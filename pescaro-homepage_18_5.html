@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PescaRO — Bălți de pescuit din România</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;}
+
+/* ── HEADER ── */
+#hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;backdrop-filter:blur(8px);}
+#hdr-in{max-width:1400px;margin:0 auto;padding:0 24px;height:62px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;}
+.logo-icon{font-size:28px;}
+.logo-text{font-size:22px;font-weight:900;color:#a3e635;letter-spacing:-.5px;}
+.logo-badge{font-size:10px;background:#1a6b3a;color:#a3e635;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:.04em;}
+nav{display:flex;align-items:center;gap:6px;}
+.nav-btn{background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;padding:8px 14px;border-radius:8px;transition:color .2s;}
+.nav-btn:hover{color:#f1f5f9;}
+.nav-primary{background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;cursor:pointer;padding:8px 18px;border-radius:8px;}
+.nav-primary:hover{background:#1e7a42;}
+
+/* ── HERO ── */
+#hero{max-width:1400px;margin:0 auto;padding:60px 24px 36px;text-align:center;}
+.hero-title{font-size:42px;font-weight:900;line-height:1.15;color:#f8fafc;margin-bottom:14px;}
+.hero-accent{color:#a3e635;}
+.hero-sub{color:#64748b;font-size:16px;margin-bottom:36px;}
+
+/* ── SEARCH ── */
+#search-wrap{position:relative;max-width:580px;margin:0 auto 10px;}
+#search-box{display:flex;align-items:center;gap:10px;background:#111827;border:2px solid #1e293b;border-radius:14px;padding:13px 18px;transition:border-color .2s;}
+#search-box:focus-within{border-color:#1a6b3a;}
+#search-input{flex:1;background:transparent;border:none;outline:none;color:#f1f5f9;font-size:15px;}
+#search-input::placeholder{color:#4b5563;}
+#clear-btn{background:transparent;border:none;color:#4b5563;cursor:pointer;font-size:18px;line-height:1;display:none;}
+#dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none;}
+.dd-item{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #1e293b;cursor:pointer;gap:12px;transition:background .15s;}
+.dd-item:last-child{border-bottom:none;}
+.dd-item:hover{background:#1e293b;}
+.dd-name{font-weight:700;font-size:14px;color:#f1f5f9;}
+.dd-meta{font-size:11px;color:#64748b;margin-top:2px;}
+.dd-open{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+
+/* ── STATS BAR ── */
+#stats-bar{padding:0;margin-bottom:10px;}
+.stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;padding:7px 20px;font-size:14px;color:#64748b;text-align:center;}
+.stat-chip strong{color:#a3e635;font-size:16px;}
+
+/* ── MAIN LAYOUT ── */
+#main{max-width:1400px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+
+/* ── MAP ── */
+#map-wrap{position:relative;border:1px solid #1e293b;border-radius:16px;overflow:hidden;}
+#map{width:100%;height:560px;}
+/* Leaflet popup dark */
+.leaflet-popup-content-wrapper{background:#111827;border:1px solid #1e293b;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+.leaflet-popup-content{color:#f1f5f9;margin:12px 14px;}
+.leaflet-popup-tip{background:#111827;}
+.leaflet-popup-close-button{color:#4b5563!important;font-size:18px!important;top:6px!important;right:8px!important;}
+.pop-name{font-size:15px;font-weight:800;color:#a3e635;margin-bottom:3px;}
+.pop-meta{font-size:11px;color:#64748b;margin-bottom:10px;}
+.pop-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.pop-tag{background:#0a0f1a;border-radius:5px;padding:3px 8px;font-size:10px;color:#94a3b8;}
+.pop-btn{width:100%;background:#166534;border:none;color:#a3e635;font-weight:700;font-size:12px;padding:8px;border-radius:7px;cursor:pointer;}
+.pop-btn:hover{background:#1a7a40;}
+#map-legend{position:absolute;bottom:14px;left:14px;background:rgba(10,15,26,.85);border:1px solid #1e293b;border-radius:8px;padding:8px 12px;font-size:11px;color:#64748b;z-index:10;pointer-events:none;}
+
+/* ── SIDEBAR ── */
+#sidebar{display:flex;flex-direction:column;gap:16px;}
+
+/* HALL OF FAME */
+.hof-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
+.hof-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1e293b;}
+.hof-title{font-weight:800;font-size:14px;color:#f59e0b;display:flex;align-items:center;gap:7px;}
+.hof-sub{font-size:10px;color:#4b5563;margin-top:1px;}
+.hof-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #0f172a;}
+.hof-row:last-child{border-bottom:none;}
+.hof-loc{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.hof-name{font-weight:700;font-size:12px;color:#e2e8f0;}
+.hof-detail{font-size:10px;color:#4b5563;margin-top:1px;}
+.hof-stars{display:flex;align-items:center;gap:2px;margin-left:auto;flex-shrink:0;}
+.star{color:#f59e0b;font-size:11px;}
+.hof-count{font-size:13px;color:#f59e0b;font-weight:800;}
+.hof-star-legend{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
+.hof-star-legend-label{font-size:9px;color:#4b5563;font-weight:600;letter-spacing:.04em;white-space:nowrap;}
+.see-all:hover{color:#a3e635;}
+
+/* LISTA BALTI */
+.balti-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
+.balti-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1e293b;}
+.balti-title{font-weight:800;font-size:14px;color:#e2e8f0;}
+.balti-count{background:#1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.balta-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #0f172a;cursor:pointer;transition:background .15s;}
+.balta-row:last-child{border-bottom:none;}
+.balta-row:hover{background:#1e293b;}
+.balta-emoji{width:36px;height:36px;background:#0d2010;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.balta-name{font-weight:700;font-size:13px;color:#f1f5f9;}
+.balta-meta{font-size:10px;color:#64748b;margin-top:2px;}
+.balta-price{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}
+.balta-arrow{color:#334155;font-size:16px;margin-left:4px;}
+
+/* ── HOF MODAL ── */
+#hof-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+#hof-modal.open{display:flex;}
+.hof-modal-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
+.hof-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;}
+.hof-modal-title{font-size:20px;font-weight:900;color:#f59e0b;}
+.hof-modal-sub{font-size:12px;color:#4b5563;margin-top:3px;}
+.modal-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;}
+.hof-modal-list{overflow-y:auto;padding:8px 0;}
+
+.balta-tooltip{background:#111827 !important;border:1px solid #1e293b !important;border-radius:7px !important;color:#f1f5f9 !important;font-size:12px !important;font-weight:700 !important;padding:5px 10px !important;box-shadow:0 4px 14px rgba(0,0,0,.6) !important;white-space:nowrap;}
+.balta-tooltip::before{border-top-color:#1e293b !important;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:#0a0f1a;}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
+@media(max-width:900px){#main{grid-template-columns:1fr;}}
+.judet-opt{padding:9px 14px;cursor:pointer;font-size:13px;color:#f1f5f9;display:flex;align-items:center;gap:8px;border-bottom:1px solid #0f172a;transition:background .1s;}
+.judet-opt:last-child{border-bottom:none;}
+.judet-opt:hover,.judet-opt.focused{background:#1e293b;}
+.judet-opt.match-first{background:#0d1f12;}
+.judet-opt .judet-match{color:#a3e635;font-weight:800;}
+
+/* ── DRAFT BANNER ── */
+#draft-banner{display:none;background:#1c1500;border:1px solid #92400e;border-radius:10px;padding:10px 16px;margin-bottom:0;align-items:center;gap:10px;flex-wrap:wrap;}
+#draft-banner.show{display:flex;}
+.draft-txt{flex:1;font-size:12px;color:#fbbf24;}
+.draft-resume{background:#f59e0b;border:none;color:#000;font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;}
+.draft-discard{background:transparent;border:1px solid #92400e;color:#92400e;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;}
+
+/* ── MODAL EDIT BALTA ── */
+#edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:700;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:20px;overflow-y:auto;}
+#edit-modal.open{display:flex;}
+.edit-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:760px;margin:auto;}
+.edit-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;position:sticky;top:0;background:#0a0f1a;border-radius:20px 20px 0 0;z-index:10;}
+.edit-title{font-size:17px;font-weight:800;color:#f1f5f9;}
+.edit-hdr-btns{display:flex;gap:8px;align-items:center;}
+.edit-save-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:13px;padding:8px 20px;border-radius:8px;cursor:pointer;}
+.edit-save-btn:hover{background:#1e7a42;}
+.edit-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;}
+.edit-body{padding:24px;}
+.edit-section{margin-bottom:28px;}
+.edit-section-title{font-size:11px;font-weight:800;color:#4b5563;letter-spacing:.08em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px;}
+.edit-section-title span{flex:1;}
+/* reutilizam .fg, .fg-row, .fg label, .fg input etc din wizard */
+
+/* Stand edit card */
+.se-card{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:14px;margin-bottom:10px;position:relative;}
+.se-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;}
+.se-nr-badge{width:28px;height:28px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
+.se-card-name{font-weight:700;font-size:13px;color:#e2e8f0;flex:1;}
+.se-card-toggle{color:#4b5563;font-size:14px;transition:transform .2s;}
+.se-card-body{display:none;}
+.se-card-body.open{display:block;}
+.se-del-btn{background:transparent;border:1px solid #334155;color:#64748b;font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer;}
+.se-del-btn:hover{border-color:#ef4444;color:#ef4444;}
+/* Galerie thumbnails edit */
+.gal-edit-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.gal-thumb-edit{position:relative;width:72px;height:72px;border-radius:7px;overflow:hidden;border:1px solid #1e293b;flex-shrink:0;}
+.gal-thumb-edit img{width:100%;height:100%;object-fit:cover;display:block;}
+.gal-thumb-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;color:#ef4444;font-size:14px;width:18px;height:18px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.gal-add-btn{width:72px;height:72px;border:1.5px dashed #1e293b;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;cursor:pointer;color:#4b5563;font-size:10px;transition:all .15s;}
+.gal-add-btn:hover{border-color:#1a6b3a;color:#a3e635;}
+.save-toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;}
+.save-toast.show{opacity:1;transform:translateY(0);}
+
+/* ── MODAL ADAUGA BALTA ── */
+#ab-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+#ab-modal.open{display:flex;}
+.ab-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;}
+.ab-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;flex-shrink:0;}
+.ab-title{font-size:18px;font-weight:900;color:#f1f5f9;}
+.ab-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;}
+
+/* Steps */
+.ab-steps{display:flex;padding:16px 24px;gap:0;border-bottom:1px solid #1e293b;flex-shrink:0;}
+.ab-step{display:flex;align-items:center;gap:8px;flex:1;}
+.ab-step:not(:last-child)::after{content:'';flex:1;height:2px;background:#1e293b;margin:0 8px;}
+.step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;border:2px solid #1e293b;color:#4b5563;background:#0a0f1a;transition:all .25s;}
+.step-dot.done{background:#1a6b3a;border-color:#a3e635;color:#a3e635;}
+.step-dot.active{background:#1e293b;border-color:#a3e635;color:#f1f5f9;}
+.step-lbl{font-size:11px;color:#4b5563;font-weight:600;white-space:nowrap;}
+.step-lbl.active{color:#e2e8f0;}
+
+/* Body */
+.ab-body{overflow-y:auto;padding:20px 24px;flex:1;}
+.ab-pane{display:none;}
+.ab-pane.active{display:block;}
+
+/* Form elements */
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#1a6b3a;}
+.fg textarea{resize:vertical;min-height:80px;}
+.fg select option{background:#111827;}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* Harta localizare */
+#ab-map{width:100%;height:260px;border-radius:10px;overflow:hidden;border:1.5px solid #1e293b;margin-bottom:10px;}
+.ab-coord-box{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;color:#a3e635;display:flex;align-items:center;gap:8px;}
+.ab-coord-lbl{color:#4b5563;font-size:11px;font-family:inherit;}
+
+/* Standuri */
+.stand-item{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:14px;margin-bottom:10px;position:relative;}
+.stand-item-nr{font-size:11px;font-weight:800;color:#a3e635;letter-spacing:.05em;margin-bottom:10px;}
+.stand-del{position:absolute;top:12px;right:12px;background:transparent;border:none;color:#4b5563;font-size:16px;cursor:pointer;}
+.stand-del:hover{color:#ef4444;}
+.add-stand-btn{width:100%;background:transparent;border:1.5px dashed #1e293b;border-radius:10px;padding:14px;color:#4b5563;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.add-stand-btn:hover{border-color:#1a6b3a;color:#a3e635;background:#0d1f12;}
+
+/* Footer */
+.ab-footer{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid #1e293b;flex-shrink:0;}
+.ab-back{background:transparent;border:1.5px solid #1e293b;color:#94a3b8;font-size:13px;font-weight:600;padding:9px 20px;border-radius:8px;cursor:pointer;}
+.ab-back:hover{border-color:#334155;color:#f1f5f9;}
+.ab-next{background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 24px;border-radius:8px;cursor:pointer;}
+.ab-next:hover{background:#1e7a42;}
+.ab-submit{background:linear-gradient(135deg,#1a6b3a,#166534);border:none;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:8px;cursor:pointer;}
+.ab-submit:hover{background:linear-gradient(135deg,#1e7a42,#1a7040);} #ab-search-box:focus-within{border-color:#1a6b3a !important;}
+.step-count{font-size:11px;color:#4b5563;}
+
+/* Succes */
+.ab-success{text-align:center;padding:32px 0;}
+.ab-success-icon{font-size:56px;margin-bottom:16px;}
+.ab-success-title{font-size:20px;font-weight:800;color:#a3e635;margin-bottom:8px;}
+.ab-success-sub{color:#64748b;font-size:13px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div id="hdr-in">
+    <a class="logo" href="#">
+      <span class="logo-icon">🎣</span>
+      <span class="logo-text">PescaRO</span>
+      <span class="logo-badge">Beta</span>
+    </a>
+    <nav>
+      <button class="nav-btn">Harta</button>
+      <button class="nav-btn" onclick="openHof()">🏆 Hall of Fame</button>
+      <button class="nav-btn" onclick="openAddBalta()">+ Adaugă baltă</button>
+      <button class="nav-primary">Contul meu</button>
+    </nav>
+  </div>
+</div>
+
+<!-- HERO + SEARCH -->
+<div id="hero">
+  <h1 class="hero-title">Descoperă cele mai bune<br/><span class="hero-accent">bălți de pescuit</span> din România</h1>
+  <p class="hero-sub">Caută o baltă, explorează standurile și planifică-ți excursia perfectă</p>
+
+  <div id="search-wrap">
+    <div id="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="search-input" type="text" placeholder="Caută baltă sau județ... (ex: Comana, Ilfov)" oninput="onSearch(this.value)" autocomplete="off"/>
+      <button id="clear-btn" onclick="clearSearch()">✕</button>
+    </div>
+    <div id="dropdown"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- HARTA -->
+  <div>
+    <!-- STATS BAR -->
+    <div id="stats-bar">
+      <div class="stats-inner">
+        <div class="stat-chip"><strong>5</strong> bălți înregistrate</div>
+        <div class="stat-chip"><strong>24</strong> standuri totale</div>
+      </div>
+    </div>
+    <div id="map-wrap">
+    <div id="map"></div>
+    <div id="map-legend">🎣 Click pe marker pentru detalii</div>
+  </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+
+    <!-- DRAFT BANNER -->
+    <div id="draft-banner">
+      <span style="font-size:18px;">📝</span>
+      <div class="draft-txt">
+        <strong>Ai un draft nesalvat!</strong><br/>
+        <span id="draft-name" style="opacity:.8;font-size:11px;">Baltă fără nume</span>
+      </div>
+      <button class="draft-resume" onclick="resumeDraft()">Continuă editarea →</button>
+      <button class="draft-discard" onclick="discardDraft()">✕ Șterge draft</button>
+    </div>
+
+    <!-- HALL OF FAME preview -->
+    <div class="hof-card">
+      <div class="hof-header">
+        <div>
+          <div class="hof-title">🏆 Hall of Fame</div>
+          <div class="hof-sub">Top pescari după numărul de stele</div>
+        </div>
+        <div class="hof-star-legend">
+          <div><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+          <div class="hof-star-legend-label">nr. stele</div>
+        </div>
+      </div>
+      <div id="hof-preview"></div>
+      <div class="see-all" onclick="openHof()">Vezi Top 20 complet →</div>
+    </div>
+
+    <!-- LISTA BALTI -->
+    <div class="balti-card">
+      <div class="balti-header">
+        <span class="balti-title">🔥 Top 10 cele mai accesate bălți</span>
+        <span class="balti-count" id="balti-count">5</span>
+      </div>
+      <div id="balti-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HALL OF FAME MODAL -->
+<div id="hof-modal" onclick="if(event.target===this)closeHof()">
+  <div class="hof-modal-inner">
+    <div class="hof-modal-hdr">
+      <div>
+        <div class="hof-modal-title">🏆 Hall of Fame</div>
+        <div class="hof-modal-sub">Top 20 pescari după numărul total de stele obținute</div>
+      </div>
+      <button class="modal-close" onclick="closeHof()">✕</button>
+    </div>
+    <div class="hof-modal-list" id="hof-full"></div>
+  </div>
+</div>
+
+<!-- MODAL ADAUGA BALTA -->
+<div id="ab-modal" onclick="if(event.target===this)closeAddBalta()">
+  <div class="ab-inner">
+
+    <!-- Header -->
+    <div class="ab-hdr">
+      <div>
+        <div class="ab-title">🎣 Adaugă baltă nouă</div>
+      </div>
+      <button class="ab-close" onclick="closeAddBalta()">✕</button>
+    </div>
+
+    <!-- Steps indicator — clickabile pentru navigare directa -->
+    <div class="ab-steps">
+      <div class="ab-step" onclick="abGoToStep(1)" style="cursor:pointer;" title="Mergi la Pas 1">
+        <div class="step-dot active" id="dot-1">1</div>
+        <span class="step-lbl active" id="lbl-1">Informații</span>
+      </div>
+      <div class="ab-step" onclick="abGoToStep(2)" style="cursor:pointer;" title="Mergi la Pas 2">
+        <div class="step-dot" id="dot-2">2</div>
+        <span class="step-lbl" id="lbl-2">Localizare</span>
+      </div>
+      <div class="ab-step" onclick="abGoToStep(3)" style="cursor:pointer;" title="Mergi la Pas 3">
+        <div class="step-dot" id="dot-3">3</div>
+        <span class="step-lbl" id="lbl-3">Standuri</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="ab-body">
+
+      <!-- PAS 1: Informatii generale -->
+      <div class="ab-pane active" id="pane-1">
+        <div class="fg">
+          <label>NUMELE BALTII *</label>
+          <input type="text" id="ab-nume" placeholder="ex: Balta Ileana Naipu" />
+        </div>
+        <div class="fg" style="position:relative;">
+          <label>JUDEȚ *</label>
+          <!-- Input vizibil + hidden value -->
+          <input type="text" id="ab-judet-search"
+            placeholder="Tastează sau selectează județul..."
+            autocomplete="off"
+            oninput="judetSearch(this.value)"
+            onkeydown="judetKeydown(event)"
+            onfocus="judetOpen()"
+            style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 36px 10px 12px;color:#f1f5f9;font-size:14px;outline:none;cursor:text;"
+          />
+          <input type="hidden" id="ab-judet" />
+          <!-- Sageata dropdown -->
+          <div id="judet-arrow" onclick="judetToggle()" style="position:absolute;right:10px;bottom:10px;color:#4b5563;cursor:pointer;font-size:14px;user-select:none;">▾</div>
+          <!-- Dropdown lista -->
+          <div id="judet-dropdown" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#111827;border:1.5px solid #1e293b;border-radius:10px;overflow:hidden;z-index:800;box-shadow:0 8px 24px rgba(0,0,0,.6);max-height:220px;overflow-y:auto;">
+          </div>
+        </div>
+        <div class="fg">
+          <label>ADRESĂ COMPLETĂ</label>
+          <input type="text" id="ab-adresa" placeholder="ex: Sat Naipu, com. Bolintin-Deal, jud. Giurgiu" />
+        </div>
+        <div class="fg">
+          <label>TELEFON CONTACT *</label>
+          <input type="tel" id="ab-tel" placeholder="+40 7xx xxx xxx" />
+        </div>
+        <div class="fg">
+          <label>LINK FACEBOOK (regulament, postări)</label>
+          <input type="url" id="ab-fb" placeholder="https://facebook.com/baltadumneavoastra" />
+        </div>
+        <div class="fg">
+          <label>NUMĂR WHATSAPP ADMINISTRATOR (pentru bot capturi)</label>
+          <input type="tel" id="ab-wa" placeholder="+40 7xx xxx xxx" />
+        </div>
+        <div class="fg">
+          <label>🎬 LINK YOUTUBE — VIDEO DRUM DE ACCES</label>
+          <input type="url" id="ab-drum-yt" placeholder="https://youtu.be/... sau https://youtube.com/watch?v=..." />
+          <div style="font-size:10px;color:#4b5563;margin-top:4px;">Videoclip cu drumul de acces către baltă — va apărea pe pagina baltii</div>
+        </div>
+
+      </div>
+      </div>
+
+      <!-- PAS 2: Localizare pe harta -->
+      <div class="ab-pane" id="pane-2">
+
+        <!-- Instructiuni -->
+        <div style="background:#0d1f12;border:1px solid #1a3020;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#94a3b8;line-height:1.7;">
+          <strong style="color:#a3e635;">Cum găsești balta:</strong><br/>
+          <span style="color:#64748b;">①</span> Caută <strong style="color:#e2e8f0;">satul sau comuna</strong> unde se află balta<br/>
+          <span style="color:#64748b;">②</span> Click pe rezultat → harta se centrează pe zonă<br/>
+          <span style="color:#64748b;">③</span> <strong style="color:#e2e8f0;">Dă zoom</strong> și <strong style="color:#e2e8f0;">click exact pe baltă</strong> pentru a o marca
+        </div>
+
+        <!-- Search localitate -->
+        <div style="position:relative;margin-bottom:8px;">
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;display:flex;align-items:center;gap:8px;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;" id="ab-search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input id="ab-search-input" type="text"
+                placeholder="Caută sat, comună sau oraș... (ex: Naipu, Comana)"
+                style="flex:1;background:transparent;border:none;outline:none;color:#f1f5f9;font-size:13px;"
+                oninput="abSearchInput(this.value)"
+                onkeydown="if(event.key==='Enter'){abDoSearch();event.preventDefault();}"
+                autocomplete="off"/>
+              <button onclick="abClearSearch()" id="ab-search-clear" style="display:none;background:transparent;border:none;color:#4b5563;cursor:pointer;font-size:16px;line-height:1;">✕</button>
+            </div>
+            <button onclick="abDoSearch()" style="background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;white-space:nowrap;">
+              🔍 Caută
+            </button>
+          </div>
+          <div id="ab-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:220px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- Harta satelit -->
+        <div id="ab-map"></div>
+
+        <!-- Status pin -->
+        <div id="ab-pin-status" style="margin-top:8px;padding:8px 12px;border-radius:8px;background:#0a0f1a;border:1px solid #1e293b;display:flex;align-items:center;gap:8px;font-size:12px;">
+          <span style="font-size:16px;">🎯</span>
+          <span style="color:#4b5563;flex:1;" id="ab-coord-display">Click pe hartă pentru a marca locația baltii</span>
+          <button id="ab-coord-clear" onclick="abClearPin()" style="display:none;background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer;">✕ Resetează</button>
+        </div>
+      </div>
+
+      <!-- PAS 3: Standuri -->
+      <div class="ab-pane" id="pane-3">
+        <div style="font-size:13px;color:#94a3b8;margin-bottom:14px;line-height:1.6;">
+          Adaugă standurile de pescuit ale baltii. Poți modifica pozițiile lor mai târziu direct pe harta baltii.
+        </div>
+        <div id="stands-container"></div>
+        <button class="add-stand-btn" onclick="addStand()">
+          <span style="font-size:18px;">+</span> Adaugă stand
+        </button>
+      </div>
+
+      <!-- SUCCES -->
+      <div class="ab-pane" id="pane-success">
+        <div class="ab-success">
+          <div class="ab-success-icon">✅</div>
+          <div class="ab-success-title">Balta a fost salvată!</div>
+          <div class="ab-success-sub">
+            Balta a fost adăugată în sistem și este în așteptare.<br/>
+            Adminul suprem va seta vizibilitatea înainte de publicare.
+          </div>
+
+          <!-- Status vizibilitate -->
+          <div style="margin-top:20px;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;text-align:left;">
+            <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:10px;">👁️ VIZIBILITATE BALTĂ</div>
+            <div style="display:flex;gap:8px;">
+              <button id="vis-unlisted" onclick="setVizibilitate('unlisted')"
+                style="flex:1;padding:10px;border-radius:9px;border:2px solid #f59e0b;background:#1c1500;color:#f59e0b;font-weight:700;font-size:12px;cursor:pointer;">
+                🔒 Unlisted
+                <div style="font-size:10px;font-weight:400;color:#92400e;margin-top:3px;">Nevizibil publicului</div>
+              </button>
+              <button id="vis-public" onclick="setVizibilitate('public')"
+                style="flex:1;padding:10px;border-radius:9px;border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;font-weight:700;font-size:12px;cursor:pointer;">
+                🌍 Public
+                <div style="font-size:10px;font-weight:400;color:#334155;margin-top:3px;">Vizibil pe platformă</div>
+              </button>
+            </div>
+            <div id="vis-status" style="margin-top:10px;font-size:11px;color:#92400e;background:#1c1500;border-radius:6px;padding:7px 10px;">
+              🔒 Balta este în modul <strong>Unlisted</strong> — nu apare în căutări sau pe harta publică până nu este setată ca Publică de admin.
+            </div>
+          </div>
+
+          <button onclick="closeAddBalta()" style="margin-top:16px;background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:14px;padding:11px 28px;border-radius:10px;cursor:pointer;width:100%;">
+            ✓ Închide
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /ab-body -->
+
+    <!-- Footer -->
+    <div class="ab-footer" id="ab-footer">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="step-count" id="step-count">Pasul 1 din 3</span>
+        <button onclick="saveDraft()" style="background:transparent;border:1px solid #334155;color:#64748b;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;" title="Salvează progresul și închide">
+          💾 Salvează draft
+        </button>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="ab-back" id="ab-back-btn" onclick="abBack()" style="display:none;">← Înapoi</button>
+        <button class="ab-next" id="ab-next-btn" onclick="abNext()">Continuă →</button>
+        <button class="ab-submit" id="ab-submit-btn" onclick="abSubmit()" style="display:none;">✓ Salvează balta</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+// ── DATE ─────────────────────────────────────────────────────────────────────
+const BALTI = [
+  { id:1, nume:"Balta Comana",          judet:"Giurgiu",  lat:44.1619, lng:26.1036, ha:"1.200 ha", pret:"80 lei/zi",  standuri:12, record:"41kg Somn",   telefon:"+40 744 123 456" },
+  { id:2, nume:"Lacul Snagov",          judet:"Ilfov",    lat:44.7000, lng:26.1500, ha:"575 ha",   pret:"60 lei/zi",  standuri:8,  record:"8.9kg Șalău", telefon:"+40 722 987 654" },
+  { id:3, nume:"Balta Clejani",         judet:"Giurgiu",  lat:44.0333, lng:25.9833, ha:"320 ha",   pret:"70 lei/zi",  standuri:6,  record:"41kg Somn",   telefon:"+40 733 456 789" },
+  { id:4, nume:"Lacul Știucilor - Cluj",judet:"Cluj",     lat:46.8333, lng:23.6333, ha:"156 ha",   pret:"50 lei/zi",  standuri:4,  record:"12.1kg Știucă",telefon:"+40 755 321 654" },
+  { id:5, nume:"Balta Ileana Naipu",    judet:"Giurgiu",  lat:44.1619, lng:25.7249, ha:"~8 ha",    pret:"60 lei/zi",  standuri:10, record:"31kg Somn",   telefon:"+40 722 334 556" },
+];
+
+const HOF = [
+  { loc:1,  pe:"Gheorghe Tanase",    stele:12, rec:"68kg Somn",         balta:"Balta Movila Miresii" },
+  { loc:2,  pe:"Liviu Gheorghe",     stele:9,  rec:"41kg Somn",         balta:"Balta Clejani"        },
+  { loc:3,  pe:"Andrei Constantin",  stele:7,  rec:"32kg Crap Oglindă", balta:"Balta Comana"         },
+  { loc:4,  pe:"Ion Popescu",        stele:6,  rec:"28.5kg Crap",       balta:"Balta Comana"         },
+  { loc:5,  pe:"Nicu Apostol",       stele:5,  rec:"52.3kg Somn",       balta:"Balta Movila Miresii" },
+  { loc:6,  pe:"Petre Lungu",        stele:4,  rec:"47.8kg Somn",       balta:"Balta Movila Miresii" },
+  { loc:7,  pe:"Florin Popa",        stele:4,  rec:"8.9kg Șalău",       balta:"Lacul Snagov"         },
+  { loc:8,  pe:"Tibor Molnar",       stele:3,  rec:"12.1kg Știucă",     balta:"Lacul Știucilor"      },
+  { loc:9,  pe:"Vasile Marinescu",   stele:3,  rec:"22.3kg Crap",       balta:"Balta Comana"         },
+  { loc:10, pe:"Dumitru Vasile",     stele:3,  rec:"35.5kg Somn",       balta:"Balta Clejani"        },
+  { loc:11, pe:"Gheorghe Mitu",      stele:3,  rec:"31kg Somn",         balta:"Balta Ileana Naipu"   },
+  { loc:12, pe:"Relu Stancu",        stele:2,  rec:"22.8kg Crap",       balta:"Balta Ileana Naipu"   },
+  { loc:13, pe:"Vasile Preda",       stele:2,  rec:"19.5kg Crap",       balta:"Balta Ileana Naipu"   },
+  { loc:14, pe:"Adrian Neagu",       stele:2,  rec:"7.2kg Crap",        balta:"Lacul Snagov"         },
+  { loc:15, pe:"Cristian Nedelcu",   stele:2,  rec:"22.1kg Crap",       balta:"Balta Comana"         },
+  { loc:16, pe:"George Petre",       stele:1,  rec:"24.6kg Crap",       balta:"Balta Comana"         },
+  { loc:17, pe:"Florin Marin",       stele:1,  rec:"11.8kg Crap",       balta:"Balta Ileana Naipu"   },
+  { loc:18, pe:"Radu Florescu",      stele:1,  rec:"16.3kg Știucă",     balta:"Balta Comana"         },
+  { loc:19, pe:"Szabo Andras",       stele:1,  rec:"9.7kg Știucă",      balta:"Lacul Știucilor"      },
+  { loc:20, pe:"Dan Popescu",        stele:1,  rec:"6.8kg Caras",       balta:"Balta Ileana Naipu"   },
+];
+
+const MEDAL_C = ['#FFD700','#C0C0C0','#CD7F32'];
+const MEDAL_I = ['🥇','🥈','🥉'];
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+let map, highlightId = null;
+
+function initMap() {
+  map = L.map('map', { center: [45.5, 24.8], zoom: 7 });
+  L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution: 'Tiles © Google', maxZoom: 22, maxNativeZoom: 20
+  }).addTo(map);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
+    maxZoom: 22, maxNativeZoom: 20, opacity: 0.85
+  }).addTo(map);
+
+  BALTI.forEach(b => {
+    const icon = makeMarker(false);
+    const m = L.marker([b.lat, b.lng], { icon })
+      .addTo(map)
+      .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
+      .bindTooltip(b.nume, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -44],
+        className: 'balta-tooltip'
+      });
+    m.on('click', () => {});
+    b._marker = m;
+  });
+
+  window.__goToBalta = id => {
+    // Map ID -> fisier pagina balta
+    const pages = {
+      5: 'balta-ileana-naipu-FINAL.html',
+    };
+    if(pages[id]) {
+      window.open(pages[id], '_blank');
+    } else {
+      alert('Pagina pentru această baltă nu este disponibilă momentan.\nID: ' + id);
+    }
+  };
+
+  setTimeout(() => map.invalidateSize(), 200);
+  if (typeof ResizeObserver !== 'undefined')
+    new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById('map'));
+}
+
+function makeMarker(active) {
+  const bg = active ? '#f59e0b' : '#1a6b3a';
+  const bdr = active ? '#fcd34d' : 'rgba(255,255,255,.3)';
+  const glow = active ? 'drop-shadow(0 0 6px rgba(245,158,11,.6)) drop-shadow(0 3px 8px rgba(0,0,0,.8))' : 'drop-shadow(0 3px 8px rgba(0,0,0,.8))';
+  return L.divIcon({
+    className: '',
+    html: `<svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" style="filter:${glow};display:block;">
+      <path d="M15 0C6.72 0 0 6.72 0 15c0 9.75 15 25 15 25S30 24.75 30 15C30 6.72 23.28 0 15 0z" fill="${bg}"/>
+      <circle cx="15" cy="14" r="9" fill="rgba(0,0,0,0.15)"/>
+      <text x="15" y="19" text-anchor="middle" font-family="system-ui" font-size="14" fill="white">🎣</text>
+    </svg>`,
+    iconSize: [30, 40], iconAnchor: [15, 40], popupAnchor: [0, -42],
+  });
+}
+
+function popHtml(b) {
+  return `
+    <div class="pop-name">${b.nume}</div>
+    <div class="pop-meta">📍 ${b.judet}</div>
+    <div class="pop-row">
+      <span class="pop-tag">🎣 ${b.standuri} standuri</span>
+      <span class="pop-tag">🏆 ${b.rec}</span>
+    </div>
+    <div class="pop-meta" style="margin-bottom:10px;">📞 ${b.telefon}</div>
+    <button class="pop-btn" onclick="__goToBalta(${b.id})">🗺️ Deschide harta baltii →</button>`;
+}
+
+function flyToBalta(id) {
+  const b = BALTI.find(x => x.id === id);
+  if (!b) return;
+  BALTI.forEach(x => x._marker && x._marker.setIcon(makeMarker(x.id === id)));
+  map.flyTo([b.lat, b.lng], 13, { duration: 1.2 });
+  setTimeout(() => b._marker && b._marker.openPopup(), 1300);
+  // highlight in lista
+  document.querySelectorAll('.balta-row').forEach(r => r.classList.toggle('active-row', +r.dataset.id === id));
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+function onSearch(q) {
+  document.getElementById('clear-btn').style.display = q ? 'block' : 'none';
+  const dd = document.getElementById('dropdown');
+  if (!q.trim()) { dd.style.display = 'none'; return; }
+  const res = BALTI.filter(b =>
+    b.nume.toLowerCase().includes(q.toLowerCase()) ||
+    b.judet.toLowerCase().includes(q.toLowerCase())
+  );
+  if (!res.length) {
+    dd.innerHTML = '<div style="padding:14px 16px;color:#4b5563;font-size:13px;">Nicio baltă găsită</div>';
+    dd.style.display = 'block';
+    return;
+  }
+  dd.innerHTML = res.map(b => `
+    <div class="dd-item" onclick="flyToBalta(${b.id})">
+      <div style="flex:1;">
+        <div class="dd-name">${b.nume}</div>
+        <div class="dd-meta">📍 ${b.judet} · ${b.ha} · ${b.standuri} standuri</div>
+      </div>
+      <button class="dd-open" onclick="event.stopPropagation();__goToBalta(${b.id})">Deschide →</button>
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('clear-btn').style.display = 'none';
+  document.getElementById('dropdown').style.display = 'none';
+  BALTI.forEach(b => b._marker && b._marker.setIcon(makeMarker(false)));
+  document.querySelectorAll('.balta-row').forEach(r => r.classList.remove('active-row'));
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('search-wrap').contains(e.target))
+    document.getElementById('dropdown').style.display = 'none';
+});
+
+// ── HALL OF FAME ──────────────────────────────────────────────────────────────
+function hofRowHtml(h, extended) {
+  return `<div class="hof-row">
+    <div class="hof-loc" style="background:${MEDAL_C[h.loc-1]||'#1e293b'};color:${h.loc<=3?'#000':'#a3e635'};">${h.loc<=3?MEDAL_I[h.loc-1]:h.loc}</div>
+    <div style="flex:1;min-width:0;">
+      <div class="hof-name">${h.pe}</div>
+      <div class="hof-detail">${h.rec}${extended?' · '+h.balta:''}</div>
+    </div>
+    <div class="hof-stars"><span class="hof-count">${h.stele}</span></div>
+  </div>`;
+}
+
+function renderHof() {
+  document.getElementById('hof-preview').innerHTML = HOF.slice(0,5).map(h=>hofRowHtml(h,false)).join('');
+  document.getElementById('hof-full').innerHTML = HOF.map(h=>hofRowHtml(h,true)).join('');
+}
+
+function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
+function closeHof() { document.getElementById('hof-modal').classList.remove('open'); }
+
+// ── LISTA BALTI ───────────────────────────────────────────────────────────────
+function renderBalti() {
+  // Sortam dupa vizite (descrescator) si luam top 10
+  const sorted = [...BALTI]
+    .filter(b => b.vizibilitate !== 'unlisted')
+    .sort((a,b) => (b.vizite||0) - (a.vizite||0))
+    .slice(0, 10);
+
+  const medals = ['🥇','🥈','🥉'];
+
+  document.getElementById('balti-list').innerHTML = sorted.map((b, idx) => {
+    const rank = idx + 1;
+    const medalColor = idx===0?'#FFD700':idx===1?'#C0C0C0':idx===2?'#CD7F32':'#1e293b';
+    const isUnlisted = b.vizibilitate === 'unlisted';
+    return `<div class="balta-row" data-id="${b.id}" onclick="flyToBalta(${b.id})">
+      <!-- Rank -->
+      <div style="width:28px;height:28px;border-radius:7px;background:${medalColor};display:flex;align-items:center;justify-content:center;font-size:${idx<3?'14':'11'}px;font-weight:900;color:${idx<3?'#000':'#64748b'};flex-shrink:0;">
+        ${idx<3?medals[idx]:rank}
+      </div>
+      <div class="balta-emoji">🌊</div>
+      <div style="flex:1;min-width:0;">
+        <div class="balta-name">${b.nume}</div>
+        <div class="balta-meta">📍 ${b.judet} · 🎣 ${b.standuri} standuri · 👁️ ${(b.vizite||0).toLocaleString()} vizite</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">
+        <button onclick="event.stopPropagation();__goToBalta(${b.id})"
+          style="background:#1a6b3a;border:none;color:#a3e635;font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;white-space:nowrap;">
+          🗺️ Harta baltii
+        </button>
+        <button onclick="event.stopPropagation();openEditBalta(${b.id})"
+          style="background:#1e293b;border:1px solid #334155;color:#94a3b8;font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;cursor:pointer;">
+          ✏️ Edit
+        </button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:20px;text-align:center;color:#4b5563;font-size:12px;">Nicio baltă publică înregistrată</div>';
+}
+
+function setVizibilitate(status) {
+  // Seteaza pe ultima balta adaugata
+  const lastBalta = BALTI[BALTI.length - 1];
+  if(!lastBalta) return;
+  lastBalta.vizibilitate = status;
+
+  const btnU = document.getElementById('vis-unlisted');
+  const btnP = document.getElementById('vis-public');
+  const st   = document.getElementById('vis-status');
+
+  if(status === 'unlisted') {
+    btnU.style.borderColor='#f59e0b'; btnU.style.background='#1c1500'; btnU.style.color='#f59e0b';
+    btnP.style.borderColor='#1e293b'; btnP.style.background='#0a0f1a'; btnP.style.color='#4b5563';
+    st.style.color='#92400e'; st.style.background='#1c1500';
+    st.innerHTML='🔒 Balta este <strong>Unlisted</strong> — nu apare în căutări sau pe harta publică.';
+  } else {
+    btnP.style.borderColor='#a3e635'; btnP.style.background='#0d1f12'; btnP.style.color='#a3e635';
+    btnU.style.borderColor='#1e293b'; btnU.style.background='#0a0f1a'; btnU.style.color='#4b5563';
+    st.style.color='#166534'; st.style.background='#0d1f12';
+    st.innerHTML='🌍 Balta este <strong>Publică</strong> — vizibilă pe hartă și în căutări.';
+    // Actualizam marker-ul pe harta principala
+    if(lastBalta._marker) lastBalta._marker.setIcon(makeMarker(false));
+  }
+  renderBalti();
+}
+
+function toggleVizibilitate(id) {
+  const b = BALTI.find(x => x.id === id);
+  if(!b) return;
+  b.vizibilitate = b.vizibilitate === 'public' ? 'unlisted' : 'public';
+  renderBalti();
+  // Ascunde/arata markerul de pe harta principala
+  if(b._marker) {
+    if(b.vizibilitate === 'unlisted') b._marker.setOpacity(0.4);
+    else b._marker.setOpacity(1);
+  }
+}
+
+// ── ACTIVE ROW STYLE ──────────────────────────────────────────────────────────
+const style = document.createElement('style');
+style.textContent = '.balta-row.active-row{background:#1e293b;border-left:3px solid #a3e635;}';
+document.head.appendChild(style);
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+
+
+window.addEventListener('load', () => {
+  initMap();
+  renderHof();
+  renderBalti();
+  checkDraft();
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// DRAFT SYSTEM — salveaza progresul wizard-ului in localStorage
+// ════════════════════════════════════════════════════════════════════════════════
+const DRAFT_KEY = 'pescaro_balta_draft';
+
+function collectWizardData() {
+  return {
+    step: abStep,
+    nume:    document.getElementById('ab-nume')?.value || '',
+    judet:   document.getElementById('ab-judet')?.value || '',
+    adresa:  document.getElementById('ab-adresa')?.value || '',
+    tel:     document.getElementById('ab-tel')?.value || '',
+    fb:      document.getElementById('ab-fb')?.value || '',
+    wa:      document.getElementById('ab-wa')?.value || '',
+    lat:     abCoords?.lat || null,
+    lng:     abCoords?.lng || null,
+    standuri: getStanduriData(),
+    savedAt: new Date().toLocaleString('ro-RO'),
+  };
+}
+
+function saveDraft() {
+  const data = collectWizardData();
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch(e) {}
+  showToast('📝 Draft salvat!');
+  closeAddBalta();
+  checkDraft();
+}
+
+function checkDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    const banner = document.getElementById('draft-banner');
+    banner.classList.add('show');
+    document.getElementById('draft-name').textContent =
+      (d.nume || 'Baltă fără nume') + ' · salvat ' + (d.savedAt || '');
+  } catch(e) {}
+}
+
+function resumeDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    openAddBalta(); // reseteaza UI
+    // Repopuleaza campurile
+    setTimeout(() => {
+      if(d.nume)   document.getElementById('ab-nume').value  = d.nume;
+      if(d.judet) {
+        document.getElementById('ab-judet').value = d.judet;
+        const js = document.getElementById('ab-judet-search');
+        if(js) { js.value = d.judet; js.style.borderColor = '#1a6b3a'; }
+      }
+      if(d.adresa) document.getElementById('ab-adresa').value= d.adresa;
+      if(d.tel)    document.getElementById('ab-tel').value   = d.tel;
+      if(d.fb)     document.getElementById('ab-fb').value    = d.fb;
+      if(d.wa)     document.getElementById('ab-wa').value    = d.wa;
+      if(d.lat && d.lng) {
+        abCoords = { lat: d.lat, lng: d.lng };
+        document.getElementById('ab-coord-display').textContent =
+          '✓ Marcat: ' + d.lat.toFixed(5) + '°N, ' + d.lng.toFixed(5) + '°E';
+        document.getElementById('ab-coord-display').style.color = '#a3e635';
+        document.getElementById('ab-coord-clear').style.display = 'inline';
+      }
+      // Recreeaza standurile
+      if(d.standuri?.length) {
+        d.standuri.forEach((s, i) => {
+          addStand();
+          const idx = i + 1;
+          setTimeout(() => {
+            const nu = document.getElementById('s'+idx+'-nume'); if(nu) nu.value = s.nume || ('Stand '+idx);
+            const ad = document.getElementById('s'+idx+'-ad'); if(ad) ad.value = s.adancime || '';
+            const di = document.getElementById('s'+idx+'-di'); if(di) di.value = s.distanta || '';
+            const la = document.getElementById('s'+idx+'-la'); if(la) la.value = s.latime || '';
+          }, 50);
+        });
+      }
+      // Mergi la pasul unde s-a oprit
+      if(d.step && d.step > 1) { abStep = d.step; updateAbUI(); }
+    }, 100);
+    document.getElementById('draft-banner').classList.remove('show');
+  } catch(e) { console.error(e); }
+}
+
+function discardDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+  document.getElementById('draft-banner').classList.remove('show');
+  showToast('🗑️ Draft șters');
+}
+
+// Sterge draft-ul dupa salvarea finala
+const _origAbSubmit = abSubmit;
+
+// ════════════════════════════════════════════════════════════════════════════════
+// EDIT BALTA MODAL
+// ════════════════════════════════════════════════════════════════════════════════
+let editBaltaId = null;
+// Date extinse per balta (standuri cu galerie, youtube etc)
+const BALTI_EXTENDED = {
+  5: { // Balta Ileana Naipu — date demo
+    facebook: 'https://facebook.com/baltaileananaipu',
+    whatsapp: '+40 722 334 556',
+    adresa: 'Sat Naipu, com. Bolintin-Deal, jud. Giurgiu',
+    standuri: [
+      {id:1,nr:1,zona:'Mal Nord-Vest',  ad:2.1,di:28,la:6, yt:'',            galerie:[{url:'https://picsum.photos/seed/n01a/200/200',cap:'Stand 1'},{url:'https://picsum.photos/seed/n01b/200/200',cap:'Captură 14.2kg'}]},
+      {id:2,nr:2,zona:'Mal Nord',       ad:3.0,di:40,la:8, yt:'https://youtube.com/watch?v=dQw4w9WgXcQ', galerie:[{url:'https://picsum.photos/seed/n02a/200/200',cap:'Stand 2'},{url:'https://picsum.photos/seed/n02b/200/200',cap:'Vedere'}]},
+      {id:3,nr:3,zona:'Mal Nord-Est',   ad:3.5,di:50,la:9, yt:'',            galerie:[{url:'https://picsum.photos/seed/n03a/200/200',cap:'Stand 3'}]},
+      {id:4,nr:4,zona:'Mal Est Sus',    ad:4.2,di:65,la:10,yt:'',            galerie:[{url:'https://picsum.photos/seed/n04a/200/200',cap:'Stand 4'}]},
+      {id:5,nr:5,zona:'Mal Est Jos',    ad:2.8,di:35,la:7, yt:'',            galerie:[]},
+      {id:6,nr:6,zona:'Mal Sud-Est',    ad:2.5,di:32,la:7, yt:'',            galerie:[]},
+      {id:7,nr:7,zona:'Mal Sud',        ad:2.3,di:30,la:6, yt:'',            galerie:[]},
+      {id:8,nr:8,zona:'Mal Sud-Vest',   ad:2.0,di:28,la:6, yt:'',            galerie:[]},
+      {id:9,nr:9,zona:'Mal Vest Jos',   ad:2.0,di:25,la:5, yt:'',            galerie:[]},
+      {id:10,nr:10,zona:'Mal Vest Sus', ad:2.2,di:26,la:5, yt:'',            galerie:[]},
+    ]
+  }
+};
+
+function openEditBalta(id) {
+  editBaltaId = id;
+  const b = BALTI.find(x => x.id === id);
+  if(!b) return;
+  const ext = BALTI_EXTENDED[id] || { standuri:[], facebook:'', whatsapp:'', adresa:'' };
+  document.getElementById('edit-modal-title').textContent = '✏️ ' + b.nume;
+  document.getElementById('edit-modal-sub').textContent = '📍 ' + b.judet + ' · Modifică informațiile, standurile și media';
+  document.getElementById('edit-body').innerHTML = buildEditBody(b, ext);
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditBalta() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editBaltaId = null;
+}
+
+function buildEditBody(b, ext) {
+  return `
+  <!-- SECTIUNE: Info generale -->
+  <div class="edit-section">
+    <div class="edit-section-title"><span>📋 INFORMAȚII GENERALE</span></div>
+    <div class="fg"><label>NUMELE BALTII</label><input type="text" id="e-nume" value="${b.nume}" /></div>
+    <div class="fg-row">
+      <div class="fg"><label>JUDEȚ</label><input type="text" id="e-judet" value="${b.judet}" /></div>
+      <div class="fg"><label>TELEFON</label><input type="tel" id="e-tel" value="${b.telefon||''}" /></div>
+    </div>
+    <div class="fg"><label>ADRESĂ</label><input type="text" id="e-adresa" value="${ext.adresa||''}" /></div>
+    <div class="fg-row">
+      <div class="fg"><label>LINK FACEBOOK</label><input type="url" id="e-fb" value="${ext.facebook||''}" placeholder="https://facebook.com/..." /></div>
+      <div class="fg"><label>WHATSAPP ADMIN</label><input type="tel" id="e-wa" value="${ext.whatsapp||''}" /></div>
+    </div>
+  </div>
+
+  <!-- SECTIUNE: Vizibilitate -->
+  <div class="edit-section">
+    <div class="edit-section-title"><span>👁️ VIZIBILITATE</span></div>
+    <div style="display:flex;gap:8px;">
+      <button id="ev-unlisted" onclick="setEditViz('unlisted')"
+        style="flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;
+        ${(b.vizibilitate||'public')==='unlisted'?'border:2px solid #f59e0b;background:#1c1500;color:#f59e0b;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
+        🔒 Unlisted<div style="font-size:10px;font-weight:400;margin-top:3px;">Nevizibil publicului</div>
+      </button>
+      <button id="ev-public" onclick="setEditViz('public')"
+        style="flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;
+        ${(b.vizibilitate||'public')==='public'?'border:2px solid #a3e635;background:#0d1f12;color:#a3e635;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
+        🌍 Public<div style="font-size:10px;font-weight:400;margin-top:3px;">Vizibil pe platformă</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- SECTIUNE: Standuri -->
+  <div class="edit-section">
+    <div class="edit-section-title">
+      <span>🎣 STANDURI (${ext.standuri.length})</span>
+      <button onclick="addEditStand()" style="background:#1a6b3a;border:none;color:#a3e635;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;">+ Adaugă stand</button>
+    </div>
+    <div id="edit-stands-wrap">
+      ${ext.standuri.map(s => buildStandEditCard(s)).join('')}
+    </div>
+  </div>`;
+}
+
+function buildStandEditCard(s) {
+  const gals = s.galerie.map((g,gi) => `
+    <div class="gal-thumb-edit">
+      <img src="${g.url}" loading="lazy"/>
+      <button class="gal-thumb-del" onclick="delEditGalerie(${s.id},${gi})" title="Șterge">✕</button>
+    </div>`).join('');
+
+  return `<div class="se-card" id="se-card-${s.id}">
+    <div class="se-card-hdr" onclick="toggleEditStand(${s.id})">
+      <div class="se-nr-badge">${s.nr}</div>
+      <div class="se-card-name">${s.zona || 'Stand ' + s.nr}</div>
+      <span class="se-card-toggle" id="se-arrow-${s.id}">▸</span>
+      <button class="se-del-btn" onclick="event.stopPropagation();delEditStand(${s.id})">✕ Șterge</button>
+    </div>
+    <div class="se-card-body" id="se-body-${s.id}">
+      <div class="fg"><label>ZONĂ / DESCRIERE</label><input type="text" id="se-zona-${s.id}" value="${s.zona||''}" /></div>
+      <div class="fg-row3">
+        <div class="fg"><label>ADÂNCIME (m)</label><input type="number" step="0.1" id="se-ad-${s.id}" value="${s.ad||''}" /></div>
+        <div class="fg"><label>DISTANȚĂ (m)</label><input type="number" id="se-di-${s.id}" value="${s.di||''}" /></div>
+        <div class="fg"><label>LĂȚIME (m)</label><input type="number" id="se-la-${s.id}" value="${s.la||''}" /></div>
+      </div>
+      <div class="fg">
+        <label>🎬 LINK YOUTUBE PREZENTARE STAND</label>
+        <input type="url" id="se-yt-${s.id}" value="${s.yt||''}" placeholder="https://youtube.com/watch?v=..." />
+      </div>
+      <div class="fg">
+        <label>📸 GALERIE STAND</label>
+        <div class="gal-edit-wrap" id="se-gal-${s.id}">
+          ${gals}
+          <div class="gal-add-btn" onclick="addEditGalerie(${s.id})" title="Adaugă fotografie">
+            <span style="font-size:20px;">+</span>
+            <span>Adaugă foto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleEditStand(id) {
+  const body  = document.getElementById('se-body-'+id);
+  const arrow = document.getElementById('se-arrow-'+id);
+  const open  = body.classList.toggle('open');
+  arrow.textContent = open ? '▾' : '▸';
+}
+
+function delEditStand(id) {
+  if(!confirm('Ștergi standul ' + id + '? Această acțiune nu poate fi anulată.')) return;
+  const card = document.getElementById('se-card-'+id);
+  if(card) card.remove();
+}
+
+function addEditStand() {
+  const wrap = document.getElementById('edit-stands-wrap');
+  const newId = Date.now(); // id unic temporar
+  const nr = wrap.querySelectorAll('.se-card').length + 1;
+  const newStand = {id: newId, nr, zona:'Stand nou', ad:'', di:'', la:'', yt:'', galerie:[]};
+  wrap.insertAdjacentHTML('beforeend', buildStandEditCard(newStand));
+  toggleEditStand(newId); // deschide automat
+}
+
+function addEditGalerie(standId) {
+  const url = prompt('Introdu URL-ul fotografiei:');
+  if(!url || !url.trim()) return;
+  const cap = prompt('Titlu/descriere fotografie (opțional):') || '';
+  const wrap = document.getElementById('se-gal-'+standId);
+  const addBtn = wrap.querySelector('.gal-add-btn');
+  const gi = wrap.querySelectorAll('.gal-thumb-edit').length;
+  const div = document.createElement('div');
+  div.className = 'gal-thumb-edit';
+  div.setAttribute('data-gi', gi);
+  div.innerHTML = `<img src="${url.trim()}" loading="lazy"/><button class="gal-thumb-del" onclick="this.parentElement.remove()" title="Șterge">✕</button>`;
+  wrap.insertBefore(div, addBtn);
+}
+
+function delEditGalerie(standId, gi) {
+  const wrap = document.getElementById('se-gal-'+standId);
+  const thumbs = wrap.querySelectorAll('.gal-thumb-edit');
+  if(thumbs[gi]) thumbs[gi].remove();
+}
+
+let editVizStatus = 'public';
+function setEditViz(status) {
+  editVizStatus = status;
+  const btnU = document.getElementById('ev-unlisted');
+  const btnP = document.getElementById('ev-public');
+  if(status === 'unlisted') {
+    btnU.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #f59e0b;background:#1c1500;color:#f59e0b;';
+    btnP.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;';
+  } else {
+    btnP.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #a3e635;background:#0d1f12;color:#a3e635;';
+    btnU.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;';
+  }
+}
+
+function saveEditBalta() {
+  const b = BALTI.find(x => x.id === editBaltaId);
+  if(!b) return;
+  // Update date balta
+  b.nume    = document.getElementById('e-nume')?.value   || b.nume;
+  b.judet   = document.getElementById('e-judet')?.value  || b.judet;
+  b.telefon = document.getElementById('e-tel')?.value    || b.telefon;
+  b.vizibilitate = editVizStatus;
+  // Update extended
+  if(!BALTI_EXTENDED[editBaltaId]) BALTI_EXTENDED[editBaltaId] = {standuri:[]};
+  BALTI_EXTENDED[editBaltaId].facebook = document.getElementById('e-fb')?.value || '';
+  BALTI_EXTENDED[editBaltaId].whatsapp = document.getElementById('e-wa')?.value || '';
+  BALTI_EXTENDED[editBaltaId].adresa   = document.getElementById('e-adresa')?.value || '';
+  // Update popup marker
+  if(b._marker) b._marker.setPopupContent(popHtml(b));
+  renderBalti();
+  closeEditBalta();
+  showToast('✅ Balta "' + b.nume + '" a fost actualizată!');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('save-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── ADAUGA BALTA WIZARD ───────────────────────────────────────────────────────
+let abStep = 1;
+let abMap = null;
+let abMarker = null;
+let abCoords = null;
+let abStandCount = 0;
+const JUDETE_COORDS = {
+  'Alba':[46.0667,23.5833],'Arad':[46.1667,21.3167],'Argeș':[44.8500,24.8667],
+  'Bacău':[46.5667,26.9167],'Bihor':[47.0500,21.9333],'Cluj':[46.7833,23.5833],
+  'Constanța':[44.1800,28.6500],'Dolj':[44.3167,23.8000],'Galați':[45.4333,28.0333],
+  'Giurgiu':[43.9000,25.9667],'Iași':[47.1667,27.6000],'Ilfov':[44.5667,26.1167],
+  'Prahova':[45.0833,25.9667],'Sibiu':[45.8000,24.1500],'Timiș':[45.7500,21.2167],
+  'Tulcea':[45.1833,28.8000],'București':[44.4333,26.1000],
+};
+
+function openAddBalta() {
+  abStep = 1; abCoords = null; abStandCount = 0;
+  document.getElementById('stands-container').innerHTML = '';
+  // reset form
+  ['ab-nume','ab-adresa','ab-tel','ab-fb','ab-wa','ab-drum-yt'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  document.getElementById('ab-coord-display').textContent = 'Nicio locație selectată';
+  document.getElementById('ab-coord-clear').style.display = 'none';
+  const si = document.getElementById('ab-search-input');
+  if(si) si.value = '';
+  const sr = document.getElementById('ab-search-results');
+  if(sr) sr.style.display = 'none';
+  updateAbUI();
+  document.getElementById('ab-modal').classList.add('open');
+  // Initializeaza harta la pasul 2 (lazy)
+  setTimeout(() => initAbMap(), 100);
+}
+
+function closeAddBalta() {
+  document.getElementById('ab-modal').classList.remove('open');
+  // Reseteaza la pasul 1 pentru data viitoare
+  abStep = 1;
+  document.querySelectorAll('.ab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('pane-1').classList.add('active');
+}
+
+function updateAbUI() {
+  const total = 3;
+  // Pane-uri
+  document.querySelectorAll('.ab-pane').forEach(p => p.classList.remove('active'));
+  const pane = abStep > total ? 'pane-success' : 'pane-' + abStep;
+  document.getElementById(pane).classList.add('active');
+
+  // Step dots
+  for(let i=1;i<=total;i++){
+    const dot = document.getElementById('dot-'+i);
+    const lbl = document.getElementById('lbl-'+i);
+    dot.classList.remove('active','done');
+    lbl.classList.remove('active');
+    if(i < abStep){ dot.classList.add('done'); dot.textContent='✓'; }
+    else if(i === abStep){ dot.classList.add('active'); dot.textContent=i; lbl.classList.add('active'); }
+    else { dot.textContent=i; }
+  }
+
+  // Footer
+  const footer = document.getElementById('ab-footer');
+  const backBtn = document.getElementById('ab-back-btn');
+  const nextBtn = document.getElementById('ab-next-btn');
+  const submitBtn = document.getElementById('ab-submit-btn');
+  const stepCount = document.getElementById('step-count');
+
+  if(abStep > total){
+    footer.style.display = 'none'; return;
+  }
+  footer.style.display = 'flex';
+  stepCount.textContent = `Pasul ${abStep} din ${total}`;
+  backBtn.style.display = abStep > 1 ? 'block' : 'none';
+  nextBtn.style.display = abStep < total ? 'block' : 'none';
+  submitBtn.style.display = abStep === total ? 'block' : 'none';
+}
+
+function abGoToStep(step) {
+  if(abStep > 3) return; // nu navigam din success
+  abStep = step;
+  updateAbUI();
+  if(step === 2) setTimeout(() => { if(abMap) abMap.invalidateSize(); }, 150);
+}
+
+function abNext() {
+  abStep++;
+  updateAbUI();
+  if(abStep === 2) setTimeout(() => { if(abMap) abMap.invalidateSize(); }, 150);
+}
+
+function abBack() {
+  abStep--;
+  updateAbUI();
+  if(abStep === 2) setTimeout(() => { if(abMap) abMap.invalidateSize(); }, 150);
+}
+
+function abSubmit() {
+  // Validare minima la submit
+  const nume = document.getElementById('ab-nume').value.trim();
+  if(!nume) {
+    abStep = 1; updateAbUI();
+    setTimeout(() => { document.getElementById('ab-nume').focus(); document.getElementById('ab-nume').style.borderColor='#ef4444'; }, 100);
+    showAbError('Completează cel puțin numele baltii pentru a o salva.');
+    return;
+  }
+
+  const balta = {
+    id: BALTI.length + 1,
+    nume,
+    judet:    document.getElementById('ab-judet').value || '—',
+    adresa:   document.getElementById('ab-adresa').value.trim(),
+    telefon:  document.getElementById('ab-tel').value.trim() || '—',
+    facebook:  document.getElementById('ab-fb').value.trim(),
+    whatsapp:  document.getElementById('ab-wa').value.trim(),
+    drum_yt:   document.getElementById('ab-drum-yt').value.trim(),
+    lat:      abCoords ? abCoords.lat : null,
+    lng:      abCoords ? abCoords.lng : null,
+    ha:       '? ha',
+    pret:     '? lei/zi',
+    rec:      '—',
+    standuri: getStanduriData().length,
+    vizibilitate: 'unlisted', // noua balta e unlisted pana admin o aproba
+  };
+
+  // Adauga pe harta daca are coordonate
+  if(abCoords) {
+    balta._marker = L.marker([abCoords.lat, abCoords.lng], { icon: makeMarker(false) })
+      .addTo(map)
+      .bindPopup(popHtml(balta), { maxWidth:240, minWidth:220 });
+  }
+  BALTI.push(balta);
+  renderBalti();
+  document.getElementById('balti-count').textContent = BALTI.length;
+
+  abStep = 4;
+  updateAbUI();
+}
+
+function showAbError(msg) {
+  let err = document.getElementById('ab-error');
+  if(!err) {
+    err = document.createElement('div');
+    err.id = 'ab-error';
+    err.style.cssText = 'background:#3b0f0f;border:1px solid #ef4444;border-radius:8px;padding:10px 14px;font-size:12px;color:#fca5a5;margin-bottom:12px;';
+    document.querySelector('.ab-body').prepend(err);
+  }
+  err.textContent = '⚠️ ' + msg;
+  setTimeout(() => { if(err) err.remove(); }, 4000);
+}
+
+// ── HARTA LOCALIZARE ──────────────────────────────────────────────────────────
+function initAbMap() {
+  if(abMap) { abMap.invalidateSize(); return; }
+  abMap = L.map('ab-map', { center:[45.5, 24.8], zoom:7 });
+  L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution:'Tiles © Google', maxZoom:22, maxNativeZoom:20
+  }).addTo(abMap);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
+    maxZoom:22, maxNativeZoom:20, opacity:.8
+  }).addTo(abMap);
+
+  abMap.on('click', e => {
+    abCoords = e.latlng;
+    document.getElementById('ab-coord-display').textContent =
+      '✓ Marcat: ' + abCoords.lat.toFixed(5) + '°N, ' + abCoords.lng.toFixed(5) + '°E';
+    document.getElementById('ab-coord-display').style.color = '#a3e635';
+    document.getElementById('ab-coord-clear').style.display = 'inline';
+    if(abMarker) abMap.removeLayer(abMarker);
+    abMarker = L.marker([abCoords.lat, abCoords.lng], { icon: pinIcon() }).addTo(abMap);
+    // Inchidem search dropdown
+    document.getElementById('ab-search-results').style.display = 'none';
+  });
+
+  // Daca judetul e completat, zboaram acolo
+  const jud = document.getElementById('ab-judet').value;
+  if(jud && JUDETE_COORDS[jud]) abMap.flyTo(JUDETE_COORDS[jud], 11, {duration:1});
+}
+
+// Cand se schimba judetul la pasul 1, pregatim harta
+// judet change handled in judetSelect()
+
+// ── SEARCH NOMINATIM (OpenStreetMap geocoder — gratuit) ───────────────────────
+let abSearchTimeout = null;
+
+function abSearchInput(val) {
+  document.getElementById('ab-search-clear').style.display = val ? 'block' : 'none';
+  clearTimeout(abSearchTimeout);
+  if(!val.trim()) { document.getElementById('ab-search-results').style.display='none'; return; }
+  // Autocomplete cu debounce 400ms
+  abSearchTimeout = setTimeout(() => abDoSearch(true), 400);
+}
+
+async function abDoSearch(isAuto=false) {
+  const q = document.getElementById('ab-search-input').value.trim();
+  if(!q) return;
+  const res = document.getElementById('ab-search-results');
+  res.innerHTML = '<div style="padding:12px 14px;color:#64748b;font-size:12px;">🔍 Se caută...</div>';
+  res.style.display = 'block';
+  try {
+    // Nominatim — geocoder OpenStreetMap, gratuit
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Romania')}&format=json&limit=6&countrycodes=ro&accept-language=ro`;
+    const resp = await fetch(url, { headers:{ 'Accept-Language':'ro', 'User-Agent':'PescaRO/1.0' } });
+    const data = await resp.json();
+    if(!data.length) {
+      res.innerHTML = `<div style="padding:12px 14px;color:#4b5563;font-size:12px;">
+        Niciun rezultat găsit.<br/>
+        <span style="color:#334155;font-size:11px;">Dă click direct pe hartă pentru a seta locația manual.</span>
+      </div>`;
+      return;
+    }
+    res.innerHTML = data.map(r => `
+      <div onclick="abSelectLocation(${r.lat},${r.lon},'${r.display_name.replace(/'/g,"\'")}')"
+        style="padding:10px 14px;border-bottom:1px solid #1e293b;cursor:pointer;transition:background .15s;"
+        onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
+        <div style="font-size:12px;font-weight:600;color:#f1f5f9;margin-bottom:2px;">${r.display_name.split(',').slice(0,2).join(',')}</div>
+        <div style="font-size:10px;color:#4b5563;">${r.display_name.split(',').slice(2).join(',').trim()}</div>
+      </div>`).join('');
+  } catch(e) {
+    res.innerHTML = '<div style="padding:12px 14px;color:#ef4444;font-size:12px;">Eroare la căutare. Verifică conexiunea la internet.</div>';
+  }
+}
+
+function abSelectLocation(lat, lng, displayName) {
+  abCoords = { lat: parseFloat(lat), lng: parseFloat(lng) };
+  // Update display
+  const shortName = displayName.split(',').slice(0,2).join(',').trim();
+  document.getElementById('ab-coord-display').textContent =
+    shortName + ' · ' + parseFloat(lat).toFixed(5) + '°N, ' + parseFloat(lng).toFixed(5) + '°E';
+  document.getElementById('ab-coord-clear').style.display = 'inline';
+  // Plasam pinul pe harta
+  if(abMarker) abMap.removeLayer(abMarker);
+  abMarker = L.marker([lat, lng], { icon: pinIcon() }).addTo(abMap);
+  abMap.flyTo([lat, lng], 16, { duration: 1.2 });
+  // Inchidem dropdown
+  document.getElementById('ab-search-results').style.display = 'none';
+  document.getElementById('ab-search-input').value = shortName;
+  document.getElementById('ab-search-clear').style.display = 'block';
+}
+
+function abClearSearch() {
+  document.getElementById('ab-search-input').value = '';
+  document.getElementById('ab-search-clear').style.display = 'none';
+  document.getElementById('ab-search-results').style.display = 'none';
+}
+
+function abClearPin() {
+  abCoords = null;
+  if(abMarker) { abMap.removeLayer(abMarker); abMarker = null; }
+  document.getElementById('ab-coord-display').textContent = 'Nicio locație selectată';
+  document.getElementById('ab-coord-clear').style.display = 'none';
+  const si = document.getElementById('ab-search-input');
+  if(si) si.value = '';
+  const sr = document.getElementById('ab-search-results');
+  if(sr) sr.style.display = 'none';
+  document.getElementById('ab-coord-clear').style.display = 'none';
+}
+
+function pinIcon() {
+  return L.divIcon({
+    className:'',
+    html:`<svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 8px rgba(0,0,0,.8));display:block;">
+      <path d="M15 0C6.72 0 0 6.72 0 15c0 9.75 15 25 15 25S30 24.75 30 15C30 6.72 23.28 0 15 0z" fill="#f59e0b"/>
+      <circle cx="15" cy="14" r="9" fill="rgba(0,0,0,0.15)"/>
+      <text x="15" y="19" text-anchor="middle" font-family="system-ui" font-size="14" fill="white">📍</text>
+    </svg>`,
+    iconSize:[30,40], iconAnchor:[15,40]
+  });
+}
+
+// Inchidem dropdown cand clickam in afara
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('pane-2');
+  if(wrap && !wrap.contains(e.target))
+    document.getElementById('ab-search-results').style.display = 'none';
+});
+
+
+// ── CUSTOM JUDET DROPDOWN ─────────────────────────────────────────────────────
+const JUDETE_LIST = ['Alba', 'Arad', 'Argeș', 'Bacău', 'Bihor', 'Bistrița-Năsăud', 'Botoșani', 'Brașov', 'Brăila', 'Buzău', 'Caraș-Severin', 'Călărași', 'Cluj', 'Constanța', 'Covasna', 'Dâmbovița', 'Dolj', 'Galați', 'Giurgiu', 'Gorj', 'Harghita', 'Hunedoara', 'Ialomița', 'Iași', 'Ilfov', 'Maramureș', 'Mehedinți', 'Mureș', 'Neamț', 'Olt', 'Prahova', 'Satu Mare', 'Sălaj', 'Sibiu', 'Suceava', 'Teleorman', 'Timiș', 'Tulcea', 'Vaslui', 'Vâlcea', 'Vrancea', 'București'];
+let judetFocusIdx = -1;
+
+function judetOpen() {
+  judetRenderList('');
+  document.getElementById('judet-dropdown').style.display = 'block';
+  document.getElementById('judet-arrow').textContent = '▴';
+}
+
+function judetClose() {
+  document.getElementById('judet-dropdown').style.display = 'none';
+  document.getElementById('judet-arrow').textContent = '▾';
+  judetFocusIdx = -1;
+}
+
+function judetToggle() {
+  const dd = document.getElementById('judet-dropdown');
+  if(dd.style.display === 'none') {
+    document.getElementById('ab-judet-search').focus();
+    judetOpen();
+  } else {
+    judetClose();
+  }
+}
+
+function judetSearch(q) {
+  judetRenderList(q);
+  document.getElementById('judet-dropdown').style.display = 'block';
+  document.getElementById('ab-judet').value = ''; // resetam selectia cand user scrie
+  judetFocusIdx = -1;
+}
+
+function judetRenderList(q) {
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const qn = norm(q.trim());
+  
+  let sorted;
+  if(!qn) {
+    sorted = [...JUDETE_LIST];
+  } else {
+    // Cele care încep cu litera/textul tastat — primele
+    const startsWith = JUDETE_LIST.filter(j => norm(j).startsWith(qn));
+    const contains   = JUDETE_LIST.filter(j => !norm(j).startsWith(qn) && norm(j).includes(qn));
+    sorted = [...startsWith, ...contains];
+  }
+
+  const dd = document.getElementById('judet-dropdown');
+  if(!sorted.length) {
+    dd.innerHTML = '<div style="padding:12px 14px;color:#4b5563;font-size:12px;">Niciun județ găsit</div>';
+    return;
+  }
+
+  // Highlight textul cautat in denumire
+  function highlight(name, q) {
+    if(!q) return name;
+    const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const idx = norm(name).indexOf(norm(q));
+    if(idx < 0) return name;
+    return name.slice(0,idx) + '<span class="judet-match">' + name.slice(idx, idx+q.length) + '</span>' + name.slice(idx+q.length);
+  }
+
+  const isFirstGroup = qn ? sorted.findIndex(j => !norm(j).startsWith(qn)) : -1;
+
+  dd.innerHTML = sorted.map((j, i) => {
+    const isMatch = qn && norm(j).startsWith(qn);
+    return `<div class="judet-opt${isMatch ? ' match-first' : ''}" 
+      data-idx="${i}" 
+      onclick="judetSelect('${j}')"
+      onmouseenter="judetFocusIdx=${i}">
+      ${isMatch ? '📍 ' : ''}<span>${highlight(j, q)}</span>
+    </div>`;
+  }).join('') + (isFirstGroup > 0 ? '' : '');
+
+  // Separator vizual intre "incepe cu" si "contine"
+  if(qn && isFirstGroup > 0) {
+    const items = dd.querySelectorAll('.judet-opt');
+    if(items[isFirstGroup]) {
+      items[isFirstGroup].style.borderTop = '1px solid #334155';
+      items[isFirstGroup].insertAdjacentHTML('beforebegin', 
+        '<div style="padding:4px 14px;font-size:9px;font-weight:700;color:#334155;letter-spacing:.06em;">CONȚINE</div>');
+    }
+  }
+}
+
+function judetSelect(judet) {
+  document.getElementById('ab-judet').value = judet;
+  document.getElementById('ab-judet-search').value = judet;
+  document.getElementById('ab-judet-search').style.borderColor = '#1a6b3a';
+  judetClose();
+  // Triggeruim event change pentru harta
+  if(judet && JUDETE_COORDS[judet]) {
+    if(abMap) abMap.flyTo(JUDETE_COORDS[judet], 11, {duration:1});
+  }
+}
+
+function judetKeydown(e) {
+  const dd = document.getElementById('judet-dropdown');
+  const opts = dd.querySelectorAll('.judet-opt');
+  if(!opts.length) return;
+  if(e.key === 'ArrowDown') {
+    e.preventDefault();
+    judetFocusIdx = Math.min(judetFocusIdx + 1, opts.length - 1);
+    opts.forEach((o,i) => o.classList.toggle('focused', i === judetFocusIdx));
+    opts[judetFocusIdx]?.scrollIntoView({block:'nearest'});
+  } else if(e.key === 'ArrowUp') {
+    e.preventDefault();
+    judetFocusIdx = Math.max(judetFocusIdx - 1, 0);
+    opts.forEach((o,i) => o.classList.toggle('focused', i === judetFocusIdx));
+    opts[judetFocusIdx]?.scrollIntoView({block:'nearest'});
+  } else if(e.key === 'Enter' && judetFocusIdx >= 0) {
+    e.preventDefault();
+    const selected = opts[judetFocusIdx]?.dataset;
+    const judet = JUDETE_LIST.filter(j => {
+      const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const q = document.getElementById('ab-judet-search').value.trim();
+      const qn = norm(q);
+      const startsWith = JUDETE_LIST.filter(j => norm(j).startsWith(qn));
+      const contains   = JUDETE_LIST.filter(j => !norm(j).startsWith(qn) && norm(j).includes(qn));
+      return [...startsWith, ...contains];
+    }).flat()[judetFocusIdx];
+    const sorted = (() => {
+      const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const q = norm(document.getElementById('ab-judet-search').value.trim());
+      const sw = JUDETE_LIST.filter(j => norm(j).startsWith(q));
+      const cn = JUDETE_LIST.filter(j => !norm(j).startsWith(q) && norm(j).includes(q));
+      return [...sw, ...cn];
+    })();
+    if(sorted[judetFocusIdx]) judetSelect(sorted[judetFocusIdx]);
+  } else if(e.key === 'Escape') {
+    judetClose();
+  } else if(e.key === 'Tab') {
+    judetClose();
+  }
+}
+
+// Inchide dropdown la click in afara
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('ab-judet-search')?.closest('.fg');
+  if(wrap && !wrap.contains(e.target)) judetClose();
+});
+
+// ── STANDURI ──────────────────────────────────────────────────────────────────
+function previewStandFoto(nr, input) {
+  var file = input.files[0];
+  if(!file) return;
+  var preview = document.getElementById('s'+nr+'-foto-preview');
+  var clearBtn = document.getElementById('s'+nr+'-foto-clear');
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    preview.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:7px;"/>';
+    preview.style.border = '1.5px solid #1a6b3a';
+    if(clearBtn) clearBtn.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearStandFoto(nr) {
+  var input = document.getElementById('s'+nr+'-foto');
+  var preview = document.getElementById('s'+nr+'-foto-preview');
+  var clearBtn = document.getElementById('s'+nr+'-foto-clear');
+  if(input) input.value = '';
+  if(preview) {
+    preview.innerHTML = '<span style="font-size:24px;">📷</span><span>Adaugă poză</span>';
+    preview.style.border = '1.5px dashed #1e293b';
+  }
+  if(clearBtn) clearBtn.style.display = 'none';
+}
+
+function addStand() {
+  abStandCount++;
+  const nr = abStandCount;
+  const container = document.getElementById('stands-container');
+  const div = document.createElement('div');
+  div.className = 'stand-item';
+  div.id = 'stand-' + nr;
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;">${nr}</div>
+      <input type="text" id="s${nr}-nume" value="Stand ${nr}"
+        style="flex:1;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:6px 10px;color:#f1f5f9;font-size:13px;font-weight:700;outline:none;"
+        placeholder="Denumire stand"
+        onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
+      <button class="stand-del" onclick="delStand(${nr})" title="Șterge stand">✕</button>
+    </div>
+    <div class="fg-row3">
+      <div class="fg">
+        <label>ADÂNCIME (m)</label>
+        <input type="number" step="0.1" min="0" id="s${nr}-ad" placeholder="ex: 3.5"/>
+      </div>
+      <div class="fg">
+        <label>DISTANȚĂ LANSARE (m)</label>
+        <input type="number" min="0" id="s${nr}-di" placeholder="ex: 50"/>
+      </div>
+      <div class="fg">
+        <label>LĂȚIME STAND (m)</label>
+        <input type="number" min="0" id="s${nr}-la" placeholder="ex: 8"/>
+      </div>
+    </div>
+    <div class="fg">
+      <label>🎬 LINK YOUTUBE — VIDEO PREZENTARE STAND</label>
+      <input type="url" id="s${nr}-yt" placeholder="https://youtu.be/... (opțional)"
+        style="background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;width:100%;"
+        onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#1e293b'"/>
+    </div>
+    <div class="fg">
+      <label>📸 FOTOGRAFIE STAND</label>
+      <div id="s${nr}-foto-wrap" style="display:flex;align-items:flex-start;gap:10px;">
+        <label for="s${nr}-foto" style="flex-shrink:0;cursor:pointer;">
+          <div id="s${nr}-foto-preview" style="width:90px;height:90px;border-radius:8px;background:#0a0f1a;border:1.5px dashed #1e293b;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#4b5563;font-size:10px;overflow:hidden;transition:border-color .15s;">
+            <span style="font-size:24px;">📷</span>
+            <span>Adaugă poză</span>
+          </div>
+        </label>
+        <input type="file" id="s${nr}-foto" accept="image/*" style="display:none;"
+          onchange="previewStandFoto(${nr}, this)"/>
+        <div style="flex:1;font-size:10px;color:#4b5563;line-height:1.7;padding-top:4px;">
+          Click pe pătrat pentru a selecta o fotografie cu standul.<br/>
+          <span style="color:#334155;">Format: JPG, PNG · Calitate originală păstrată</span><br/>
+          <button id="s${nr}-foto-clear" onclick="clearStandFoto(${nr})" style="display:none;margin-top:6px;background:#1e293b;border:none;color:#94a3b8;font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer;">✕ Elimină poza</button>
+        </div>
+      </div>
+    </div>`;
+  container.appendChild(div);
+}
+
+function delStand(nr) {
+  const el = document.getElementById('stand-' + nr);
+  if(el) el.remove();
+}
+
+function getStanduriData() {
+  const items = document.querySelectorAll('.stand-item');
+  return Array.from(items).map((item, i) => {
+    const nr = i + 1;
+    const idPfx = item.id.replace('stand-','s');
+    // Extragem poza din preview (daca exista)
+    var fotoSrc = '';
+    var prevImg = document.querySelector('#'+idPfx+'-foto-preview img');
+    if(prevImg) fotoSrc = prevImg.src;
+    return {
+      nr,
+      nume:     document.getElementById(idPfx+'-nume')?.value || ('Stand ' + nr),
+      adancime: parseFloat(document.getElementById(idPfx+'-ad')?.value)||0,
+      distanta: parseInt(document.getElementById(idPfx+'-di')?.value)||0,
+      latime:   parseInt(document.getElementById(idPfx+'-la')?.value)||0,
+      yt:       document.getElementById(idPfx+'-yt')?.value || '',
+      foto:     fotoSrc,
+    };
+  });
+}
+</script>
+<!-- TOAST NOTIFICARE -->
+<div class="save-toast" id="save-toast">✓ Salvat cu succes!</div>
+
+<!-- MODAL EDIT BALTA -->
+<div id="edit-modal" onclick="if(event.target===this)closeEditBalta()">
+  <div class="edit-inner">
+    <div class="edit-hdr">
+      <div>
+        <div class="edit-title" id="edit-modal-title">✏️ Editează balta</div>
+        <div style="font-size:11px;color:#4b5563;margin-top:2px;" id="edit-modal-sub">Modifică informațiile, standurile și media</div>
+      </div>
+      <div class="edit-hdr-btns">
+        <button class="edit-save-btn" onclick="saveEditBalta()">💾 Salvează modificările</button>
+        <button class="edit-close" onclick="closeEditBalta()">✕</button>
+      </div>
+    </div>
+    <div class="edit-body" id="edit-body">
+      <!-- Generat dinamic -->
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

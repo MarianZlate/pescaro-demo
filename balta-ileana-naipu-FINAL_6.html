@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PescaRO - Balta Ileana Naipu</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;}
+#hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
+#hdr-in{max-width:1600px;margin:0 auto;padding:0 20px;height:28px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:16px;font-weight:800;color:#a3e635;}
+.badge{font-size:10px;background:#7c3aed;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:6px;}
+#layout{max-width:1600px;margin:0 auto;padding:14px 20px 50px;display:grid;grid-template-columns:1fr 400px;gap:16px;align-items:start;}
+.lc,.rc{display:flex;flex-direction:column;gap:12px;}
+.info-bar{display:flex;align-items:center;gap:10px;background:#111827;border:1px solid #1e293b;border-radius:10px;padding:10px 14px;flex-wrap:wrap;}
+.ebtn{border-radius:8px;font-weight:700;font-size:13px;padding:8px 18px;cursor:pointer;border:none;}
+#map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;}
+#lake-img{display:block;width:100%;height:auto;pointer-events:none;}
+#pins-layer{position:absolute;inset:0;pointer-events:none;}
+.stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
+.stand-pin svg{display:block;}
+#stand-overlay{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;width:460px;max-width:95%;box-shadow:0 8px 40px rgba(0,0,0,.85);}
+.ov-hdr{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#0d1f12;border-bottom:1px solid #1a3020;}
+.spnr{font-size:14px;font-weight:900;color:#a3e635;}
+.xbtn{background:transparent;border:none;color:#4b5563;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;}
+.xbtn:hover{color:#f1f5f9;}
+.sec-lbl{font-size:9px;font-weight:700;color:#4b5563;letter-spacing:.07em;margin-bottom:6px;}
+.foto-wrap{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1/1;cursor:zoom-in;background:#0a0f1a;display:block;}
+.foto-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.zoom-hint{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 5px;font-size:9px;color:#94a3b8;pointer-events:none;}
+.foto-empty{aspect-ratio:1/1;background:#0a0f1a;border-radius:8px;border:1px dashed #1e293b;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#334155;font-size:10px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:4px 7px;background:#0a0f1a;border-radius:5px;}
+.stat-lbl{color:#64748b;font-size:10px;}
+.stat-val{color:#a3e635;font-size:14px;font-weight:900;}
+.ov-yt{padding:8px 10px;border-top:1px solid #1e293b;}
+.yt-btn{display:flex;align-items:center;gap:10px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:8px 12px;text-decoration:none;cursor:pointer;}
+.yt-btn:hover{border-color:#ef4444;}
+.yt-icon{width:36px;height:26px;background:#ef4444;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#pw{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.pl{color:#64748b;font-size:12px;white-space:nowrap;}
+.pill{border:1.5px solid #166534;border-radius:20px;padding:4px 12px;cursor:pointer;font-size:12px;font-weight:700;background:#1e3a2e;color:#a3e635;}
+.pill.active{background:#f59e0b;color:#000;border-color:#fcd34d;}
+#pill-all{border:1.5px solid #a3e635;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#1e3a2e;color:#a3e635;}
+#spr{background:#111827;border:1px dashed #1e293b;border-radius:12px;padding:28px 20px;text-align:center;}
+#map-yt-bar{display:none;}
+.card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;}
+.ct{font-weight:700;font-size:13px;color:#e2e8f0;margin-bottom:8px;}
+.t10c{background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;}
+.t10tabs{display:flex;border-bottom:1px solid #1e293b;padding:0 14px;}
+.t10t{background:transparent;border:none;color:#64748b;padding:10px 8px;cursor:pointer;font-size:11px;font-weight:600;border-bottom:2px solid transparent;}
+.t10t.active{color:#a3e635;border-bottom-color:#a3e635;font-weight:700;}
+.t10ct{display:none;}.t10ct.active{display:block;}
+.t10h{display:flex;align-items:center;gap:7px;padding:10px 14px 6px;font-weight:700;font-size:12px;color:#e2e8f0;}
+.lbdg{background:#1a3020;color:#a3e635;font-size:9px;padding:2px 7px;border-radius:8px;font-weight:600;}
+.t10e{padding:14px;color:#4b5563;text-align:center;font-size:12px;}
+.t10r{display:flex;align-items:stretch;border-bottom:1px solid #0f172a;}
+.t10r-foto{width:72px;flex-shrink:0;position:relative;}
+.t10r-foto img{width:72px;height:72px;object-fit:cover;display:block;}
+.t10r-foto-empty{width:72px;height:72px;background:#0a0f1a;display:flex;align-items:center;justify-content:center;color:#334155;font-size:20px;}
+.medal{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.t10r-info{flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:3px;}
+.t10-name{font-weight:700;font-size:12px;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.t10-meta{font-size:10px;color:#4b5563;}
+.t10-kg{padding:8px 12px 8px 0;display:flex;align-items:center;flex-shrink:0;}
+.t10-kg span{font-weight:900;color:#a3e635;font-size:14px;}
+.isub{display:flex;gap:5px;padding:8px 14px;flex-wrap:wrap;}
+.ist{background:#0a0f1a;border:1px solid #1e293b;color:#64748b;font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;cursor:pointer;}
+.ist.active{background:#1a3020;border-color:#166534;color:#a3e635;font-weight:700;}
+.lgd{display:flex;flex-direction:column;gap:5px;}
+.li{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;border:1px solid #1e293b;cursor:pointer;transition:all .15s;background:#111827;}
+.li:hover,.li.active{background:#1e3a2e;border-color:#a3e635;}
+.lnr{width:22px;height:22px;border-radius:50%;background:#e8142a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#fff;flex-shrink:0;}
+.lz{font-size:11px;color:#94a3b8;}.ls{font-size:9px;color:#4b5563;margin-top:1px;}
+.lrec{font-weight:700;color:#f59e0b;font-size:11px;white-space:nowrap;margin-left:auto;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#0a0f1a;}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
+@media(max-width:960px){#layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="hdr"><div id="hdr-in">
+  <div><span class="logo">🎣 PescaRO</span><span class="badge">PREVIEW</span></div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-weight:700;font-size:15px;color:#f8fafc;">Balta Ileana Naipu</span>
+    <span style="color:#64748b;font-size:12px;">📍 Naipu, Giurgiu</span>
+  </div>
+</div></div>
+
+<div id="layout">
+<div class="lc">
+  <div class="info-bar">
+    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+      <span style="font-size:20px;">🎣</span>
+      <div><div style="font-weight:800;font-size:15px;color:#f1f5f9;">Balta Ileana Naipu</div><div style="font-size:11px;color:#64748b;">📍 Naipu, Giurgiu</div></div>
+    </div>
+    <a href="tel:+40722334556" style="display:flex;align-items:center;gap:7px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:7px 12px;text-decoration:none;color:#f1f5f9;font-size:13px;font-weight:600;white-space:nowrap;">📞 +40 722 334 556</a>
+    <a href="https://facebook.com" target="_blank" style="display:flex;align-items:center;gap:7px;background:#1877f2;border-radius:8px;padding:7px 12px;text-decoration:none;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> Regulament</a>
+    <button onclick="window.open('https://waze.com/ul?ll=44.1619,25.7249&navigate=yes','_blank')" style="display:flex;align-items:center;gap:7px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🚗 Waze</button>
+    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=44.1619,25.7249','_blank')" style="display:flex;align-items:center;gap:7px;background:rgba(66,133,244,.08);border:1px solid rgba(66,133,244,.25);border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🗺️ Google Maps</button>
+  </div>
+
+  <div id="edit-bar" style="display:flex;align-items:center;gap:10px;background:#111827;border:1px solid #1e293b;border-radius:10px;padding:10px 14px;flex-wrap:wrap;">
+    <div id="edit-status" style="display:flex;align-items:center;gap:8px;flex:1;">
+      <span style="font-size:18px;">🔒</span>
+      <div><div style="font-weight:700;font-size:13px;color:#e2e8f0;">Poziții blocate</div><div style="font-size:11px;color:#64748b;">Apasă Editează pentru a muta standurile</div></div>
+    </div>
+    <button id="btn-edit" onclick="toggleEdit()" class="ebtn" style="background:#1e3a2e;color:#a3e635;">✏️ Editează poziții</button>
+    <button id="btn-save" onclick="savePositions()" class="ebtn" style="background:#166534;color:#fff;display:none;">💾 Salvează</button>
+    <button id="btn-exp"  onclick="exportCoords()" class="ebtn" style="background:#0a0f1a;border:1.5px solid #334155;color:#94a3b8;display:none;">📋 Coordonate</button>
+  </div>
+
+  <div id="map-wrap">
+    <img id="lake-img" src="" alt="Harta Balta Ileana Naipu"/>
+    <div id="pins-layer"></div>
+    <div id="stand-overlay">
+      <div class="ov-hdr">
+        <div class="spnr" id="ov-nr">Stand 1</div>
+        <button class="xbtn" onclick="closeOverlay()">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        <div style="padding:10px;border-right:1px solid #1e293b;">
+          <div class="sec-lbl">📸 CEA MAI MARE CAPTURĂ</div>
+          <div id="ov-rec-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">🐟</span><span>Fără fotografie</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div class="stat-row"><span class="stat-lbl">🏆 Greutate</span><strong id="ov-kg" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+            <div class="stat-row"><span class="stat-lbl">👤 Pescar</span><strong id="ov-pe" style="color:#e2e8f0;font-size:11px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">-</strong></div>
+            <div class="stat-row"><span class="stat-lbl">📅 Data</span><strong id="ov-da" style="color:#e2e8f0;font-size:11px;">-</strong></div>
+          </div>
+        </div>
+        <div style="padding:10px;">
+          <div class="sec-lbl">📸 STAND</div>
+          <div id="ov-stand-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">📷</span><span>Fără fotografie</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div class="stat-row"><span class="stat-lbl">📏 Lățime stand</span><strong id="ov-la" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+            <div class="stat-row"><span class="stat-lbl">🎯 Distanță lansare</span><strong id="ov-di" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pw">
+    <span class="pl">Selectează rapid:</span>
+    <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🛣️ Drum de acces</button>
+    <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
+    <div id="pills"></div>
+  </div>
+
+  <div id="map-yt-bar" style="display:none;">
+    <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
+    <div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+      <iframe id="map-yt-iframe" src="" frameborder="0"
+        allow="autoplay;encrypted-media;fullscreen" allowfullscreen
+        style="position:absolute;inset:0;width:100%;height:100%;border:none;">
+      </iframe>
+    </div>
+  </div>
+
+  <div id="spr">
+    <div style="font-size:32px;margin-bottom:8px;">📍</div>
+    <div style="color:#94a3b8;font-weight:600;font-size:13px;">Click pe un stand pentru detalii</div>
+    <div style="color:#4b5563;font-size:11px;margin-top:5px;">10 standuri disponibile</div>
+  </div>
+</div>
+
+<div class="rc">
+  <div class="t10c">
+    <div class="ct" style="padding:14px 14px 0;">📊 Clasamente</div>
+    <div class="t10tabs">
+      <button class="t10t active" onclick="swt10('at',this)">All Time</button>
+      <button class="t10t" onclick="swt10('lu',this)">Iunie 2025</button>
+      <button class="t10t" onclick="swt10('is',this)">📅 Istoric</button>
+    </div>
+    <div class="t10ct active" id="t-at"></div>
+    <div class="t10ct" id="t-lu"></div>
+    <div class="t10ct" id="t-is"><div class="isub" id="isub"></div><div id="isc"></div></div>
+  </div>
+</div>
+
+<!-- FULLSCREEN MODAL -->
+<div id="fs-modal" onclick="closeFS()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
+  <div style="position:relative;display:inline-block;cursor:default;" onclick="event.stopPropagation()">
+    <img id="fs-img" src="" style="display:block;max-width:95vw;max-height:95vh;object-fit:contain;border-radius:10px;box-shadow:0 0 60px rgba(0,0,0,.9);"/>
+    <button onclick="closeFS()" style="position:absolute;top:-14px;right:-14px;width:28px;height:28px;background:#1e293b;border:1.5px solid #334155;color:#f1f5f9;font-size:14px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;font-weight:700;">✕</button>
+  </div>
+</div>
+
+<!-- VIDEO EMBED MODAL -->
+<div id="yt-modal" onclick="closeYT()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9998;align-items:center;justify-content:center;">
+  <div style="position:relative;width:min(860px,95vw);" onclick="event.stopPropagation()">
+    <div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:12px;overflow:hidden;">
+      <iframe id="yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>
+    </div>
+    <button onclick="closeYT()" style="position:absolute;top:-14px;right:-14px;width:28px;height:28px;background:#1e293b;border:1.5px solid #334155;color:#f1f5f9;font-size:14px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">✕</button>
+  </div>
+</div>
+
+<script>
+var DRUM_ACCES_YT = 'https://youtu.be/nzf0I3F9HtQ'; // înlocuiește cu URL-ul real al drumului de acces
+
+var ST = [
+  {id:1, nr:1, x:43.37, y:29.41, z:"Mal Nord-Vest",  ad:2.1, di:28, la:6,  r:{kg:14.2,sp:"Crap Oglindă",pe:"Ion Marin",    da:"08.03.2024",st:1,foto:"https://picsum.photos/seed/r01/400/400"}, yt:"https://youtu.be/nzf0I3F9HtQ",  g:[{u:"https://picsum.photos/seed/n01a/600/350",c:"Stand 1"},{u:"https://picsum.photos/seed/n01b/600/350",c:"Captura 14.2kg"}]},
+  {id:2, nr:2, x:46.97, y:25.81, z:"Mal Nord",        ad:3.0, di:40, la:8,  r:{kg:19.5,sp:"Crap Oglindă",pe:"Vasile Preda", da:"22.05.2024",st:2,foto:"https://picsum.photos/seed/r02/400/400"}, yt:"https://www.youtube.com/watch?v=dQw4w9WgXcQ", g:[{u:"https://picsum.photos/seed/n02a/600/350",c:"Stand 2"},{u:"https://picsum.photos/seed/n02b/600/350",c:"Vedere lac"}]},
+  {id:3, nr:3, x:51.41, y:27.87, z:"Mal Nord-Est",    ad:3.5, di:50, la:9,  r:{kg:22.8,sp:"Crap",        pe:"Relu Stancu",  da:"14.09.2023",st:2,foto:"https://picsum.photos/seed/r03/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n03a/600/350",c:"Stand 3"}]},
+  {id:4, nr:4, x:54.83, y:37.12, z:"Mal Est Sus",     ad:4.2, di:65, la:10, r:{kg:31.0,sp:"Somn",        pe:"Gheorghe Mitu",da:"05.06.2023",st:3,foto:"https://picsum.photos/seed/r04/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n04a/600/350",c:"Stand 4"},{u:"https://picsum.photos/seed/n04b/600/350",c:"Somn 31kg"}]},
+  {id:5, nr:5, x:54.66, y:51.49, z:"Mal Est Jos",     ad:2.8, di:35, la:7,  r:{kg:11.3,sp:"Crap",        pe:"Dorin Nedelcu",da:"30.04.2024",st:1,foto:"https://picsum.photos/seed/r05/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n05a/600/350",c:"Stand 5"}]},
+  {id:6, nr:6, x:52.44, y:59.71, z:"Mal Sud-Est",     ad:2.5, di:32, la:7,  r:{kg:8.7, sp:"Caras",       pe:"Marius Toma",  da:"17.07.2024",st:1,foto:"https://picsum.photos/seed/r06/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n06a/600/350",c:"Stand 6"}]},
+  {id:7, nr:7, x:48.33, y:61.76, z:"Mal Sud",         ad:2.3, di:30, la:6,  r:{kg:9.4, sp:"Crap",        pe:"Ciprian Voicu",da:"12.08.2024",st:1,foto:"https://picsum.photos/seed/r07/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n07a/600/350",c:"Stand 7"}]},
+  {id:8, nr:8, x:43.89, y:56.63, z:"Mal Sud-Vest",    ad:2.0, di:28, la:6,  r:{kg:9.2, sp:"Crap",        pe:"Andrei Voicu", da:"05.09.2024",st:1,foto:"https://picsum.photos/seed/r08/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n08a/600/350",c:"Stand 8"}]},
+  {id:9, nr:9, x:41.66, y:47.39, z:"Mal Vest Jos",    ad:2.0, di:25, la:5,  r:{kg:7.2, sp:"Caras",       pe:"Florin Badea", da:"03.09.2024",st:1,foto:"https://picsum.photos/seed/r09/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n09a/600/350",c:"Stand 9"}]},
+  {id:10,nr:10,x:41.66, y:37.12, z:"Mal Vest Sus",    ad:2.2, di:26, la:5,  r:{kg:6.8, sp:"Caras",       pe:"Dan Popescu",  da:"19.10.2024",st:1,foto:"https://picsum.photos/seed/r10/400/400"}, yt:"",  g:[{u:"https://picsum.photos/seed/n10a/600/350",c:"Stand 10"}]},
+];
+var TAT=[
+  {loc:1,pe:"Gheorghe Mitu",kg:31.0,sp:"Somn",        da:"05.06.2023",st:4,foto:"https://picsum.photos/seed/t01/200/200"},
+  {loc:2,pe:"Relu Stancu",  kg:22.8,sp:"Crap",        da:"14.09.2023",st:3,foto:"https://picsum.photos/seed/t02/200/200"},
+  {loc:3,pe:"Vasile Preda", kg:19.5,sp:"Crap Oglindar",da:"22.05.2024",st:2,foto:"https://picsum.photos/seed/t03/200/200"},
+  {loc:4,pe:"Ion Marin",    kg:14.2,sp:"Crap Oglinda",da:"08.03.2024",st:1,foto:"https://picsum.photos/seed/t04/200/200"},
+  {loc:5,pe:"Dorin Nedelcu",kg:11.3,sp:"Crap",        da:"30.04.2024",st:5,foto:"https://picsum.photos/seed/t05/200/200"},
+  {loc:6,pe:"Ciprian Voicu",kg:9.4, sp:"Crap",        da:"12.08.2024",st:7,foto:"https://picsum.photos/seed/t06/200/200"},
+  {loc:7,pe:"Marius Toma",  kg:8.7, sp:"Caras",       da:"17.07.2024",st:6,foto:"https://picsum.photos/seed/t07/200/200"},
+  {loc:8,pe:"Florin Badea", kg:7.2, sp:"Caras",       da:"03.09.2024",st:9,foto:"https://picsum.photos/seed/t08/200/200"},
+];
+var TLU=[
+  {loc:1,pe:"Relu Stancu",  kg:16.4,sp:"Crap Oglinda",da:"03.06.2025",st:3,foto:"https://picsum.photos/seed/l01/200/200"},
+  {loc:2,pe:"Vasile Preda", kg:12.1,sp:"Crap",        da:"09.06.2025",st:2,foto:"https://picsum.photos/seed/l02/200/200"},
+  {loc:3,pe:"Dorin Nedelcu",kg:8.3, sp:"Crap",        da:"14.06.2025",st:5,foto:"https://picsum.photos/seed/l03/200/200"},
+  {loc:4,pe:"Marius Toma",  kg:5.8, sp:"Caras",       da:"16.06.2025",st:6,foto:"https://picsum.photos/seed/l04/200/200"},
+];
+var IST=[
+  {l:"Mai 2025",    e:[{loc:1,pe:"Gheorghe Mitu",kg:24.5,sp:"Somn",        da:"07.05.2025",st:4,foto:"https://picsum.photos/seed/m01/200/200"},{loc:2,pe:"Ion Marin",   kg:15.2,sp:"Crap Oglinda",da:"15.05.2025",st:1,foto:"https://picsum.photos/seed/m02/200/200"},{loc:3,pe:"Relu Stancu",kg:11.0,sp:"Crap",da:"23.05.2025",st:3,foto:"https://picsum.photos/seed/m03/200/200"}]},
+  {l:"Aprilie 2025",e:[{loc:1,pe:"Vasile Preda", kg:18.7,sp:"Crap Oglinda",da:"04.04.2025",st:2,foto:"https://picsum.photos/seed/a01/200/200"},{loc:2,pe:"Ciprian Voicu",kg:12.3,sp:"Crap",da:"18.04.2025",st:7,foto:"https://picsum.photos/seed/a02/200/200"}]},
+  {l:"Martie 2025", e:[{loc:1,pe:"Gheorghe Mitu",kg:28.1,sp:"Somn",        da:"10.03.2025",st:4,foto:"https://picsum.photos/seed/r01/200/200"},{loc:2,pe:"Relu Stancu", kg:20.0,sp:"Crap",da:"22.03.2025",st:3,foto:"https://picsum.photos/seed/r02/200/200"}]},
+];
+
+var selId=null, editMode=false, dragState=null;
+var M=['#FFD700','#C0C0C0','#CD7F32'], MI=['🥇','🥈','🥉'];
+
+function openFS(src){document.getElementById('fs-img').src=src;document.getElementById('fs-modal').style.display='flex';}
+function closeFS(){document.getElementById('fs-modal').style.display='none';document.getElementById('fs-img').src='';}
+function openYT(url){var m=url.match(/(?:v=|youtu\.be\/|embed\/)([^&?\/\s]{11})/);if(!m)return;document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+m[1]+'?autoplay=1';document.getElementById('yt-modal').style.display='flex';}
+function closeYT(){document.getElementById('yt-iframe').src='';document.getElementById('yt-modal').style.display='none';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeFS();closeYT();}});
+
+function pinSVG(nr,active,editing){
+  var col=active?'#f59e0b':editing?'#7c3aed':'#e8142a';
+  var stk=active?'#cc4400':editing?'#a78bfa':'#c8a800';
+  var glow=editing?'drop-shadow(0 0 5px rgba(124,58,237,.7))':'drop-shadow(0 2px 5px rgba(0,0,0,.8))';
+  var fs=nr>9?'9':'11';
+  return '<svg width="36" height="44" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;">'
+    +'<line x1="26" y1="12" x2="5" y2="42" stroke="'+stk+'" stroke-width="2" stroke-linecap="round"/>'
+    +'<circle cx="26" cy="11" r="11" fill="rgba(0,0,0,.2)" transform="translate(1.5,1.5)"/>'
+    +'<circle cx="26" cy="11" r="11" fill="'+col+'" stroke="'+stk+'" stroke-width="1.5"/>'
+    +'<circle cx="26" cy="11" r="4" fill="'+stk+'" opacity="0.5"/>'
+    +'<circle cx="26" cy="11" r="2" fill="rgba(255,255,255,.45)"/>'
+    +'<ellipse cx="22" cy="7" rx="3.5" ry="2.5" fill="rgba(255,255,255,.28)" transform="rotate(-20,22,7)"/>'
+    +'<text x="26" y="16" text-anchor="middle" font-family="system-ui" font-size="'+fs+'" font-weight="900" fill="#1a1a1a" opacity="0.9">'+nr+'</text>'
+    +'</svg>';
+}
+
+function renderPins(){
+  var layer=document.getElementById('pins-layer');
+  layer.innerHTML='';
+  ST.forEach(function(s){
+    var div=document.createElement('div');
+    div.className='stand-pin';
+    div.id='pin-'+s.id;
+    div.style.left=s.x+'%';
+    div.style.top=s.y+'%';
+    div.style.opacity=(!selId||selId===s.id||editMode)?'1':'0';
+    div.innerHTML=pinSVG(s.nr,selId===s.id,editMode);
+    div.addEventListener('click',function(e){e.stopPropagation();if(!editMode)selStand(s.id);});
+    if(editMode){div.style.cursor='grab';div.addEventListener('mousedown',function(e){startDrag(e,s.id);});}
+    layer.appendChild(div);
+  });
+}
+
+function selStand(id){
+  selId=id;
+  var s=ST.find(function(x){return x.id===id;});
+  renderPins();
+  updatePills();
+  document.getElementById('ov-nr').textContent='Stand '+s.nr;
+  document.getElementById('ov-kg').textContent=s.r.kg+' kg';
+  document.getElementById('ov-pe').textContent=s.r.pe;
+  document.getElementById('ov-da').textContent=s.r.da;
+  document.getElementById('ov-la').textContent=s.la+'m';
+  document.getElementById('ov-di').textContent=s.di+'m';
+  var oldRec=document.getElementById('ov-rec-foto');
+  var recFoto=oldRec.cloneNode(false);recFoto.id='ov-rec-foto';
+  oldRec.parentNode.replaceChild(recFoto,oldRec);
+  if(s.r.foto){
+    recFoto.className='foto-wrap';
+    var ri=document.createElement('img');ri.src=s.r.foto;ri.loading='lazy';ri.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+    var rh=document.createElement('div');rh.className='zoom-hint';rh.textContent='🔍';
+    recFoto.appendChild(ri);recFoto.appendChild(rh);
+    recFoto.addEventListener('click',function(){openFS(s.r.foto);});
+  } else {
+    recFoto.className='foto-empty';recFoto.innerHTML='<span style="font-size:24px;">🐟</span><span>Fara fotografie</span>';
+  }
+  var oldSt=document.getElementById('ov-stand-foto');
+  var stFoto=oldSt.cloneNode(false);stFoto.id='ov-stand-foto';
+  oldSt.parentNode.replaceChild(stFoto,oldSt);
+  if(s.g&&s.g.length){
+    stFoto.className='foto-wrap';
+    var si=document.createElement('img');si.src=s.g[0].u;si.loading='lazy';si.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+    var sh=document.createElement('div');sh.className='zoom-hint';sh.textContent='🔍';
+    stFoto.appendChild(si);stFoto.appendChild(sh);
+    var su=s.g[0].u;stFoto.addEventListener('click',function(){openFS(su);});
+  } else {
+    stFoto.className='foto-empty';stFoto.innerHTML='<span style="font-size:24px;">📷</span><span>Fara fotografie</span>';
+  }
+
+  showMapYT(s);
+  document.getElementById('stand-overlay').style.display='block';
+  document.getElementById('spr').style.display='none';
+  document.querySelectorAll('.li').forEach(function(l){l.classList.toggle('active',+l.dataset.id===id);});
+}
+
+function closeOverlay(){
+  document.getElementById('stand-overlay').style.display='none';
+}
+
+function deselectStand(){
+  selId=null;
+  document.getElementById('stand-overlay').style.display='none';
+  document.getElementById('spr').style.display='block';
+  renderPins();updatePills();
+  document.querySelectorAll('.li').forEach(function(l){l.classList.remove('active');});
+  // Reset buton drum acces
+  var db=document.getElementById('pill-drum');
+  if(db){db.style.borderColor='#334155';db.style.background='#0a0f1a';db.style.color='#64748b';}
+  // Ascunde player drum acces din coloana dreapta
+  showDrumYT('');
+  // Reset iframe player de sub harta
+  var bar=document.getElementById('map-yt-bar');
+  var iframe=document.getElementById('map-yt-iframe');
+  iframe.src='';bar.style.display='none';
+}
+
+function showAll(){
+  deselectStand();
+  var label=document.getElementById('map-yt-label');
+  if(label) label.textContent='🎬 VIDEOCLIP DE PREZENTARE A DRUMULUI DE ACCES PÂNĂ LA BALTĂ';
+  showMapYT(null);
+}
+
+function showDrumAcces(){
+  // Deselecteaza stand dar arata video drum acces
+  selId=null;
+  document.getElementById('stand-overlay').style.display='none';
+  document.getElementById('spr').style.display='block';
+  renderPins();
+  document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.li').forEach(function(l){l.classList.remove('active');});
+  // Buton drum activ, toate standurile inactiv
+  var pb=document.getElementById('pill-all');
+  pb.style.borderColor='#334155';pb.style.background='#0a0f1a';pb.style.color='#64748b;';
+  var db=document.getElementById('pill-drum');
+  db.style.borderColor='#f59e0b';db.style.background='#1c1500';db.style.color='#f59e0b';
+  // Arata video drum acces
+  var label=document.getElementById('map-yt-label');
+  if(label) label.textContent='🎬 VIDEOCLIP DE PREZENTARE A DRUMULUI DE ACCES PÂNĂ LA BALTĂ';
+  showDrumYT(DRUM_ACCES_YT);
+  if(DRUM_ACCES_YT){
+    showMapYT(null);
+  } else {
+    var bar=document.getElementById('map-yt-bar');
+    var iframe=document.getElementById('map-yt-iframe');
+    iframe.src='';bar.style.display='none';
+  }
+}
+
+function showDrumYT(url){
+  var sec=document.getElementById('drum-yt-section');
+  var iframe=document.getElementById('drum-yt-iframe');
+  if(url){
+    var m=url.match(/(?:v=|youtu\.be\/|embed\/)([^&?\/\s]{11})/);
+    if(m){
+      iframe.src='https://www.youtube-nocookie.com/embed/'+m[1]+'?rel=0';
+      sec.style.display='block';
+      return;
+    }
+  }
+  iframe.src='';sec.style.display='none';
+}
+
+function showMapYT(s){
+  var bar=document.getElementById('map-yt-bar');
+  var iframe=document.getElementById('map-yt-iframe');
+  var url='';
+  if(s&&s.yt) url=s.yt;
+  else if(!s&&DRUM_ACCES_YT) url=DRUM_ACCES_YT;
+  var label=document.getElementById('map-yt-label');
+  if(url){
+    var m=url.match(/(?:v=|youtu\.be\/|embed\/)([^&?\/\s]{11})/);
+    if(m){
+      iframe.src='https://www.youtube-nocookie.com/embed/'+m[1]+'?rel=0';
+      bar.style.display='block';
+      if(label) label.textContent=s?'🎬 VIDEOCLIP DE PREZENTARE A STANDULUI':'🎬 VIDEOCLIP DE PREZENTARE A DRUMULUI DE ACCES PÂNĂ LA BALTĂ';
+    } else {
+      iframe.src='';bar.style.display='none';
+    }
+  } else {
+    iframe.src='';bar.style.display='none';
+  }
+}
+
+function mkYTBtn(url,label){
+  var a=document.createElement('a');
+  a.href='javascript:void(0)';
+  a.style.cssText='display:flex;align-items:center;gap:10px;background:#111827;border:1px solid #1e293b;border-radius:8px;padding:9px 14px;text-decoration:none;cursor:pointer;';
+  a.addEventListener('mouseover',function(){this.style.borderColor='#ef4444';});
+  a.addEventListener('mouseout',function(){this.style.borderColor='#1e293b';});
+  var u=url;a.addEventListener('click',function(){openYT(u);});
+  var ic=document.createElement('div');
+  ic.style.cssText='width:36px;height:26px;background:#ef4444;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  ic.innerHTML='<svg width="12" height="9" viewBox="0 0 16 12" fill="white"><path d="M15.7 1.9A2 2 0 0 0 14.3.5C13 .1 8 .1 8 .1s-5 0-6.3.4A2 2 0 0 0 .3 1.9C0 3.2 0 6 0 6s0 2.8.3 4.1A2 2 0 0 0 1.7 11.5C3 11.9 8 11.9 8 11.9s5 0 6.3-.4a2 2 0 0 0 1.4-1.4C16 8.8 16 6 16 6s0-2.8-.3-4.1zM6.4 8.6V3.4L10.5 6 6.4 8.6z"/></svg>';
+  var tx=document.createElement('div');tx.style.cssText='color:#f1f5f9;font-weight:700;font-size:13px;';tx.textContent='▶ '+label;
+  a.appendChild(ic);a.appendChild(tx);return a;
+}
+
+function updatePills(){
+  document.querySelectorAll('.pill').forEach(function(p){p.classList.toggle('active',+p.dataset.id===selId);});
+  var ab=document.getElementById('pill-all');
+  ab.style.borderColor=selId?'#334155':'#a3e635';ab.style.background=selId?'#0a0f1a':'#1e3a2e';ab.style.color=selId?'#4b5563':'#a3e635';
+}
+
+function startDrag(e,id){
+  e.preventDefault();
+  var wrap=document.getElementById('map-wrap'),rect=wrap.getBoundingClientRect();
+  var s=ST.find(function(x){return x.id===id;});
+  dragState={id:id,startX:e.clientX,startY:e.clientY,origX:s.x,origY:s.y,wW:rect.width,wH:rect.height};
+  document.addEventListener('mousemove',onDrag);document.addEventListener('mouseup',endDrag);
+}
+function onDrag(e){
+  if(!dragState)return;var ds=dragState;
+  var dx=(e.clientX-ds.startX)/ds.wW*100,dy=(e.clientY-ds.startY)/ds.wH*100;
+  var s=ST.find(function(x){return x.id===ds.id;});
+  s.x=Math.max(0,Math.min(100,ds.origX+dx));s.y=Math.max(0,Math.min(100,ds.origY+dy));
+  var pin=document.getElementById('pin-'+ds.id);if(pin){pin.style.left=s.x+'%';pin.style.top=s.y+'%';}
+}
+function endDrag(){document.removeEventListener('mousemove',onDrag);document.removeEventListener('mouseup',endDrag);dragState=null;}
+
+function toggleEdit(){
+  editMode=true;closeOverlay();
+  document.getElementById('btn-edit').style.display='none';
+  document.getElementById('btn-save').style.display='block';
+  document.getElementById('btn-exp').style.display='block';
+  document.getElementById('edit-status').innerHTML='<span style="font-size:18px;">✏️</span><div><div style="font-weight:700;font-size:13px;color:#f59e0b;">Mod editare activ</div><div style="font-size:11px;color:#94a3b8;">Trage pinurile pe pozitie</div></div>';
+  renderPins();
+}
+function savePositions(){
+  editMode=false;
+  document.getElementById('btn-edit').style.display='block';
+  document.getElementById('btn-save').style.display='none';
+  document.getElementById('btn-exp').style.display='none';
+  document.getElementById('edit-status').innerHTML='<span style="font-size:18px;">🔒</span><div><div style="font-weight:700;font-size:13px;color:#a3e635;">Pozitii salvate ✓</div><div style="font-size:11px;color:#64748b;">Apasa Editeaza pentru a muta din nou</div></div>';
+  renderPins();
+}
+function exportCoords(){
+  var lines=ST.map(function(s){return 'Stand '+s.nr+': x='+s.x.toFixed(2)+'%, y='+s.y.toFixed(2)+'%';}).join('\n');
+  var modal=document.createElement('div');modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  var inner=document.createElement('div');inner.style.cssText='background:#111827;border:1px solid #334155;border-radius:14px;padding:24px;max-width:480px;width:90%;';
+  var ttl=document.createElement('div');ttl.style.cssText='font-weight:700;color:#e2e8f0;font-size:14px;margin-bottom:12px;';ttl.textContent='Coordonate standuri';
+  var pre=document.createElement('pre');pre.style.cssText='background:#0a0f1a;border-radius:8px;padding:12px;color:#a3e635;font-size:11px;white-space:pre-wrap;';pre.textContent=lines;
+  var xbtn=document.createElement('button');xbtn.style.cssText='margin-top:12px;width:100%;background:#166534;border:none;color:#fff;font-weight:700;padding:9px;border-radius:8px;cursor:pointer;';xbtn.textContent='Inchide';xbtn.onclick=function(){modal.remove();};
+  inner.appendChild(ttl);inner.appendChild(pre);inner.appendChild(xbtn);modal.appendChild(inner);document.body.appendChild(modal);
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+}
+
+var M2=['#FFD700','#C0C0C0','#CD7F32'],MI2=['🥇','🥈','🥉'];
+function t10Html(arr){
+  if(!arr.length)return '<div class="t10e">Nicio captura inregistrata</div>';
+  return arr.map(function(e,i){
+    return '<div class="t10r"><div class="t10r-foto">'+(e.foto?'<img src="'+e.foto+'" loading="lazy"/>':'<div class="t10r-foto-empty">📷</div>')+'<div class="medal" style="background:'+(M2[i]||'#1e3a2e')+';color:'+(i<3?'#000':'#a3e635')+'">'+(i<3?MI2[i]:e.loc)+'</div></div><div class="t10r-info"><div class="t10-name">'+e.pe+'</div><div class="t10-meta">'+e.sp+' &middot; Stand '+e.st+' &middot; '+e.da+'</div></div><div class="t10-kg"><span>'+e.kg+'kg</span></div></div>';
+  }).join('');
+}
+function swt10(n,btn){document.querySelectorAll('.t10t').forEach(function(b){b.classList.remove('active');});document.querySelectorAll('.t10ct').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');document.getElementById('t-'+n).classList.add('active');}
+function swIs(i,btn){document.querySelectorAll('.ist').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');rIs(i);}
+function rIs(i){var il=IST[i];document.getElementById('isc').innerHTML='<div class="t10h">🏆 '+il.l+'</div>'+t10Html(il.e);}
+
+window.addEventListener('load',function(){
+  document.getElementById('lake-img').src='PLACEHOLDER_HARTA_BALTA_PNG';
+  renderPins();
+  document.getElementById('pills').innerHTML=ST.map(function(s){return '<button class="pill" data-id="'+s.id+'" onclick="selStand('+s.id+')">'+s.nr+'</button>';}).join('');
+  document.getElementById('t-at').innerHTML='<div class="t10h">🏆 Top 10 All Time</div>'+t10Html(TAT);
+  document.getElementById('t-lu').innerHTML='<div class="t10h">🏆 Top 10 Lunar <span class="lbdg">Iunie 2025</span></div>'+t10Html(TLU);
+  document.getElementById('isub').innerHTML=IST.map(function(il,i){return '<button class="ist'+(i===0?' active':'')+'" onclick="swIs('+i+',this)">'+il.l+'</button>';}).join('');
+  rIs(0);
+  showMapYT(null);
+  document.getElementById('map-wrap').addEventListener('click',function(e){
+    if(e.target===document.getElementById('lake-img')||e.target===document.getElementById('map-wrap')||e.target===document.getElementById('pins-layer')){
+      if(selId&&!editMode)deselectStand();
+    }
+  });
+});
+</script>
+</body>
+</html>
