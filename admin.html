@@ -1089,20 +1089,42 @@ async function saveEditBalta() {
 
     let standId;
     if(isNew) {
-      const { data: newStand } = await sb.from('standuri').insert({ balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt, rec_foto: recFoto||null, rec_kg: recKg||null, rec_pescar: recPescar||null, rec_data: recData||null }).select('id').single();
+      const { data: newStand } = await sb.from('standuri').insert({
+        balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt
+      }).select('id').single();
       standId = newStand?.id;
+      if(standId) {
+        const recPayload = {};
+        if(recFoto   !== '')  recPayload.rec_foto   = recFoto   || null;
+        if(recKg     !== '')  recPayload.rec_kg     = recKg     || null;
+        if(recPescar !== '')  recPayload.rec_pescar = recPescar || null;
+        if(recData   !== '')  recPayload.rec_data   = recData   || null;
+        if(Object.keys(recPayload).length > 0) {
+          const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
+          if(recErr) console.warn('Coloanele rec_ lipsesc din BD:', recErr.message);
+        }
+      }
     } else {
       standId = parseInt(sid);
+      // Update câmpuri de bază
       const { error: stErr } = await sb.from('standuri').update({
-        nume: zona, adancime: ad, distanta: di, latime: la, yt,
-        rec_foto: recFoto||null, rec_kg: recKg||null,
-        rec_pescar: recPescar||null, rec_data: recData||null
+        nume: zona, adancime: ad, distanta: di, latime: la, yt
       }).eq('id', standId);
       if(stErr) {
         showToast('❌ Eroare stand ' + standId + ': ' + stErr.message, true);
         console.error('Stand update error:', stErr);
         saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
         return;
+      }
+      // Update câmpuri record (coloane opționale — ignorăm eroarea dacă nu există în BD)
+      const recPayload = {};
+      if(recFoto   !== undefined) recPayload.rec_foto   = recFoto   || null;
+      if(recKg     !== '')        recPayload.rec_kg     = recKg     || null;
+      if(recPescar !== '')        recPayload.rec_pescar = recPescar || null;
+      if(recData   !== '')        recPayload.rec_data   = recData   || null;
+      if(Object.keys(recPayload).length > 0) {
+        const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
+        if(recErr) console.warn('Coloanele rec_ lipsesc din BD — rulează ALTER TABLE:', recErr.message);
       }
     }
 
