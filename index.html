@@ -1079,8 +1079,9 @@ async function openEditBalta(id) {
   const hartaUrl = hartaRow ? hartaRow.url : '';
   const pozeByStand = {};
   (poze || []).filter(p => p.stand_id).forEach(p => {
-    if(!pozeByStand[p.stand_id]) pozeByStand[p.stand_id] = [];
-    pozeByStand[p.stand_id].push(p);
+    const key = String(p.stand_id);
+    if(!pozeByStand[key]) pozeByStand[key] = [];
+    pozeByStand[key].push(p);
   });
 
   // Actualizează b cu datele complete din BD
@@ -1105,7 +1106,7 @@ async function openEditBalta(id) {
       rec_kg:     s.rec_kg     || '',
       rec_pescar: s.rec_pescar || '',
       rec_data:   s.rec_data   || '',
-      galerie:    (pozeByStand[s.id] || []).map(p => ({ url: p.url })),
+      galerie:    (pozeByStand[String(s.id)] || []).map(p => ({ url: p.url })),
     })),
   };
 
