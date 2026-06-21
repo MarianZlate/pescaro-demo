@@ -642,8 +642,9 @@ async function openEditBalta(id) {
   const hartaUrl  = hartaRow ? hartaRow.url : '';
   const pozeByStand = {};
   (poze || []).filter(p => p.stand_id).forEach(p => {
-    if(!pozeByStand[p.stand_id]) pozeByStand[p.stand_id] = [];
-    pozeByStand[p.stand_id].push(p);
+    const key = String(p.stand_id);
+    if(!pozeByStand[key]) pozeByStand[key] = [];
+    pozeByStand[key].push(p);
   });
 
   // Construiește ext compatibil cu buildEditBody
@@ -665,7 +666,7 @@ async function openEditBalta(id) {
       rec_kg:     s.rec_kg     || '',
       rec_pescar: s.rec_pescar || '',
       rec_data:   s.rec_data   || '',
-      galerie:    (pozeByStand[s.id] || []).map(p => ({ url: p.url, cap: '' })),
+      galerie:    (pozeByStand[String(s.id)] || []).map(p => ({ url: p.url, cap: '' })),
     })),
   };
 
@@ -1141,9 +1142,13 @@ async function saveEditBalta() {
         const urls = Array.from(galWrap.querySelectorAll('.gal-thumb-edit'))
           .map(t => t.dataset.url || '')
           .filter(u => u && u.startsWith('http'));
-        await sb.from('poze').delete().eq('balta_id', editBaltaId).eq('stand_id', standId);
+        console.log('[GAL] standId=', standId, 'urls=', urls);
+        const { error: delErr } = await sb.from('poze').delete()
+          .eq('balta_id', editBaltaId).eq('stand_id', standId);
+        console.log('[GAL] delete error:', delErr);
         for(const url of urls) {
-          await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
+          const { error: insErr } = await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
+          console.log('[GAL] insert', url, 'error:', insErr);
         }
       }
     }
