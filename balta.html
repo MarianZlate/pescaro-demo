@@ -657,9 +657,9 @@ function deselectStand() {
   document.querySelectorAll('.li').forEach(function(l) { l.classList.remove('active'); });
   var db = document.getElementById('pill-drum');
   if (db) { db.style.borderColor = '#334155'; db.style.background = '#0a0f1a'; db.style.color = '#64748b'; }
-  showDrumYT('');
-  var bar = document.getElementById('map-yt-bar');
-  document.getElementById('map-yt-iframe').src = ''; bar.style.display = 'none';
+  document.getElementById('map-yt-iframe').src = '';
+  document.getElementById('map-yt-bar').style.display = 'none';
+  document.getElementById('spr').style.display = 'block';
 }
 
 function showAll() {
@@ -670,7 +670,6 @@ function showAll() {
 function showDrumAcces() {
   selId = null;
   document.getElementById('stand-overlay').style.display = 'none';
-  document.getElementById('spr').style.display = 'block';
   renderPins();
   document.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.li').forEach(function(l) { l.classList.remove('active'); });
@@ -678,9 +677,14 @@ function showDrumAcces() {
   pb.style.borderColor = '#334155'; pb.style.background = '#0a0f1a'; pb.style.color = '#64748b';
   var db = document.getElementById('pill-drum');
   db.style.borderColor = '#f59e0b'; db.style.background = '#1c1500'; db.style.color = '#f59e0b';
-  showDrumYT(DRUM_ACCES_YT);
-  if (DRUM_ACCES_YT) showMapYT(null);
-  else { document.getElementById('map-yt-iframe').src = ''; document.getElementById('map-yt-bar').style.display = 'none'; }
+
+  if (DRUM_ACCES_YT) {
+    // Ascunde placeholder, arată player-ul
+    document.getElementById('spr').style.display = 'none';
+    showMapYT(null); // afișează videoclipul în map-yt-bar
+  } else {
+    document.getElementById('spr').style.display = 'block';
+  }
 }
 
 function updatePills() {
