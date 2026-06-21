@@ -698,7 +698,7 @@ function updatePills() {
 // ─── YOUTUBE ───────────────────────────────────────────────────────────────
 function ytEmbed(url) {
   if (!url) return '';
-  var m = url.match(/(?:v=|youtu\.be\/|embed\/)([^&?\/\s]{11})/);
+  var m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([^&?\/\s]{11})/);
   return m ? 'https://www.youtube-nocookie.com/embed/' + m[1] + '?rel=0' : '';
 }
 
