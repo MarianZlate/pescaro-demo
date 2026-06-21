@@ -297,6 +297,15 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 </div><!-- /.lc -->
 
 <div class="rc">
+  <div class="t10c" id="top10-card" style="display:none;">
+    <div class="t10tabs">
+      <button class="t10t active" onclick="switchT10('top')" id="tab-top">🏆 Top capturi</button>
+    </div>
+    <div class="t10ct active" id="t10-top">
+      <div class="t10h">Cele mai mari capturi per stand <span class="lbdg">RECORD</span></div>
+      <div id="t10-list"></div>
+    </div>
+  </div>
 </div>
 </div><!-- /#layout -->
 
@@ -522,6 +531,9 @@ function renderPage(hartaUrl) {
   var elIsub = document.getElementById('isub');  if(elIsub) elIsub.innerHTML = '';
   var elIsc  = document.getElementById('isc');   if(elIsc)  elIsc.innerHTML  = '<div class="t10e">Niciun istoric disponibil</div>';
 
+  // Top10 capturi din datele standurilor
+  renderTop10();
+
   // Afișează pagina
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
@@ -538,6 +550,61 @@ function renderPage(hartaUrl) {
       if (selId && !editMode) deselectStand();
     }
   });
+}
+
+function renderTop10() {
+  // Ia standurile care au record (rec_kg nenul)
+  var withRec = ST.filter(function(s) { return s.r.kg && parseFloat(s.r.kg) > 0; });
+  // Sorteaza descrescator dupa kg
+  withRec.sort(function(a, b) { return parseFloat(b.r.kg) - parseFloat(a.r.kg); });
+
+  var card = document.getElementById('top10-card');
+  var list = document.getElementById('t10-list');
+  if(!card || !list) return;
+
+  if(withRec.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  var medals = ['🥇','🥈','🥉'];
+  var medalColors = ['#f59e0b','#94a3b8','#cd7f32'];
+
+  list.innerHTML = withRec.map(function(s, i) {
+    var medal = i < 3 ? medals[i] : (i + 1);
+    var medalBg = i < 3 ? medalColors[i] : '#1e293b';
+    var fotoHtml = s.r.foto
+      ? '<img src="' + s.r.foto + '" loading="lazy" id="rec-img-' + s.id + '" style="cursor:zoom-in;width:72px;height:72px;object-fit:cover;display:block;"/>'
+      : '<div class="t10r-foto-empty">🐟</div>';
+    var pescarStr = s.r.pe ? s.r.pe : '—';
+    var dataStr   = s.r.da ? ' · ' + s.r.da : '';
+    return '<div class="t10r" onclick="selStand(' + s.id + ')" style="cursor:pointer;">'
+      + '<div class="t10r-foto">'
+      + fotoHtml
+      + '<div class="medal" style="background:' + medalBg + ';color:#fff;">' + medal + '</div>'
+      + '</div>'
+      + '<div class="t10r-info">'
+      + '<div class="t10-name">Stand ' + s.nr + ' — ' + s.z + '</div>'
+      + '<div class="t10-meta">👤 ' + pescarStr + dataStr + '</div>'
+      + '</div>'
+      + '<div class="t10-kg"><span>' + parseFloat(s.r.kg).toFixed(1) + ' kg</span></div>'
+      + '</div>';
+  }).join('');
+
+  // Click pe poza record — zoom fullscreen
+  withRec.forEach(function(s) {
+    if(!s.r.foto) return;
+    var img = document.getElementById('rec-img-' + s.id);
+    if(img) img.addEventListener('click', function(e) { e.stopPropagation(); openFS(s.r.foto); });
+  });
+}
+
+function switchT10(tab) {
+  document.querySelectorAll('.t10t').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.t10ct').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('t10-' + tab).classList.add('active');
 }
 
 function showError(msg) {
