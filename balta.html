@@ -362,9 +362,10 @@ async function loadBalta(id) {
   var pRes = await sb.from('poze').select('*').eq('balta_id', id);
   var poze = pRes.data || [];
 
-  // Hartă baltă (stand_id IS NULL)
-  var hartaRow = poze.find(function(p){ return !p.stand_id; });
-  var hartaUrl = hartaRow ? hartaRow.url : '';
+  // Hartă baltă — ia cea mai recentă (stand_id IS NULL)
+  var hartaRows = poze.filter(function(p){ return !p.stand_id; });
+  var hartaRow  = hartaRows.length ? hartaRows[hartaRows.length - 1] : null;
+  var hartaUrl  = hartaRow ? hartaRow.url : '';
 
   // Construiește ST cu datele reale din BD
   // Pozițiile standurilor pe hartă sunt stocate în câmpul `pozitie` (JSON {x,y})
