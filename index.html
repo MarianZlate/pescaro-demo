@@ -1414,10 +1414,19 @@ async function saveEditBalta() {
 
     if(isNew) {
       const { data: newSt } = await sb.from('standuri').insert({
-        balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt,
-        rec_kg: recKg||null, rec_pescar: recPescar||null, rec_data: recData||null
+        balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt
       }).select('id').single();
       const standId = newSt?.id;
+      if(standId) {
+        const recPayload = {};
+        if(recKg     !== '') recPayload.rec_kg     = recKg     || null;
+        if(recPescar !== '') recPayload.rec_pescar = recPescar || null;
+        if(recData   !== '') recPayload.rec_data   = recData   || null;
+        if(Object.keys(recPayload).length > 0) {
+          const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
+          if(recErr) console.warn('Coloanele rec_ lipsesc din BD:', recErr.message);
+        }
+      }
       if(standId) {
         const galWrap = document.getElementById('se-gal-' + sid);
         if(galWrap) {
@@ -1430,8 +1439,7 @@ async function saveEditBalta() {
     } else {
       const standId = parseInt(sid);
       const { error: stErr } = await sb.from('standuri').update({
-        nume: zona, adancime: ad, distanta: di, latime: la, yt,
-        rec_kg: recKg||null, rec_pescar: recPescar||null, rec_data: recData||null
+        nume: zona, adancime: ad, distanta: di, latime: la, yt
       }).eq('id', standId);
       if(stErr) {
         showToast('❌ Eroare stand: ' + stErr.message);
@@ -1439,6 +1447,14 @@ async function saveEditBalta() {
         const saveBtn = document.querySelector('.edit-save-btn');
         if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
         return;
+      }
+      const recPayload = {};
+      if(recKg     !== '') recPayload.rec_kg     = recKg     || null;
+      if(recPescar !== '') recPayload.rec_pescar = recPescar || null;
+      if(recData   !== '') recPayload.rec_data   = recData   || null;
+      if(Object.keys(recPayload).length > 0) {
+        const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
+        if(recErr) console.warn('Coloanele rec_ lipsesc din BD:', recErr.message);
       }
       const galWrap = document.getElementById('se-gal-' + sid);
       if(galWrap) {
