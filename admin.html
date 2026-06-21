@@ -288,6 +288,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   <div class="tabs">
     <button class="tab active" onclick="switchTab('balti')">🎣 Bălți</button>
     <button class="tab" onclick="switchTab('users')">👥 Utilizatori</button>
+    <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
   </div>
 
   <!-- BALTI PANEL -->
@@ -405,10 +406,40 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users'][i]===tab));
-  document.getElementById('panel-balti').style.display = tab==='balti' ? 'block' : 'none';
-  document.getElementById('panel-users').style.display = tab==='users' ? 'block' : 'none';
-  if(tab==='users') loadUsers();
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','settings'][i]===tab));
+  document.getElementById('panel-balti').style.display     = tab==='balti'    ? 'block' : 'none';
+  document.getElementById('panel-users').style.display     = tab==='users'    ? 'block' : 'none';
+  document.getElementById('panel-settings').style.display  = tab==='settings' ? 'block' : 'none';
+  if(tab==='users')    loadUsers();
+  if(tab==='settings') loadSettings();
+}
+
+async function loadSettings() {
+  const { data } = await sb.from('platform_settings').select('*').eq('id', 1).single();
+  if(data) {
+    document.getElementById('set-email').value    = data.contact_email    || '';
+    document.getElementById('set-phone').value    = data.contact_phone    || '';
+    document.getElementById('set-whatsapp').value = data.contact_whatsapp || '';
+  }
+}
+
+async function saveSettings() {
+  const email    = document.getElementById('set-email').value.trim();
+  const phone    = document.getElementById('set-phone').value.trim();
+  const whatsapp = document.getElementById('set-whatsapp').value.trim();
+  const st = document.getElementById('settings-status');
+  st.textContent = '⏳ Se salvează...'; st.style.color = '#64748b';
+
+  const { error } = await sb.from('platform_settings').upsert({
+    id: 1, contact_email: email, contact_phone: phone, contact_whatsapp: whatsapp
+  });
+
+  if(error) {
+    st.textContent = '❌ Eroare: ' + error.message; st.style.color = '#ef4444';
+  } else {
+    st.textContent = '✅ Setări salvate!'; st.style.color = '#a3e635';
+    setTimeout(() => { st.textContent = ''; }, 3000);
+  }
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
