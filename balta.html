@@ -288,26 +288,15 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
   </div>
 
-</div><!-- /.lc -->
-
-<div class="rc">
-  <!-- Legend standuri — apare prima -->
-  <div class="card" id="legend-card" style="display:none;">
-    <div class="ct">🗺️ Standuri disponibile</div>
+  <!-- Legendă standuri — capturi maxime, vizibilă când "Toate standurile" e activ -->
+  <div id="legend-card" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;">
+    <div class="ct" style="margin-bottom:10px;">🏆 Standuri — Cele mai mari capturi</div>
     <div class="lgd" id="legend-list"></div>
   </div>
 
-  <div class="t10c">
-    <div class="ct" style="padding:14px 14px 0;">📊 Clasamente</div>
-    <div class="t10tabs">
-      <button class="t10t active" onclick="swt10('at',this)">All Time</button>
-      <button id="tab-lu-btn" class="t10t" onclick="swt10('lu',this)">Curent</button>
-      <button class="t10t" onclick="swt10('is',this)">📅 Istoric</button>
-    </div>
-    <div class="t10ct active" id="t-at"></div>
-    <div class="t10ct" id="t-lu"></div>
-    <div class="t10ct" id="t-is"><div class="isub" id="isub"></div><div id="isc"></div></div>
-  </div>
+</div><!-- /.lc -->
+
+<div class="rc">
 </div>
 </div><!-- /#layout -->
 
@@ -375,9 +364,10 @@ async function loadBalta(id) {
   var pRes = await sb.from('poze').select('*').eq('balta_id', id);
   var poze = pRes.data || [];
 
-  // Hartă baltă (stand_id IS NULL)
-  var hartaRow = poze.find(function(p){ return !p.stand_id; });
-  var hartaUrl = hartaRow ? hartaRow.url : '';
+  // Hartă baltă — ia cea mai recentă (stand_id IS NULL)
+  var hartaRows = poze.filter(function(p){ return !p.stand_id; });
+  var hartaRow  = hartaRows.length ? hartaRows[hartaRows.length - 1] : null;
+  var hartaUrl  = hartaRow ? hartaRow.url : '';
 
   // Construiește ST cu datele reale din BD
   // Pozițiile standurilor pe hartă sunt stocate în câmpul `pozitie` (JSON {x,y})
@@ -397,10 +387,10 @@ async function loadBalta(id) {
       la: s.latime   || 0,
       yt: s.yt       || '',
       r: {
-        kg:   s.rec_kg      || '-',
-        pe:   s.rec_pescar  || '-',
-        da:   s.rec_data    || '-',
-        foto: s.rec_foto    || ''
+        kg:   s.rec_kg     != null ? String(s.rec_kg)  : '',
+        pe:   s.rec_pescar || '',
+        da:   s.rec_data   || '',
+        foto: s.rec_foto   || ''
       },
       g: pozeFotou
     };
@@ -510,23 +500,27 @@ function renderPage(hartaUrl) {
 
   // Legend standuri
   if (ST.length > 0) {
-    document.getElementById('legend-card').style.display = 'block';
+    // legend-card e ascunsă inițial — apare la 'Toate standurile'
     document.getElementById('legend-list').innerHTML = ST.map(function(s){
-      var rec = s.r.kg !== '-' ? '<span class="lrec">'+s.r.kg+'kg</span>' : '';
+      var recText = s.r.kg ? '<span class="lrec">🏆 ' + s.r.kg + ' kg</span>' : '';
+      var recSub  = s.r.pe ? '<div class="ls" style="color:#f59e0b;">👤 ' + s.r.pe + (s.r.da ? ' · ' + s.r.da : '') + '</div>' : '';
       return '<div class="li" data-id="'+s.id+'" onclick="selStand('+s.id+')">'
         +'<div class="lnr">'+s.nr+'</div>'
-        +'<div><div class="lz">'+s.z+'</div>'
-        +'<div class="ls">Adâncime: '+(s.ad||'—')+'m · Distanță: '+(s.di||'—')+'m · Lățime: '+(s.la||'—')+'m</div></div>'
-        + rec
+        +'<div style="flex:1;min-width:0;">'
+        +'<div class="lz">'+s.z+'</div>'
+        +'<div class="ls">⚓ '+(s.ad||'—')+'m adânc · 🎯 '+(s.di||'—')+'m · ↔ '+(s.la||'—')+'m</div>'
+        + recSub
+        +'</div>'
+        + recText
         +'</div>';
     }).join('');
   }
 
   // Clasamente (momentan goale — viitor: tabela captures)
-  document.getElementById('t-at').innerHTML = '<div class="t10e">Nicio captură înregistrată încă</div>';
-  document.getElementById('t-lu').innerHTML = '<div class="t10e">Nicio captură în luna curentă</div>';
-  document.getElementById('isub').innerHTML = '';
-  document.getElementById('isc').innerHTML = '<div class="t10e">Niciun istoric disponibil</div>';
+  var elTat  = document.getElementById('t-at');  if(elTat)  elTat.innerHTML  = '<div class="t10e">Nicio captură înregistrată încă</div>';
+  var elTlu  = document.getElementById('t-lu');  if(elTlu)  elTlu.innerHTML  = '<div class="t10e">Nicio captură în luna curentă</div>';
+  var elIsub = document.getElementById('isub');  if(elIsub) elIsub.innerHTML = '';
+  var elIsc  = document.getElementById('isc');   if(elIsc)  elIsc.innerHTML  = '<div class="t10e">Niciun istoric disponibil</div>';
 
   // Afișează pagina
   document.getElementById('loading-screen').style.display = 'none';
@@ -601,17 +595,11 @@ function selStand(id) {
   document.getElementById('ov-nr').textContent = 'Stand ' + s.nr + ' — ' + s.z;
 
   // Record (dacă există)
-  if (s.r.kg !== '-') {
-    document.getElementById('ov-kg').textContent = s.r.kg + ' kg';
-    document.getElementById('ov-pe').textContent = s.r.pe;
-    document.getElementById('ov-da').textContent = s.r.da;
-  } else {
-    document.getElementById('ov-kg').textContent = '—';
-    document.getElementById('ov-pe').textContent = '—';
-    document.getElementById('ov-da').textContent = '—';
-  }
-  document.getElementById('ov-la').textContent = s.la ? s.la + 'm' : '—';
-  document.getElementById('ov-di').textContent = s.di ? s.di + 'm' : '—';
+  document.getElementById('ov-kg').textContent = (s.r.kg !== '' && s.r.kg !== null && s.r.kg !== '-') ? s.r.kg + ' kg' : '—';
+  document.getElementById('ov-pe').textContent = (s.r.pe && s.r.pe !== '-') ? s.r.pe : '—';
+  document.getElementById('ov-da').textContent = (s.r.da && s.r.da !== '-') ? s.r.da : '—';
+  document.getElementById('ov-la').textContent = (s.la !== '' && s.la != null && s.la != 0) ? s.la + 'm' : '—';
+  document.getElementById('ov-di').textContent = (s.di !== '' && s.di != null && s.di != 0) ? s.di + 'm' : '—';
 
   // Foto record
   var oldRec = document.getElementById('ov-rec-foto');
@@ -665,11 +653,16 @@ function deselectStand() {
   document.getElementById('map-yt-iframe').src = '';
   document.getElementById('map-yt-bar').style.display = 'none';
   document.getElementById('spr').style.display = 'block';
+  document.getElementById('legend-card').style.display = 'none';
 }
 
 function showAll() {
   deselectStand();
-  showMapYT(null);
+  document.getElementById('map-yt-iframe').src = '';
+  document.getElementById('map-yt-bar').style.display = 'none';
+  // Arată legenda cu capturile maxime per stand
+  document.getElementById('spr').style.display = 'none';
+  document.getElementById('legend-card').style.display = 'block';
 }
 
 function showDrumAcces() {
@@ -866,13 +859,7 @@ function startDrag(e, id) {
   }
 }
 
-// ─── TABS ─────────────────────────────────────────────────────────────────
-function swt10(n, btn) {
-  document.querySelectorAll('.t10t').forEach(function(b) { b.classList.remove('active'); });
-  document.querySelectorAll('.t10ct').forEach(function(t) { t.classList.remove('active'); });
-  btn.classList.add('active');
-  document.getElementById('t-' + n).classList.add('active');
-}
+
 </script>
 </body>
 </html>
