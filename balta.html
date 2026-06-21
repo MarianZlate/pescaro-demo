@@ -515,10 +515,10 @@ function renderPage(hartaUrl) {
   }
 
   // Clasamente (momentan goale — viitor: tabela captures)
-  document.getElementById('t-at').innerHTML = '<div class="t10e">Nicio captură înregistrată încă</div>';
-  document.getElementById('t-lu').innerHTML = '<div class="t10e">Nicio captură în luna curentă</div>';
-  document.getElementById('isub').innerHTML = '';
-  document.getElementById('isc').innerHTML = '<div class="t10e">Niciun istoric disponibil</div>';
+  var elTat  = document.getElementById('t-at');  if(elTat)  elTat.innerHTML  = '<div class="t10e">Nicio captură înregistrată încă</div>';
+  var elTlu  = document.getElementById('t-lu');  if(elTlu)  elTlu.innerHTML  = '<div class="t10e">Nicio captură în luna curentă</div>';
+  var elIsub = document.getElementById('isub');  if(elIsub) elIsub.innerHTML = '';
+  var elIsc  = document.getElementById('isc');   if(elIsc)  elIsc.innerHTML  = '<div class="t10e">Niciun istoric disponibil</div>';
 
   // Afișează pagina
   document.getElementById('loading-screen').style.display = 'none';
