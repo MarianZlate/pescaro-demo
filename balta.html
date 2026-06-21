@@ -96,6 +96,49 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#0a0f1a;}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
 @media(max-width:960px){#layout{grid-template-columns:1fr;}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #hdr-in{padding:0 12px;height:48px;gap:8px;}
+  #hdr-balta-name{font-size:13px;}
+  #hdr-balta-loc{display:none;}
+  .back-btn{padding:5px 10px;font-size:11px;}
+
+  #layout{padding:10px 12px 40px;gap:10px;}
+
+  /* Info bar butoane wrap */
+  .info-bar{padding:8px 10px;gap:6px;}
+  #ib-name{font-size:13px;}
+  #btn-tel,#btn-fb,#btn-wa,#btn-waze,#btn-gmaps{padding:5px 9px;font-size:11px;}
+
+  /* Edit bar */
+  #edit-bar-top{padding:8px 10px;gap:6px;flex-wrap:wrap;}
+  .ebtn{padding:6px 12px;font-size:12px;}
+
+  /* Pills */
+  #pw{gap:5px;flex-wrap:wrap;}
+  .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
+
+  /* Stand overlay */
+  #stand-overlay{width:95%;left:50%;}
+
+  /* Right column apare sub hartă pe mobil */
+  .rc{order:3;}
+  .lc{order:1;}
+
+  /* Clasamente */
+  .t10tabs{overflow-x:auto;}
+  .t10t{white-space:nowrap;padding:8px 10px;font-size:11px;}
+}
+
+@media(max-width:480px){
+  #hdr-balta-name{font-size:12px;max-width:120px;}
+  .info-bar{flex-direction:column;align-items:flex-start;}
+  #btn-tel,#btn-fb,#btn-wa{width:100%;justify-content:center;}
+  #btn-waze,#btn-gmaps{flex:1;}
+  .ebtn{flex:1;text-align:center;}
+  #edit-bar-top{gap:4px;}
+}
 </style>
 </head>
 <body>
