@@ -654,15 +654,18 @@ async function openEditBalta(id) {
     drum_yt:   b.drum_yt   || '',
     harta_url: hartaUrl,
     standuri: (standuri || []).map((s, i) => ({
-      id:       s.id,
-      nr:       i + 1,
-      zona:     s.nume     || ('Stand ' + (i + 1)),
-      ad:       s.adancime || '',
-      di:       s.distanta || '',
-      la:       s.latime   || '',
-      yt:       s.yt       || '',
-      rec_foto: s.rec_foto || '',
-      galerie:  (pozeByStand[s.id] || []).map(p => ({ url: p.url, cap: '' })),
+      id:         s.id,
+      nr:         i + 1,
+      zona:       s.nume       || ('Stand ' + (i + 1)),
+      ad:         s.adancime   || '',
+      di:         s.distanta   || '',
+      la:         s.latime     || '',
+      yt:         s.yt         || '',
+      rec_foto:   s.rec_foto   || '',
+      rec_kg:     s.rec_kg     || '',
+      rec_pescar: s.rec_pescar || '',
+      rec_data:   s.rec_data   || '',
+      galerie:    (pozeByStand[s.id] || []).map(p => ({ url: p.url, cap: '' })),
     })),
   };
 
@@ -820,6 +823,22 @@ function buildStandEditCard(s) {
         <input type="hidden" id="se-rec-url-${s.id}" value="${escHtml(recFoto)}"/>
       </div>
 
+      <!-- DETALII CEA MAI MARE CAPTURĂ -->
+      <div class="fg-row3">
+        <div class="fg">
+          <label>⚖️ GREUTATE (kg)</label>
+          <input type="number" step="0.1" id="se-rec-kg-${s.id}" value="${escHtml(String(s.rec_kg||''))}" placeholder="ex: 12.5"/>
+        </div>
+        <div class="fg">
+          <label>👤 PESCAR</label>
+          <input type="text" id="se-rec-pescar-${s.id}" value="${escHtml(s.rec_pescar||'')}" placeholder="Nume pescar"/>
+        </div>
+        <div class="fg">
+          <label>📅 DATA</label>
+          <input type="date" id="se-rec-data-${s.id}" value="${escHtml(s.rec_data||'')}"/>
+        </div>
+      </div>
+
       <div class="fg">
         <label>📸 GALERIE STAND</label>
         <div class="gal-edit-wrap" id="se-gal-${s.id}">
@@ -849,19 +868,60 @@ function addEditStand() {
   const wrap  = document.getElementById('edit-stands-wrap');
   const newId = Date.now();
   const nr    = wrap.querySelectorAll('.se-card').length + 1;
-  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', galerie: [] }));
+  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_data: '', galerie: [] }));
   toggleEditStand(newId);
 }
 
 function addEditGalerie(standId) {
-  const url = prompt('Introdu URL-ul fotografiei:');
-  if(!url?.trim()) return;
-  const wrap   = document.getElementById('se-gal-' + standId);
-  const addBtn = wrap.querySelector('.gal-add-btn');
-  const div = document.createElement('div');
-  div.className = 'gal-thumb-edit';
-  div.innerHTML = `<img src="${escHtml(url.trim())}" loading="lazy"/><button class="gal-thumb-del" onclick="this.parentElement.remove()" title="Șterge">✕</button>`;
-  wrap.insertBefore(div, addBtn);
+  // Creează un input file invizibil și îl triggăm
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+
+  input.addEventListener('change', async function() {
+    const file = input.files[0];
+    if(!file) { input.remove(); return; }
+
+    // Găsim butonul + ca să inserăm thumb-ul lângă el
+    const wrap   = document.getElementById('se-gal-' + standId);
+    const addBtn = wrap?.querySelector('.gal-add-btn');
+    if(!wrap) { input.remove(); return; }
+
+    // Placeholder loading
+    const loadDiv = document.createElement('div');
+    loadDiv.className = 'gal-thumb-edit';
+    loadDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;background:#0a0f1a;border:1px dashed #334155;';
+    loadDiv.innerHTML = '<div style="font-size:18px;animation:spin .8s linear infinite;">⏳</div>';
+    wrap.insertBefore(loadDiv, addBtn);
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLOUDINARY_PRESET);
+      fd.append('tags', 'galerie_stand');
+      const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: fd });
+      const data = await resp.json();
+
+      if(data.secure_url) {
+        loadDiv.className = 'gal-thumb-edit';
+        loadDiv.style.cssText = '';
+        loadDiv.innerHTML = `<img src="${escHtml(data.secure_url)}" loading="lazy"/><button class="gal-thumb-del" onclick="this.parentElement.remove()" title="Șterge">✕</button>`;
+        // Salvăm URL-ul ca data attribute pentru saveEditBalta
+        loadDiv.dataset.url = data.secure_url;
+      } else {
+        loadDiv.remove();
+        showToast('❌ Eroare upload: ' + (data.error?.message || 'Cloudinary'), true);
+      }
+    } catch(e) {
+      loadDiv.remove();
+      showToast('❌ Eroare rețea: ' + e.message, true);
+    }
+    input.remove();
+  });
+
+  input.click();
 }
 
 // ── POZA RECORD STAND ────────────────────────────────────────────────────────
@@ -1022,12 +1082,37 @@ async function saveEditBalta() {
     const di    = parseInt(document.getElementById('se-di-' + sid)?.value)   || null;
     const la    = parseInt(document.getElementById('se-la-' + sid)?.value)   || null;
     const yt    = document.getElementById('se-yt-'  + sid)?.value.trim()     || '';
-    const recFoto = document.getElementById('se-rec-url-' + sid)?.value.trim() || '';
+    const recFoto   = document.getElementById('se-rec-url-'    + sid)?.value.trim() || '';
+    const recKg     = document.getElementById('se-rec-kg-'     + sid)?.value.trim() || '';
+    const recPescar = document.getElementById('se-rec-pescar-' + sid)?.value.trim() || '';
+    const recData   = document.getElementById('se-rec-data-'   + sid)?.value.trim() || '';
 
+    let standId;
     if(isNew) {
-      await sb.from('standuri').insert({ balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt, rec_foto: recFoto || null });
+      const { data: newStand } = await sb.from('standuri').insert({ balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt, rec_foto: recFoto||null, rec_kg: recKg||null, rec_pescar: recPescar||null, rec_data: recData||null }).select('id').single();
+      standId = newStand?.id;
     } else {
-      await sb.from('standuri').update({ nume: zona, adancime: ad, distanta: di, latime: la, yt, rec_foto: recFoto || null }).eq('id', parseInt(sid));
+      standId = parseInt(sid);
+      await sb.from('standuri').update({ nume: zona, adancime: ad, distanta: di, latime: la, yt, rec_foto: recFoto||null, rec_kg: recKg||null, rec_pescar: recPescar||null, rec_data: recData||null }).eq('id', standId);
+    }
+
+    // Salvează galeria — șterge pozele vechi și inserează cele curente
+    if(standId) {
+      const galWrap = document.getElementById('se-gal-' + sid);
+      if(galWrap) {
+        const thumbs = galWrap.querySelectorAll('.gal-thumb-edit');
+        const urls = Array.from(thumbs).map(t => {
+          // URL din dataset (nou uploadat) sau din img src (existent)
+          return t.dataset.url || t.querySelector('img')?.src || '';
+        }).filter(u => u && !u.startsWith('data:'));
+
+        if(urls.length > 0) {
+          await sb.from('poze').delete().eq('balta_id', editBaltaId).eq('stand_id', standId);
+          for(const url of urls) {
+            await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
+          }
+        }
+      }
     }
   }
 
