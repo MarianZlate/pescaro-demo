@@ -773,11 +773,14 @@ function escHtml(s) {
 }
 
 function buildStandEditCard(s) {
-  const gals = (s.galerie || []).map((g, gi) => `
-    <div class="gal-thumb-edit" data-url="${escHtml(g.url)}">
+  const gals = (s.galerie || []).map((g, gi) => {
+    // Escapam doar ghilimelele din URL pentru atribut HTML - Cloudinary nu foloseste < > &
+    const urlAttr = (g.url || '').replace(/"/g, '&quot;');
+    return `<div class="gal-thumb-edit" data-url="${urlAttr}">
       <img src="${escHtml(g.url)}" loading="lazy"/>
       <button class="gal-thumb-del" onclick="delEditGalerie(${s.id},${gi})" title="Șterge">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   const recFoto   = s.rec_foto || '';
   const recPreview = recFoto ? `
@@ -1078,9 +1081,12 @@ async function saveEditBalta() {
     const sid   = card.id.replace('se-card-', '');
     const isNew = sid.length > 10; // Date.now() are 13 cifre
     const zona  = document.getElementById('se-zona-' + sid)?.value.trim() || 'Stand';
-    const ad    = parseFloat(document.getElementById('se-ad-' + sid)?.value) || null;
-    const di    = parseInt(document.getElementById('se-di-' + sid)?.value)   || null;
-    const la    = parseInt(document.getElementById('se-la-' + sid)?.value)   || null;
+    const _adVal = document.getElementById('se-ad-' + sid)?.value;
+    const _diVal = document.getElementById('se-di-' + sid)?.value;
+    const _laVal = document.getElementById('se-la-' + sid)?.value;
+    const ad = (_adVal !== '' && _adVal != null) ? (parseFloat(_adVal) || null) : null;
+    const di = (_diVal !== '' && _diVal != null) ? (parseInt(_diVal)   || null) : null;
+    const la = (_laVal !== '' && _laVal != null) ? (parseInt(_laVal)   || null) : null;
     const yt    = document.getElementById('se-yt-'  + sid)?.value.trim()     || '';
     const recFoto   = document.getElementById('se-rec-url-'    + sid)?.value.trim() || '';
     const recKg     = document.getElementById('se-rec-kg-'     + sid)?.value.trim() || '';
