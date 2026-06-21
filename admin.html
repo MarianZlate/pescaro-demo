@@ -774,7 +774,7 @@ function escHtml(s) {
 
 function buildStandEditCard(s) {
   const gals = (s.galerie || []).map((g, gi) => `
-    <div class="gal-thumb-edit">
+    <div class="gal-thumb-edit" data-url="${escHtml(g.url)}">
       <img src="${escHtml(g.url)}" loading="lazy"/>
       <button class="gal-thumb-del" onclick="delEditGalerie(${s.id},${gi})" title="Șterge">✕</button>
     </div>`).join('');
@@ -1093,24 +1093,29 @@ async function saveEditBalta() {
       standId = newStand?.id;
     } else {
       standId = parseInt(sid);
-      await sb.from('standuri').update({ nume: zona, adancime: ad, distanta: di, latime: la, yt, rec_foto: recFoto||null, rec_kg: recKg||null, rec_pescar: recPescar||null, rec_data: recData||null }).eq('id', standId);
+      const { error: stErr } = await sb.from('standuri').update({
+        nume: zona, adancime: ad, distanta: di, latime: la, yt,
+        rec_foto: recFoto||null, rec_kg: recKg||null,
+        rec_pescar: recPescar||null, rec_data: recData||null
+      }).eq('id', standId);
+      if(stErr) {
+        showToast('❌ Eroare stand ' + standId + ': ' + stErr.message, true);
+        console.error('Stand update error:', stErr);
+        saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
+        return;
+      }
     }
 
-    // Salvează galeria — șterge pozele vechi și inserează cele curente
+    // Salvează galeria — ștergem mereu și reinserăm ce a rămas (data-url)
     if(standId) {
       const galWrap = document.getElementById('se-gal-' + sid);
       if(galWrap) {
-        const thumbs = galWrap.querySelectorAll('.gal-thumb-edit');
-        const urls = Array.from(thumbs).map(t => {
-          // URL din dataset (nou uploadat) sau din img src (existent)
-          return t.dataset.url || t.querySelector('img')?.src || '';
-        }).filter(u => u && !u.startsWith('data:'));
-
-        if(urls.length > 0) {
-          await sb.from('poze').delete().eq('balta_id', editBaltaId).eq('stand_id', standId);
-          for(const url of urls) {
-            await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
-          }
+        const urls = Array.from(galWrap.querySelectorAll('.gal-thumb-edit'))
+          .map(t => t.dataset.url || '')
+          .filter(u => u && u.startsWith('http'));
+        await sb.from('poze').delete().eq('balta_id', editBaltaId).eq('stand_id', standId);
+        for(const url of urls) {
+          await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
         }
       }
     }
