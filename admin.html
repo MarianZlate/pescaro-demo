@@ -428,9 +428,9 @@ function closeConfirm() {
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','settings'][i]===tab));
-  document.getElementById('panel-balti').style.display     = tab==='balti'    ? 'block' : 'none';
-  document.getElementById('panel-users').style.display     = tab==='users'    ? 'block' : 'none';
-  document.getElementById('panel-settings').style.display  = tab==='settings' ? 'block' : 'none';
+  const pB = document.getElementById('panel-balti');    if(pB) pB.style.display    = tab==='balti'    ? 'block' : 'none';
+  const pU = document.getElementById('panel-users');    if(pU) pU.style.display    = tab==='users'    ? 'block' : 'none';
+  const pS = document.getElementById('panel-settings'); if(pS) pS.style.display   = tab==='settings' ? 'block' : 'none';
   if(tab==='users')    loadUsers();
   if(tab==='settings') loadSettings();
 }
