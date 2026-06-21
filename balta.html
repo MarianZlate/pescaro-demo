@@ -795,13 +795,9 @@ function showDrumAcces() {
   var db = document.getElementById('pill-drum');
   db.style.borderColor = '#f59e0b'; db.style.background = '#1c1500'; db.style.color = '#f59e0b';
 
-  if (DRUM_ACCES_YT) {
-    // Ascunde placeholder, arată player-ul
-    document.getElementById('spr').style.display = 'none';
-    showMapYT(null); // afișează videoclipul în map-yt-bar
-  } else {
-    document.getElementById('spr').style.display = 'block';
-  }
+  document.getElementById('legend-card').style.display = 'none';
+  document.getElementById('spr').style.display = 'none';
+  showMapYT(DRUM_ACCES_YT ? null : undefined);
 }
 
 function updatePills() {
