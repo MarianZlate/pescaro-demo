@@ -655,7 +655,8 @@ function deselectStand() {
 
 function showAll() {
   deselectStand();
-  showMapYT(null);
+  document.getElementById('map-yt-iframe').src = '';
+  document.getElementById('map-yt-bar').style.display = 'none';
 }
 
 function showDrumAcces() {
