@@ -17,7 +17,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .back-btn{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:6px 12px;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;}
 .back-btn:hover{border-color:#a3e635;color:#a3e635;}
 
-#layout{max-width:1600px;margin:0 auto;padding:14px 20px 50px;display:grid;grid-template-columns:1fr 400px;gap:16px;align-items:start;}
+#layout{max-width:1600px;margin:0 auto;padding:14px 20px 50px;display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
 .lc,.rc{display:flex;flex-direction:column;gap:12px;min-width:0;}
 .info-bar{display:flex;align-items:center;gap:10px;background:#111827;border:1px solid #1e293b;border-radius:10px;padding:10px 14px;flex-wrap:wrap;}
 .ebtn{border-radius:8px;font-weight:700;font-size:13px;padding:8px 18px;cursor:pointer;border:none;}
@@ -34,7 +34,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
 #pins-layer{position:absolute;inset:0;pointer-events:none;}
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
-#img-pins-wrap{position:relative;width:100%;max-width:min(100%, calc(75vh - 80px));aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
+#map-grid{display:grid;grid-template-columns:1fr 280px;gap:12px;align-items:start;}
+#map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;}
+#img-pins-wrap{position:relative;width:100%;aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
 #lake-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;}
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
 .stand-pin svg{display:block;}
@@ -118,8 +120,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Map-wrap pe mobil: lat cat ecranul */
+  /* Map-wrap pe mobil: lat cat ecranul, grid stivuit */
   #map-wrap{width:100%;}
+  #map-grid{grid-template-columns:1fr;}
+  #map-sidebar{gap:8px;}
   /* pins-layer pozitionat de JS via adjustPinsLayer */
   #pins-layer{position:absolute;pointer-events:none;}
 
@@ -234,13 +238,14 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div>
 
-  <!-- Map -->
-  <div id="map-wrap">
-    <div id="img-pins-wrap">
-      <img id="lake-img" src="" alt="Harta Baltă"/>
-      <div id="pins-layer"></div>
-    </div>
-    <div id="stand-overlay">
+  <!-- Map + Sidebar dreapta -->
+  <div id="map-grid">
+    <div id="map-wrap">
+      <div id="img-pins-wrap">
+        <img id="lake-img" src="" alt="Harta Baltă"/>
+        <div id="pins-layer"></div>
+      </div>
+      <div id="stand-overlay">
       <div class="ov-hdr">
         <div class="spnr" id="ov-nr">Stand 1</div>
         <button class="xbtn" onclick="closeOverlay()">✕</button>
@@ -265,44 +270,48 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         </div>
       </div>
     </div>
-  </div>
+    </div><!-- /#map-wrap -->
 
-  <!-- Stand pills -->
-  <div id="pw">
+    <!-- Sidebar dreapta hartii: pills + spr + legend -->
+    <div id="map-sidebar">
+      <div id="pw" style="margin:0;">
     <span class="pl">Selectează rapid:</span>
     <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🛣️ Drum de acces</button>
     <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
-    <div id="pills"></div>
-  </div>
+      <div id="pills"></div>
+      </div><!-- /#pw -->
 
-  <!-- YouTube player sub hartă -->
-  <div id="map-yt-bar" style="display:none;">
-    <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
-    <div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
-      <iframe id="map-yt-iframe" src="" frameborder="0"
-        allow="autoplay;encrypted-media;fullscreen" allowfullscreen
-        style="position:absolute;inset:0;width:100%;height:100%;border:none;">
-      </iframe>
-    </div>
-  </div>
+      <!-- Placeholder când niciun stand nu e selectat -->
+      <div id="spr" style="background:#111827;border:1px dashed #1e293b;border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:6px;">📍</div>
+        <div style="color:#94a3b8;font-weight:600;font-size:12px;">Click pe un stand</div>
+        <div id="spr-count" style="color:#4b5563;font-size:10px;margin-top:4px;"></div>
+      </div>
 
-  <!-- Placeholder când niciun stand nu e selectat -->
-  <div id="spr">
-    <div style="font-size:32px;margin-bottom:8px;">📍</div>
-    <div style="color:#94a3b8;font-weight:600;font-size:13px;">Click pe un stand pentru detalii</div>
-    <div id="spr-count" style="color:#4b5563;font-size:11px;margin-top:5px;"></div>
-  </div>
+      <!-- Legendă standuri -->
+      <div id="legend-card" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;">
+        <div class="ct" style="margin-bottom:10px;">🏆 Standuri — Cele mai mari capturi</div>
+        <div class="lgd" id="legend-list"></div>
+      </div>
 
-  <!-- Drum acces YT (right column embed - now unused, kept for logic compat) -->
-  <div id="drum-yt-section" style="display:none;">
-    <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
-  </div>
+      <!-- YouTube player -->
+      <div id="map-yt-bar" style="display:none;">
+        <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
+        <div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+          <iframe id="map-yt-iframe" src="" frameborder="0"
+            allow="autoplay;encrypted-media;fullscreen" allowfullscreen
+            style="position:absolute;inset:0;width:100%;height:100%;border:none;">
+          </iframe>
+        </div>
+      </div>
 
-  <!-- Legendă standuri — capturi maxime, vizibilă când "Toate standurile" e activ -->
-  <div id="legend-card" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;">
-    <div class="ct" style="margin-bottom:10px;">🏆 Standuri — Cele mai mari capturi</div>
-    <div class="lgd" id="legend-list"></div>
-  </div>
+      <!-- Drum acces YT -->
+      <div id="drum-yt-section" style="display:none;">
+        <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
+      </div>
+
+    </div><!-- /#map-sidebar -->
+  </div><!-- /#map-grid -->
 
 </div><!-- /.lc -->
 
