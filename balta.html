@@ -108,65 +108,45 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
   #layout{padding:10px 12px 40px;gap:10px;}
 
-  /* Info bar */
-  .info-bar{padding:8px 10px;gap:6px;}
+  .info-bar{padding:8px 10px;gap:6px;flex-wrap:wrap;}
   #ib-name{font-size:13px;}
   #btn-tel,#btn-fb,#btn-wa,#btn-waze,#btn-gmaps{padding:5px 9px;font-size:11px;}
 
-  /* Harta mai înaltă pe mobil */
-  #map-wrap{min-height:320px;}
-
-  /* Edit bar */
   #edit-bar-top{padding:8px 10px;gap:6px;flex-wrap:wrap;}
   .ebtn{padding:6px 12px;font-size:12px;}
 
-  /* Pills */
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Stand overlay — bottom sheet pe mobil */
+  /* Harta mai înaltă pe mobil ca să încapă și overlay-ul */
+  #map-wrap{min-height:520px;}
+
+  /* Overlay rămâne în hartă — ajustat pentru mobil */
   #stand-overlay{
-    position:fixed !important;
-    top:auto !important;
-    bottom:0 !important;
-    left:0 !important;
-    right:0 !important;
-    transform:none !important;
-    width:100% !important;
-    max-width:100% !important;
-    max-height:75vh;
+    width:96% !important;
+    max-height:calc(100% - 20px);
     overflow-y:auto;
-    border-radius:16px 16px 0 0 !important;
-    z-index:500;
-    box-shadow:0 -4px 40px rgba(0,0,0,.8) !important;
+    top:50% !important;
+    left:50% !important;
+    transform:translate(-50%,-50%) !important;
   }
-  /* Grid 2 coloane → 1 coloana pe mobil în overlay */
+  /* Grid 2 coloane → 1 coloană în overlay pe mobil */
   #stand-overlay > div:nth-child(2){
     grid-template-columns:1fr !important;
   }
-  /* Backdrop pentru overlay pe mobil */
-  #stand-overlay-backdrop{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.5);
-    z-index:499;
-  }
-  #stand-overlay-backdrop.active{display:block;}
 
-  /* Clasamente */
   .t10tabs{overflow-x:auto;}
   .t10t{white-space:nowrap;padding:8px 10px;font-size:11px;}
 }
 
 @media(max-width:480px){
-  #map-wrap{min-height:260px;}
+  #map-wrap{min-height:480px;}
+  #stand-overlay{width:98% !important;}
   .info-bar{flex-direction:column;align-items:flex-start;}
   #btn-tel,#btn-fb,#btn-wa{width:100%;justify-content:center;}
   #btn-waze,#btn-gmaps{flex:1;}
   .ebtn{flex:1;text-align:center;}
   #edit-bar-top{gap:4px;}
-  #stand-overlay{max-height:82vh;}
 }
 </style>
 </head>
@@ -244,9 +224,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       Funcționează și pe mobile (touch). Apasă <strong style="color:#fff;">💾 Salvează</strong> când ești mulțumit sau <strong style="color:#94a3b8;">✕ Anulează</strong> pentru a renunța.
     </div>
   </div>
-
-  <!-- Backdrop pentru overlay pe mobil -->
-  <div id="stand-overlay-backdrop" onclick="closeOverlay()"></div>
 
   <!-- Map -->
   <div id="map-wrap">
@@ -663,20 +640,17 @@ function selStand(id) {
 
   showMapYT(s);
   document.getElementById('stand-overlay').style.display = 'block';
-  document.getElementById('stand-overlay-backdrop').classList.add('active');
   document.getElementById('spr').style.display = 'none';
   document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
 }
 
 function closeOverlay() {
   document.getElementById('stand-overlay').style.display = 'none';
-  document.getElementById('stand-overlay-backdrop').classList.remove('active');
 }
 
 function deselectStand() {
   selId = null;
   document.getElementById('stand-overlay').style.display = 'none';
-  document.getElementById('stand-overlay-backdrop').classList.remove('active');
   document.getElementById('spr').style.display = 'block';
   renderPins(); updatePills();
   document.querySelectorAll('.li').forEach(function(l) { l.classList.remove('active'); });
