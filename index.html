@@ -144,8 +144,30 @@ nav{display:flex;align-items:center;gap:6px;}
 
   #stats-bar{padding:0 14px;}
 
-  #main{padding:0 14px 40px;gap:14px;}
-  #map{height:380px;}
+  #main{padding:0 8px 40px;gap:10px;}
+
+  /* Harta mai inalta pe mobil - ocupa latimea ecranului */
+  #map-wrap{border-radius:10px;}
+  #map{height:calc(100vw - 16px);}
+
+  /* Sidebar: HoF + Balti side by side intr-un grid 2 col */
+  #sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;}
+  .hof-card,.balti-card{min-width:0;}
+
+  /* Text mai mic in carduri ca sa incapa */
+  .hof-name{font-size:11px;}
+  .hof-detail{font-size:9px;}
+  .hof-row{padding:7px 10px;gap:7px;}
+  .hof-loc{width:22px;height:22px;font-size:10px;}
+  .hof-header{padding:10px 12px;}
+  .hof-title{font-size:12px;}
+
+  .balta-name{font-size:11px;}
+  .balta-meta{font-size:9px;}
+  .balta-row{padding:8px 10px;gap:7px;}
+  .balta-emoji{width:28px;height:28px;font-size:14px;}
+  .balti-header{padding:10px 12px;}
+  .balti-title{font-size:12px;}
 
   .hof-modal-inner{max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;margin-top:auto;}
   #hof-modal{align-items:flex-end;}
@@ -170,10 +192,14 @@ nav{display:flex;align-items:center;gap:6px;}
 @media(max-width:480px){
   .hero-title{font-size:22px;}
   .nav-btn span{display:none;}
-  #map{height:300px;}
+  /* Harta patrata pe telefoane mici */
+  #map{height:calc(100vw - 16px);}
   .stat-chip{padding:5px 12px;font-size:12px;}
-  .hof-row{padding:7px 12px;}
-  .balta-row{padding:8px 12px;}
+  .hof-row{padding:6px 10px;}
+  .balta-row{padding:6px 10px;}
+  /* Pe telefoane foarte mici, stivuieste din nou daca nu incape */
+  .hof-name{font-size:10px;}
+  .balta-name{font-size:10px;}
 }
 .judet-opt{padding:9px 14px;cursor:pointer;font-size:13px;color:#f1f5f9;display:flex;align-items:center;gap:8px;border-bottom:1px solid #0f172a;transition:background .1s;}
 .judet-opt:last-child{border-bottom:none;}
