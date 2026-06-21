@@ -99,7 +99,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#0a0f1a;}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
 @media(max-width:960px){#layout{grid-template-columns:1fr;}}
 
-/* ── RESPONSIVE ── */
 @media(max-width:768px){
   #hdr-in{padding:0 12px;height:48px;gap:8px;}
   #hdr-balta-name{font-size:13px;}
@@ -118,35 +117,42 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Harta mai înaltă pe mobil ca să încapă și overlay-ul */
-  #map-wrap{min-height:520px;}
+  /* Harta suficient de înaltă */
+  #map-wrap{min-height:420px;}
 
-  /* Overlay rămâne în hartă — ajustat pentru mobil */
+  /* Overlay compact pe mobil — încape în hartă */
   #stand-overlay{
-    width:96% !important;
-    max-height:calc(100% - 20px);
+    width:92% !important;
+    max-height:72% !important;
     overflow-y:auto;
     top:50% !important;
     left:50% !important;
     transform:translate(-50%,-50%) !important;
   }
-  /* Grid 2 coloane → 1 coloană în overlay pe mobil */
+  /* Grid 2 col → 1 col */
   #stand-overlay > div:nth-child(2){
     grid-template-columns:1fr !important;
   }
+  /* Ascunde fotografiile pe mobil — prea mari */
+  #ov-rec-foto, #ov-stand-foto{ display:none !important; }
+  /* Statistici mai compacte */
+  .stat-row{padding:3px 6px;}
+  .stat-lbl{font-size:9px;}
+  .sec-lbl{margin-bottom:3px;}
+  /* Elimină border-right între cele 2 coloane când devin 1 */
+  #stand-overlay > div:nth-child(2) > div:first-child{border-right:none !important;border-bottom:1px solid #1e293b;padding-bottom:8px;}
 
   .t10tabs{overflow-x:auto;}
   .t10t{white-space:nowrap;padding:8px 10px;font-size:11px;}
 }
 
 @media(max-width:480px){
-  #map-wrap{min-height:480px;}
-  #stand-overlay{width:98% !important;}
+  #map-wrap{min-height:380px;}
+  #stand-overlay{width:95% !important;max-height:70% !important;}
   .info-bar{flex-direction:column;align-items:flex-start;}
   #btn-tel,#btn-fb,#btn-wa{width:100%;justify-content:center;}
   #btn-waze,#btn-gmaps{flex:1;}
   .ebtn{flex:1;text-align:center;}
-  #edit-bar-top{gap:4px;}
 }
 </style>
 </head>
