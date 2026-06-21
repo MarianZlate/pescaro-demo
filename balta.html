@@ -45,7 +45,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
 .stand-pin svg{display:block;}
 
-#stand-overlay{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;width:460px;max-width:95%;box-shadow:0 8px 40px rgba(0,0,0,.85);}
+#stand-overlay{display:none;position:static;transform:none;z-index:auto;background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;width:100%;max-width:100%;box-shadow:0 4px 20px rgba(0,0,0,.5);}
 .ov-hdr{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#0d1f12;border-bottom:1px solid #1a3020;}
 .spnr{font-size:14px;font-weight:900;color:#a3e635;}
 .xbtn{background:transparent;border:none;color:#4b5563;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;}
@@ -132,23 +132,15 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #rc-top10{width:100%;}
   #pins-layer{position:absolute;pointer-events:none;}
 
-  /* Overlay ocupa exact chenarul hartii */
+  /* Overlay stand pe mobil: rămâne în flux în yt-col, deasupra YT */
   #stand-overlay{
-    position:absolute !important;
-    top:0 !important; left:0 !important;
-    right:0 !important; bottom:0 !important;
-    width:100% !important;
-    max-width:100% !important;
-    transform:none !important;
-    border-radius:14px !important;
-    overflow-y:auto !important;
-    max-height:100% !important;
-    flex-direction:column;
+    border-radius:14px;
+    overflow-y:auto;
   }
-  /* display e controlat doar de JS (block/none) — nu suprascrie cu CSS */
   #stand-overlay[style*="display: block"],
   #stand-overlay[style*="display:block"]{
     display:flex !important;
+    flex-direction:column;
   }
   #stand-overlay > div:nth-child(2){
     grid-template-columns:1fr 1fr !important;
@@ -255,31 +247,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
             <img id="lake-img" src="" alt="Harta Baltă"/>
             <div id="pins-layer"></div>
           </div>
-          <div id="stand-overlay">
-          <div class="ov-hdr">
-            <div class="spnr" id="ov-nr">Stand 1</div>
-            <button class="xbtn" onclick="closeOverlay()">✕</button>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
-            <div style="padding:10px;border-right:1px solid #1e293b;">
-              <div class="sec-lbl">📸 CEA MAI MARE CAPTURĂ</div>
-              <div id="ov-rec-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">🐟</span><span>Fără fotografie</span></div>
-              <div style="display:flex;flex-direction:column;gap:3px;">
-                <div class="stat-row"><span class="stat-lbl">🏆 Greutate</span><strong id="ov-kg" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
-                <div class="stat-row"><span class="stat-lbl">👤 Pescar</span><strong id="ov-pe" style="color:#e2e8f0;font-size:11px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">-</strong></div>
-                <div class="stat-row"><span class="stat-lbl">📅 Data</span><strong id="ov-da" style="color:#e2e8f0;font-size:11px;">-</strong></div>
-              </div>
-            </div>
-            <div style="padding:10px;">
-              <div class="sec-lbl">📸 STAND</div>
-              <div id="ov-stand-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">📷</span><span>Fără fotografie</span></div>
-              <div style="display:flex;flex-direction:column;gap:3px;">
-                <div class="stat-row"><span class="stat-lbl">📏 Lățime stand</span><strong id="ov-la" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
-                <div class="stat-row"><span class="stat-lbl">🎯 Distanță lansare</span><strong id="ov-di" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
-              </div>
-            </div>
-          </div>
-        </div>
         </div><!-- /#map-wrap -->
       </div><!-- /#map-grid -->
 
@@ -307,8 +274,34 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       </div><!-- /#map-sidebar -->
     </div><!-- /#map-col -->
 
-    <!-- Coloana mijloc: videoclipuri standalone -->
+    <!-- Coloana mijloc: overlay stand (deasupra) + videoclipuri standalone -->
     <div id="yt-col">
+      <!-- Detalii stand — apare deasupra videoclipurilor când e selectat un stand -->
+      <div id="stand-overlay">
+        <div class="ov-hdr">
+          <div class="spnr" id="ov-nr">Stand 1</div>
+          <button class="xbtn" onclick="closeOverlay()">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+          <div style="padding:10px;border-right:1px solid #1e293b;">
+            <div class="sec-lbl">📸 CEA MAI MARE CAPTURĂ</div>
+            <div id="ov-rec-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">🐟</span><span>Fără fotografie</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div class="stat-row"><span class="stat-lbl">🏆 Greutate</span><strong id="ov-kg" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+              <div class="stat-row"><span class="stat-lbl">👤 Pescar</span><strong id="ov-pe" style="color:#e2e8f0;font-size:11px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">-</strong></div>
+              <div class="stat-row"><span class="stat-lbl">📅 Data</span><strong id="ov-da" style="color:#e2e8f0;font-size:11px;">-</strong></div>
+            </div>
+          </div>
+          <div style="padding:10px;">
+            <div class="sec-lbl">📸 STAND</div>
+            <div id="ov-stand-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">📷</span><span>Fără fotografie</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div class="stat-row"><span class="stat-lbl">📏 Lățime stand</span><strong id="ov-la" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+              <div class="stat-row"><span class="stat-lbl">🎯 Distanță lansare</span><strong id="ov-di" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /#stand-overlay -->
       <!-- YouTube player stand / drum acces -->
       <div id="map-yt-bar" style="display:none;">
         <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
