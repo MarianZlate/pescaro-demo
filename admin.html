@@ -54,6 +54,44 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 /* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
 @media(max-width:700px){.stats-row{grid-template-columns:1fr 1fr;}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #adm-hdr-in{padding:0 12px;height:48px;flex-wrap:wrap;gap:6px;}
+  #adm-hdr-in .logo{font-size:15px;}
+
+  .adm-tabs{padding:0 12px;gap:0;overflow-x:auto;}
+  .adm-tab{padding:10px 12px;font-size:12px;white-space:nowrap;}
+
+  #tab-balti,#tab-users{padding:14px 12px;}
+
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px;padding:12px;}
+  .stat-box{padding:12px;}
+  .stat-num{font-size:24px;}
+
+  table{font-size:11px;}
+  th,td{padding:8px 6px;}
+  /* Ascunde coloane mai puțin importante pe mobil */
+  th:nth-child(3),td:nth-child(3),
+  th:nth-child(4),td:nth-child(4){display:none;}
+
+  .action-btns{flex-wrap:wrap;gap:4px;}
+  .btn-pub,.btn-unlist,.btn-edit,.btn-view,.btn-del{font-size:10px;padding:4px 7px;}
+
+  /* Edit modal full screen */
+  #edit-modal{padding:0;align-items:flex-end;}
+  .edit-inner{max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;max-height:95vh;}
+  .edit-hdr{border-radius:16px 16px 0 0;padding:14px 16px;}
+  .edit-title{font-size:14px;}
+  .edit-save-btn{padding:7px 12px;font-size:12px;}
+  .edit-body{padding:16px;}
+  .fg-row,.fg-row3{grid-template-columns:1fr;}
+}
+
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr;}
+  th:nth-child(2),td:nth-child(2){max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+}
 .stat-card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px 20px;}
 .stat-num{font-size:28px;font-weight:900;color:#a3e635;line-height:1;}
 .stat-label{font-size:11px;color:#4b5563;margin-top:4px;font-weight:600;}
