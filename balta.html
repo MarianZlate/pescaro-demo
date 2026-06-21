@@ -511,13 +511,12 @@ function renderPage(hartaUrl) {
   if (ST.length > 0) {
     // legend-card e ascunsă inițial — apare la 'Toate standurile'
     document.getElementById('legend-list').innerHTML = ST.map(function(s){
-      var recText = s.r.kg ? '<span class="lrec">🏆 ' + s.r.kg + ' kg</span>' : '';
-      var recSub  = s.r.pe ? '<div class="ls" style="color:#f59e0b;">👤 ' + s.r.pe + (s.r.da ? ' · ' + s.r.da : '') + '</div>' : '';
+      var recText = s.r.kg ? '<span style="font-weight:800;color:#f59e0b;font-size:14px;white-space:nowrap;margin-left:auto;">🏆 ' + s.r.kg + ' kg</span>' : '';
+      var recSub  = s.r.pe ? '<div style="font-size:12px;color:#f59e0b;margin-top:3px;">👤 ' + s.r.pe + (s.r.da ? ' · ' + s.r.da : '') + '</div>' : '';
       return '<div class="li" data-id="'+s.id+'" onclick="selStand('+s.id+')">'
         +'<div class="lnr">'+s.nr+'</div>'
         +'<div style="flex:1;min-width:0;">'
-        +'<div class="lz">'+s.z+'</div>'
-        +'<div class="ls">⚓ '+(s.ad||'—')+'m adânc · 🎯 '+(s.di||'—')+'m · ↔ '+(s.la||'—')+'m</div>'
+        +'<div style="font-size:14px;font-weight:700;color:#f1f5f9;">'+s.z+'</div>'
         + recSub
         +'</div>'
         + recText
