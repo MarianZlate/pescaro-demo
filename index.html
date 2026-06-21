@@ -708,7 +708,7 @@ function initMap() {
   });
 
   window.__goToBalta = id => {
-    window.open('balta.html?id=' + id, '_blank');
+    window.location.href = 'balta.html?id=' + id;
   };
 
   setTimeout(() => map.invalidateSize(), 200);
