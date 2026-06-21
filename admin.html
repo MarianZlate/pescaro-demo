@@ -640,12 +640,27 @@ async function openEditBalta(id) {
   const { data: poze } = await sb.from('poze').select('*').eq('balta_id', id);
   const hartaRow  = (poze || []).find(p => !p.stand_id);
   const hartaUrl  = hartaRow ? hartaRow.url : '';
+
+  // Deduplicare automata: pentru fiecare stand, pastreaza doar primul row per URL
   const pozeByStand = {};
+  const seenUrls = {}; // 'standId_url' -> true
+  const toDelete = []; // id-uri duplicate de sters
   (poze || []).filter(p => p.stand_id).forEach(p => {
     const key = String(p.stand_id);
-    if(!pozeByStand[key]) pozeByStand[key] = [];
-    pozeByStand[key].push(p);
+    const urlKey = key + '|' + p.url;
+    if(seenUrls[urlKey]) {
+      toDelete.push(p.id); // duplicat
+    } else {
+      seenUrls[urlKey] = true;
+      if(!pozeByStand[key]) pozeByStand[key] = [];
+      pozeByStand[key].push(p);
+    }
   });
+  // Stergem duplicatele silentios
+  for(const dupId of toDelete) {
+    await sb.from('poze').delete().eq('id', dupId);
+  }
+  if(toDelete.length > 0) console.log('[DEDUP] Sterse', toDelete.length, 'poze duplicate');
 
   // Construiește ext compatibil cu buildEditBody
   const ext = {
@@ -775,9 +790,9 @@ function escHtml(s) {
 
 function buildStandEditCard(s) {
   const gals = (s.galerie || []).map((g, gi) => {
-    // Escapam doar ghilimelele din URL pentru atribut HTML - Cloudinary nu foloseste < > &
     const urlAttr = (g.url || '').replace(/"/g, '&quot;');
-    return `<div class="gal-thumb-edit" data-url="${urlAttr}">
+    // data-existing="true" = poza deja in BD, data-url = URL-ul ei
+    return `<div class="gal-thumb-edit" data-url="${urlAttr}" data-existing="true">
       <img src="${escHtml(g.url)}" loading="lazy"/>
       <button class="gal-thumb-del" onclick="delEditGalerie(${s.id},${gi})" title="Șterge">✕</button>
     </div>`;
@@ -1135,20 +1150,29 @@ async function saveEditBalta() {
       }
     }
 
-    // Salvează galeria — ștergem mereu și reinserăm ce a rămas (data-url)
+    // Salvează galeria: insert pozele NOI, sterge pozele eliminate
     if(standId) {
       const galWrap = document.getElementById('se-gal-' + sid);
       if(galWrap) {
-        const urls = Array.from(galWrap.querySelectorAll('.gal-thumb-edit'))
-          .map(t => t.dataset.url || '')
-          .filter(u => u && u.startsWith('http'));
-        console.log('[GAL] standId=', standId, 'urls=', urls);
-        const { error: delErr } = await sb.from('poze').delete()
-          .eq('balta_id', editBaltaId).eq('stand_id', standId);
-        console.log('[GAL] delete error:', delErr);
-        for(const url of urls) {
-          const { error: insErr } = await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
-          console.log('[GAL] insert', url, 'error:', insErr);
+        const thumbs = Array.from(galWrap.querySelectorAll('.gal-thumb-edit'));
+        // Pozele noi = cele fara data-existing (uploadate acum)
+        const newUrls = thumbs
+          .filter(t => !t.dataset.existing && t.dataset.url && t.dataset.url.startsWith('http'))
+          .map(t => t.dataset.url);
+        // Pozele ramase in DOM (existente + noi)
+        const keptUrls = thumbs
+          .filter(t => t.dataset.existing && t.dataset.url)
+          .map(t => t.dataset.url);
+        // Sterge din BD pozele care au fost scoase din galerie (existente dar nu mai sunt in DOM)
+        const { data: bdPoze } = await sb.from('poze').select('id,url').eq('balta_id', editBaltaId).eq('stand_id', standId);
+        for(const p of (bdPoze || [])) {
+          if(!keptUrls.includes(p.url)) {
+            await sb.from('poze').delete().eq('id', p.id);
+          }
+        }
+        // Inserteaza pozele noi
+        for(const url of newUrls) {
+          await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
         }
       }
     }
