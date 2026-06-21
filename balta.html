@@ -291,6 +291,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 </div><!-- /.lc -->
 
 <div class="rc">
+  <!-- Legend standuri — apare prima -->
+  <div class="card" id="legend-card" style="display:none;">
+    <div class="ct">🗺️ Standuri disponibile</div>
+    <div class="lgd" id="legend-list"></div>
+  </div>
+
   <div class="t10c">
     <div class="ct" style="padding:14px 14px 0;">📊 Clasamente</div>
     <div class="t10tabs">
@@ -301,12 +307,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <div class="t10ct active" id="t-at"></div>
     <div class="t10ct" id="t-lu"></div>
     <div class="t10ct" id="t-is"><div class="isub" id="isub"></div><div id="isc"></div></div>
-  </div>
-
-  <!-- Legend standuri -->
-  <div class="card" id="legend-card" style="display:none;">
-    <div class="ct">🗺️ Standuri disponibile</div>
-    <div class="lgd" id="legend-list"></div>
   </div>
 </div>
 </div><!-- /#layout -->
@@ -394,9 +394,14 @@ async function loadBalta(id) {
       z: s.nume || ('Stand ' + (i+1)),
       ad: s.adancime || 0,
       di: s.distanta || 0,
-      la: s.latime || 0,
-      yt: s.yt || '',
-      r: { kg: '-', sp: '-', pe: '-', da: '-', st: null, foto: '' }, // capturi → viitor
+      la: s.latime   || 0,
+      yt: s.yt       || '',
+      r: {
+        kg:   s.rec_kg      || '-',
+        pe:   s.rec_pescar  || '-',
+        da:   s.rec_data    || '-',
+        foto: s.rec_foto    || ''
+      },
       g: pozeFotou
     };
   });
