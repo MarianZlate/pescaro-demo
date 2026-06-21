@@ -334,6 +334,7 @@ nav{display:flex;align-items:center;gap:6px;}
     <nav>
       <button class="nav-btn" onclick="openHof()">🏆 Hall of Fame</button>
       <button class="nav-btn" id="nav-add-balta" onclick="onClickAddBalta()" style="display:none;">+ Adaugă baltă</button>
+      <button class="nav-btn" onclick="openRegModal()" style="background:#1e3a2e;color:#a3e635;font-weight:700;border:1px solid #166534;">📋 Înregistrează balta</button>
       <div id="nav-auth-area">
         <button class="nav-primary" onclick="openAuthModal()">Contul meu</button>
       </div>
@@ -353,6 +354,43 @@ nav{display:flex;align-items:center;gap:6px;}
       <button id="clear-btn" onclick="clearSearch()">✕</button>
     </div>
     <div id="dropdown"></div>
+  </div>
+</div>
+
+<!-- MODAL INREGISTRARE BALTA -->
+<div id="reg-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:900;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:480px;margin:0 16px;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;background:#0a0f1a;">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:#f1f5f9;">📋 Înregistrează balta ta</div>
+        <div style="font-size:12px;color:#4b5563;margin-top:3px;">Contactează-ne și te adăugăm pe platformă</div>
+      </div>
+      <button onclick="closeRegModal()" style="background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px;">📧</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">EMAIL</div>
+          <a id="reg-email-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;" id="reg-email-val">—</a>
+        </div>
+      </div>
+      <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px;">📞</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">TELEFON</div>
+          <a id="reg-phone-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;" id="reg-phone-val">—</a>
+        </div>
+      </div>
+      <a id="reg-wa-link" href="#" target="_blank" style="display:flex;align-items:center;gap:14px;background:#25d366;border-radius:12px;padding:16px;text-decoration:none;cursor:pointer;">
+        <div style="font-size:28px;">💬</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:rgba(0,0,0,.5);letter-spacing:.06em;margin-bottom:4px;">WHATSAPP</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">Trimite mesaj pe WhatsApp →</div>
+        </div>
+      </a>
+      <div id="reg-loading" style="text-align:center;color:#4b5563;font-size:13px;padding:8px 0;display:none;">Se încarcă informațiile de contact...</div>
+    </div>
   </div>
 </div>
 
@@ -1490,6 +1528,47 @@ async function saveEditBalta() {
   showToast('✅ Balta "' + b.nume + '" a fost actualizată!');
   if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
 }
+
+// ── MODAL INREGISTRARE BALTA ──────────────────────────────────────────────────
+var _platSettings = null;
+
+async function openRegModal() {
+  document.getElementById('reg-modal').style.display = 'flex';
+  if(!_platSettings) {
+    document.getElementById('reg-loading').style.display = 'block';
+    const { data } = await sb.from('platform_settings').select('*').eq('id', 1).single();
+    _platSettings = data || {};
+    document.getElementById('reg-loading').style.display = 'none';
+  }
+  var s = _platSettings;
+  var email = s.contact_email || '';
+  var phone = s.contact_phone || '';
+  var wa    = s.contact_whatsapp || '';
+  var waMsg = encodeURIComponent('Bună ziua! Doresc să înregistrez balta mea pe PescaRO.');
+
+  var eEl = document.getElementById('reg-email-link');
+  eEl.textContent = email || 'Indisponibil';
+  eEl.href = email ? 'mailto:' + email : '#';
+
+  var pEl = document.getElementById('reg-phone-link');
+  pEl.textContent = phone || 'Indisponibil';
+  pEl.href = phone ? 'tel:' + phone : '#';
+
+  var wEl = document.getElementById('reg-wa-link');
+  if(wa) {
+    wEl.href = 'https://wa.me/' + wa.replace(/\D/g,'') + '?text=' + waMsg;
+    wEl.style.opacity = '1'; wEl.style.pointerEvents = '';
+  } else {
+    wEl.href = '#'; wEl.style.opacity = '.4'; wEl.style.pointerEvents = 'none';
+  }
+}
+
+function closeRegModal() {
+  document.getElementById('reg-modal').style.display = 'none';
+}
+document.addEventListener('keydown', function(e) {
+  if(e.key === 'Escape') closeRegModal();
+});
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(msg) {
