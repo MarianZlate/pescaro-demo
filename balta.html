@@ -117,33 +117,31 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Harta suficient de înaltă ca să încapă overlay-ul scalat */
-  #map-wrap{min-height:400px;}
-
-  /* Overlay — același layout ca desktop, scalat să încapă în hartă */
+  /* Overlay ocupa exact chenarul hartii */
   #stand-overlay{
-    width:460px !important;          /* lățimea originală desktop */
-    transform-origin:center center !important;
-    transform:translate(-50%,-50%) scale(0.92) !important;
-    top:50% !important;
-    left:50% !important;
-    max-height:none !important;
-    overflow-y:visible !important;
+    position:absolute !important;
+    top:0 !important; left:0 !important;
+    right:0 !important; bottom:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    transform:none !important;
+    border-radius:14px !important;
+    overflow-y:auto !important;
+    max-height:100% !important;
+    display:flex;
+    flex-direction:column;
   }
-  /* Poze vizibile — la fel ca desktop */
+  #stand-overlay > div:nth-child(2){
+    grid-template-columns:1fr 1fr !important;
+    flex:1;
+  }
   #ov-rec-foto, #ov-stand-foto{ display:block !important; }
-  /* Grid 2 coloane păstrat */
-  #stand-overlay > div:nth-child(2){ grid-template-columns:1fr 1fr !important; }
 
   .t10tabs{overflow-x:auto;}
   .t10t{white-space:nowrap;padding:8px 10px;font-size:11px;}
 }
 
 @media(max-width:480px){
-  #map-wrap{min-height:360px;}
-  #stand-overlay{
-    transform:translate(-50%,-50%) scale(0.85) !important;
-  }
   .info-bar{flex-direction:column;align-items:flex-start;}
   #btn-tel,#btn-fb,#btn-wa{width:100%;justify-content:center;}
   #btn-waze,#btn-gmaps{flex:1;}
