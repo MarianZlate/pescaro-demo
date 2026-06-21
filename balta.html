@@ -288,13 +288,15 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
   </div>
 
+  <!-- Legendă standuri — capturi maxime, vizibilă când "Toate standurile" e activ -->
+  <div id="legend-card" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;">
+    <div class="ct" style="margin-bottom:10px;">🏆 Standuri — Cele mai mari capturi</div>
+    <div class="lgd" id="legend-list"></div>
+  </div>
+
 </div><!-- /.lc -->
 
 <div class="rc">
-  <div class="card" id="legend-card" style="display:none;">
-    <div class="ct">🗺️ Standuri — Cele mai mari capturi</div>
-    <div class="lgd" id="legend-list"></div>
-  </div>
 </div>
 </div><!-- /#layout -->
 
@@ -498,7 +500,7 @@ function renderPage(hartaUrl) {
 
   // Legend standuri
   if (ST.length > 0) {
-    document.getElementById('legend-card').style.display = 'block';
+    // legend-card e ascunsă inițial — apare la 'Toate standurile'
     document.getElementById('legend-list').innerHTML = ST.map(function(s){
       var recText = s.r.kg ? '<span class="lrec">🏆 ' + s.r.kg + ' kg</span>' : '';
       var recSub  = s.r.pe ? '<div class="ls" style="color:#f59e0b;">👤 ' + s.r.pe + (s.r.da ? ' · ' + s.r.da : '') + '</div>' : '';
@@ -651,12 +653,16 @@ function deselectStand() {
   document.getElementById('map-yt-iframe').src = '';
   document.getElementById('map-yt-bar').style.display = 'none';
   document.getElementById('spr').style.display = 'block';
+  document.getElementById('legend-card').style.display = 'none';
 }
 
 function showAll() {
   deselectStand();
   document.getElementById('map-yt-iframe').src = '';
   document.getElementById('map-yt-bar').style.display = 'none';
+  // Arată legenda cu capturile maxime per stand
+  document.getElementById('spr').style.display = 'none';
+  document.getElementById('legend-card').style.display = 'block';
 }
 
 function showDrumAcces() {
