@@ -132,8 +132,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     border-radius:14px !important;
     overflow-y:auto !important;
     max-height:100% !important;
-    display:flex;
     flex-direction:column;
+  }
+  /* display e controlat doar de JS (block/none) — nu suprascrie cu CSS */
+  #stand-overlay[style*="display: block"],
+  #stand-overlay[style*="display:block"]{
+    display:flex !important;
   }
   #stand-overlay > div:nth-child(2){
     grid-template-columns:1fr 1fr !important;
