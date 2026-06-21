@@ -34,6 +34,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
 #pins-layer{position:absolute;inset:0;pointer-events:none;}
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
+#img-pins-wrap{position:relative;width:100%;}
 #lake-img{display:block;width:100%;height:auto;max-width:100%;pointer-events:none;}
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
 .stand-pin svg{display:block;}
@@ -117,10 +118,40 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Harta lata cat ecranul, inaltimea dupa imagine (fara benzi) */
-  #map-wrap{width:100%;aspect-ratio:unset;}
-  #lake-img{position:static;width:100%;height:auto;object-fit:unset;}
-  #pins-layer{position:absolute;top:0;left:0;width:100%;height:100%;}
+  /* Harta 1:1 pe mobil, fundal verde, imaginea centrata */
+  #map-wrap{
+    width:100%;
+    aspect-ratio:1/1;
+    background:#0d2010;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  /* img-pins-wrap se dimensioneaza dupa imagine, centrat in chenarul verde */
+  #img-pins-wrap{
+    position:relative;
+    width:100%;
+    max-width:100%;
+    max-height:100%;
+    /* Limiteaza inaltimea la chenarul 1:1 */
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #lake-img{
+    display:block;
+    max-width:100%;
+    max-height:100%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+  }
+  /* pins-layer trebuie sa acopere exact imaginea, nu tot wrap-ul */
+  #pins-layer{
+    position:absolute;
+    pointer-events:none;
+  }
 
   /* Overlay ocupa exact chenarul hartii */
   #stand-overlay{
@@ -235,8 +266,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
   <!-- Map -->
   <div id="map-wrap">
-    <img id="lake-img" src="" alt="Harta Baltă"/>
-    <div id="pins-layer"></div>
+    <div id="img-pins-wrap">
+      <img id="lake-img" src="" alt="Harta Baltă"/>
+      <div id="pins-layer"></div>
+    </div>
     <div id="stand-overlay">
       <div class="ov-hdr">
         <div class="spnr" id="ov-nr">Stand 1</div>
@@ -491,9 +524,12 @@ function renderPage(hartaUrl) {
 
   // Hartă baltă
   if (hartaUrl) {
-    document.getElementById('lake-img').src = hartaUrl;
-    document.getElementById('lake-img').alt = 'Harta ' + b.nume;
+    var lakeImg = document.getElementById('lake-img');
+    lakeImg.alt = 'Harta ' + b.nume;
+    lakeImg.onload = function() { adjustPinsLayer(); };
+    lakeImg.src = hartaUrl;
     document.getElementById('map-wrap').style.display = 'block';
+    window.addEventListener('resize', adjustPinsLayer);
   } else {
     // Fără hartă uploadată: ascunde wrapper și arată mesaj
     document.getElementById('map-wrap').style.display = 'none';
@@ -660,6 +696,20 @@ function renderPins() {
 }
 
 // ─── STAND SELECT ──────────────────────────────────────────────────────────
+
+function adjustPinsLayer() {
+  if(window.innerWidth > 768) return; // doar pe mobil
+  var img = document.getElementById('lake-img');
+  var layer = document.getElementById('pins-layer');
+  if(!img || !layer || !img.naturalWidth) return;
+  // getBoundingClientRect da dimensiunile reale ale imaginii randata
+  var r = img.getBoundingClientRect();
+  var wrapR = document.getElementById('img-pins-wrap').getBoundingClientRect();
+  layer.style.left   = (r.left - wrapR.left) + 'px';
+  layer.style.top    = (r.top  - wrapR.top)  + 'px';
+  layer.style.width  = r.width  + 'px';
+  layer.style.height = r.height + 'px';
+}
 
 function scrollToMap() {
   if(window.innerWidth <= 768) {
