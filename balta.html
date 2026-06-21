@@ -35,8 +35,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #pins-layer{position:absolute;inset:0;pointer-events:none;}
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
 #main-area{display:flex;flex-direction:row;gap:16px;align-items:start;}
-#map-grid{flex:0 0 min(calc(85vh - 120px), calc(100% - 540px));min-width:0;}
-#map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;width:240px;flex-shrink:0;}
+#map-col{display:flex;flex-direction:column;gap:10px;flex:0 0 min(calc(85vh - 120px), calc(100% - 580px));min-width:0;}
+#map-grid{width:100%;}
+#map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;}
+#yt-col{display:flex;flex-direction:column;gap:10px;width:240px;flex-shrink:0;}
 #rc-top10{width:280px;flex-shrink:0;}
 #img-pins-wrap{position:relative;width:100%;aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
 #lake-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;}
@@ -122,11 +124,11 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Map-wrap pe mobil: lat cat ecranul, main-area stivuit */
+  /* Mobil: totul stivuit */
   #map-wrap{width:100%;}
   #main-area{flex-direction:column;}
-  #map-grid{flex:none;width:100%;}
-  #map-sidebar{width:100%;}
+  #map-col{flex:none;width:100%;}
+  #yt-col{width:100%;}
   #rc-top10{width:100%;}
   #pins-layer{position:absolute;pointer-events:none;}
 
@@ -241,94 +243,101 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div>
 
-  <!-- Map + Sidebar + Top10: wrapper flex pe desktop -->
+  <!-- Desktop: [harta+sub-harta] | [YT standalone] | [top10]
+       Mobil: harta → pills/standuri → YT → top10 (stivuit) -->
   <div id="main-area">
-  <div id="map-grid">
-    <div id="map-wrap">
-      <div id="img-pins-wrap">
-        <img id="lake-img" src="" alt="Harta Baltă"/>
-        <div id="pins-layer"></div>
-      </div>
-      <div id="stand-overlay">
-      <div class="ov-hdr">
-        <div class="spnr" id="ov-nr">Stand 1</div>
-        <button class="xbtn" onclick="closeOverlay()">✕</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
-        <div style="padding:10px;border-right:1px solid #1e293b;">
-          <div class="sec-lbl">📸 CEA MAI MARE CAPTURĂ</div>
-          <div id="ov-rec-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">🐟</span><span>Fără fotografie</span></div>
-          <div style="display:flex;flex-direction:column;gap:3px;">
-            <div class="stat-row"><span class="stat-lbl">🏆 Greutate</span><strong id="ov-kg" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
-            <div class="stat-row"><span class="stat-lbl">👤 Pescar</span><strong id="ov-pe" style="color:#e2e8f0;font-size:11px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">-</strong></div>
-            <div class="stat-row"><span class="stat-lbl">📅 Data</span><strong id="ov-da" style="color:#e2e8f0;font-size:11px;">-</strong></div>
+
+    <!-- Coloana stanga: harta + bara selectie rapida sub ea -->
+    <div id="map-col">
+      <div id="map-grid">
+        <div id="map-wrap">
+          <div id="img-pins-wrap">
+            <img id="lake-img" src="" alt="Harta Baltă"/>
+            <div id="pins-layer"></div>
+          </div>
+          <div id="stand-overlay">
+          <div class="ov-hdr">
+            <div class="spnr" id="ov-nr">Stand 1</div>
+            <button class="xbtn" onclick="closeOverlay()">✕</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+            <div style="padding:10px;border-right:1px solid #1e293b;">
+              <div class="sec-lbl">📸 CEA MAI MARE CAPTURĂ</div>
+              <div id="ov-rec-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">🐟</span><span>Fără fotografie</span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <div class="stat-row"><span class="stat-lbl">🏆 Greutate</span><strong id="ov-kg" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+                <div class="stat-row"><span class="stat-lbl">👤 Pescar</span><strong id="ov-pe" style="color:#e2e8f0;font-size:11px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">-</strong></div>
+                <div class="stat-row"><span class="stat-lbl">📅 Data</span><strong id="ov-da" style="color:#e2e8f0;font-size:11px;">-</strong></div>
+              </div>
+            </div>
+            <div style="padding:10px;">
+              <div class="sec-lbl">📸 STAND</div>
+              <div id="ov-stand-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">📷</span><span>Fără fotografie</span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <div class="stat-row"><span class="stat-lbl">📏 Lățime stand</span><strong id="ov-la" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+                <div class="stat-row"><span class="stat-lbl">🎯 Distanță lansare</span><strong id="ov-di" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
+              </div>
+            </div>
           </div>
         </div>
-        <div style="padding:10px;">
-          <div class="sec-lbl">📸 STAND</div>
-          <div id="ov-stand-foto" class="foto-empty" style="margin-bottom:8px;"><span style="font-size:24px;">📷</span><span>Fără fotografie</span></div>
-          <div style="display:flex;flex-direction:column;gap:3px;">
-            <div class="stat-row"><span class="stat-lbl">📏 Lățime stand</span><strong id="ov-la" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
-            <div class="stat-row"><span class="stat-lbl">🎯 Distanță lansare</span><strong id="ov-di" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
-          </div>
+        </div><!-- /#map-wrap -->
+      </div><!-- /#map-grid -->
+
+      <!-- Bara selectie rapida + legend — sub harta pe desktop, sub harta pe mobil -->
+      <div id="map-sidebar">
+        <div id="pw" style="margin:0;">
+          <span class="pl">Selectează rapid:</span>
+          <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🛣️ Drum de acces</button>
+          <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
+          <div id="pills"></div>
+        </div><!-- /#pw -->
+
+        <!-- Placeholder când niciun stand nu e selectat -->
+        <div id="spr" style="background:#111827;border:1px dashed #1e293b;border-radius:12px;padding:20px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📍</div>
+          <div style="color:#94a3b8;font-weight:600;font-size:12px;">Click pe un stand</div>
+          <div id="spr-count" style="color:#4b5563;font-size:10px;margin-top:4px;"></div>
+        </div>
+
+        <!-- Legendă standuri -->
+        <div id="legend-card" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;">
+          <div class="ct" style="margin-bottom:10px;">🏆 Standuri — Cele mai mari capturi</div>
+          <div class="lgd" id="legend-list"></div>
+        </div>
+      </div><!-- /#map-sidebar -->
+    </div><!-- /#map-col -->
+
+    <!-- Coloana mijloc: videoclipuri standalone -->
+    <div id="yt-col">
+      <!-- YouTube player stand / drum acces -->
+      <div id="map-yt-bar" style="display:none;">
+        <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
+        <div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+          <iframe id="map-yt-iframe" src="" frameborder="0"
+            allow="autoplay;encrypted-media;fullscreen" allowfullscreen
+            style="position:absolute;inset:0;width:100%;height:100%;border:none;">
+          </iframe>
         </div>
       </div>
-    </div>
-    </div><!-- /#map-wrap -->
 
-  </div><!-- /#map-grid -->
-
-  <!-- Butoane selectie stand + continut — SUB HARTA (desktop: coloana 2, mobil: sub harta) -->
-  <div id="map-sidebar">
-    <div id="pw" style="margin:0;">
-      <span class="pl">Selectează rapid:</span>
-      <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🛣️ Drum de acces</button>
-      <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
-      <div id="pills"></div>
-    </div><!-- /#pw -->
-
-    <!-- Placeholder când niciun stand nu e selectat -->
-    <div id="spr" style="background:#111827;border:1px dashed #1e293b;border-radius:12px;padding:20px;text-align:center;">
-      <div style="font-size:28px;margin-bottom:6px;">📍</div>
-      <div style="color:#94a3b8;font-weight:600;font-size:12px;">Click pe un stand</div>
-      <div id="spr-count" style="color:#4b5563;font-size:10px;margin-top:4px;"></div>
-    </div>
-
-    <!-- Legendă standuri -->
-    <div id="legend-card" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;">
-      <div class="ct" style="margin-bottom:10px;">🏆 Standuri — Cele mai mari capturi</div>
-      <div class="lgd" id="legend-list"></div>
-    </div>
-
-    <!-- YouTube player -->
-    <div id="map-yt-bar" style="display:none;">
-      <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
-      <div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
-        <iframe id="map-yt-iframe" src="" frameborder="0"
-          allow="autoplay;encrypted-media;fullscreen" allowfullscreen
-          style="position:absolute;inset:0;width:100%;height:100%;border:none;">
-        </iframe>
+      <!-- Drum acces YT -->
+      <div id="drum-yt-section" style="display:none;">
+        <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
       </div>
-    </div>
+    </div><!-- /#yt-col -->
 
-    <!-- Drum acces YT -->
-    <div id="drum-yt-section" style="display:none;">
-      <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
-    </div>
-  </div><!-- /#map-sidebar -->
-
-  <!-- Top10 — desktop: coloana 3; mobil: sub map-sidebar (adica sub YT) -->
-  <div id="rc-top10">
-    <div class="t10c" id="top10-card" style="display:none;">
-      <div class="t10tabs">
-        <button class="t10t active" onclick="switchT10('top')" id="tab-top">🏆 Top capturi</button>
+    <!-- Top10 — coloana 3 desktop; sub YT pe mobil -->
+    <div id="rc-top10">
+      <div class="t10c" id="top10-card" style="display:none;">
+        <div class="t10tabs">
+          <button class="t10t active" onclick="switchT10('top')" id="tab-top">🏆 Top capturi</button>
+        </div>
+        <div class="t10ct active" id="t10-top">
+          <div class="t10h">Top capturi — cei mai mari pești prinși <span class="lbdg">RECORD</span></div>
+          <div id="t10-list"></div>
+        </div>
       </div>
-      <div class="t10ct active" id="t10-top">
-        <div class="t10h">Top capturi — cei mai mari pești prinși <span class="lbdg">RECORD</span></div>
-        <div id="t10-list"></div>
-      </div>
-    </div>
-  </div><!-- /#rc-top10 -->
+    </div><!-- /#rc-top10 -->
 
   </div><!-- /#main-area -->
 
