@@ -769,7 +769,7 @@ function initMap() {
       .addTo(map)
       .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
       .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
-    m.on('click', () => {});
+    m.on('click', () => { flyToBalta(b.id); });
     b._marker = m;
   });
 
@@ -976,7 +976,7 @@ async function loadBaltiFromSupabase() {
       .addTo(map)
       .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
       .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
-    m.on('click', () => {});
+    m.on('click', () => { flyToBalta(b.id); });
     b._marker = m;
   });
   // Actualizeaza statistici
