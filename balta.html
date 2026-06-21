@@ -35,11 +35,11 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #pins-layer{position:absolute;inset:0;pointer-events:none;}
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
 #main-area{display:flex;flex-direction:row;gap:16px;align-items:start;}
-#map-col{display:flex;flex-direction:column;gap:10px;flex:0 0 min(calc(85vh - 120px), calc(100% - 580px));min-width:0;}
+#map-col{display:flex;flex-direction:column;gap:10px;flex:0 0 min(calc(85vh - 120px), calc(100% - 660px));min-width:0;}
 #map-grid{width:100%;}
 #map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;}
-#yt-col{display:flex;flex-direction:column;gap:10px;width:240px;flex-shrink:0;}
-#rc-top10{width:280px;flex-shrink:0;}
+#yt-col{display:flex;flex-direction:column;gap:10px;width:320px;flex-shrink:0;}
+#rc-top10{width:300px;flex-shrink:0;}
 #img-pins-wrap{position:relative;width:100%;aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
 #lake-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;}
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
@@ -127,15 +127,23 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   /* Mobil: totul stivuit */
   #map-wrap{width:100%;}
   #main-area{flex-direction:column;}
-  #map-col{flex:none;width:100%;}
+  #map-col{flex:none;width:100%;position:relative;}
   #yt-col{width:100%;}
   #rc-top10{width:100%;}
   #pins-layer{position:absolute;pointer-events:none;}
 
-  /* Overlay stand pe mobil: rămâne în flux în yt-col, deasupra YT */
+  /* Overlay stand pe mobil: modal fix centrat pe ecran */
   #stand-overlay{
-    border-radius:14px;
-    overflow-y:auto;
+    position:fixed !important;
+    top:50% !important;
+    left:50% !important;
+    transform:translate(-50%,-50%) !important;
+    width:min(460px, 95vw) !important;
+    max-width:95vw !important;
+    max-height:85vh !important;
+    overflow-y:auto !important;
+    z-index:500 !important;
+    border-radius:14px !important;
   }
   #stand-overlay[style*="display: block"],
   #stand-overlay[style*="display:block"]{
@@ -250,7 +258,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         </div><!-- /#map-wrap -->
       </div><!-- /#map-grid -->
 
-      <!-- Bara selectie rapida + legend — sub harta pe desktop, sub harta pe mobil -->
+      <!-- Bara selectie rapida + legend — sub harta -->
       <div id="map-sidebar">
         <div id="pw" style="margin:0;">
           <span class="pl">Selectează rapid:</span>
@@ -567,7 +575,7 @@ function renderPage(hartaUrl) {
   // Afișează pagina
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
-  document.getElementById('layout').style.display = 'grid';
+  document.getElementById('layout').style.display = 'block';
 
   // Init player drum acces
   showMapYT(null);
