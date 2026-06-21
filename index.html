@@ -890,26 +890,16 @@ function renderBalti() {
   document.getElementById('balti-list').innerHTML = sorted.map((b, idx) => {
     const rank = idx + 1;
     const medalColor = idx===0?'#FFD700':idx===1?'#C0C0C0':idx===2?'#CD7F32':'#1e293b';
-    const isUnlisted = b.vizibilitate === 'unlisted';
-    return `<div class="balta-row" data-id="${b.id}" onclick="flyToBalta(${b.id})">
-      <!-- Rank -->
-      <div style="width:28px;height:28px;border-radius:7px;background:${medalColor};display:flex;align-items:center;justify-content:center;font-size:${idx<3?'14':'11'}px;font-weight:900;color:${idx<3?'#000':'#64748b'};flex-shrink:0;">
+    const textColor  = idx<3?'#000':'#64748b';
+    return `<div class="balta-row" data-id="${b.id}" onclick="__goToBalta(${b.id})" style="cursor:pointer;">
+      <div style="width:28px;height:28px;border-radius:7px;background:${medalColor};display:flex;align-items:center;justify-content:center;font-size:${idx<3?'14':'11'}px;font-weight:900;color:${textColor};flex-shrink:0;">
         ${idx<3?medals[idx]:rank}
       </div>
-      <div class="balta-emoji">🌊</div>
       <div style="flex:1;min-width:0;">
         <div class="balta-name">${b.nume}</div>
-        <div class="balta-meta">📍 ${b.judet} · 🎣 ${b.standuri} standuri · 👁️ ${(b.vizite||0).toLocaleString()} vizite</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">
-        <button onclick="event.stopPropagation();__goToBalta(${b.id})"
-          style="background:#1a6b3a;border:none;color:#a3e635;font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;white-space:nowrap;">
-          🗺️ Harta baltii
-        </button>
-        <button onclick="event.stopPropagation();openEditBalta(${b.id})"
-          style="background:#1e293b;border:1px solid #334155;color:#94a3b8;font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;cursor:pointer;">
-          ✏️ Edit
-        </button>
+      <div style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap;flex-shrink:0;">
+        👁️ ${(b.vizite||0).toLocaleString()}
       </div>
     </div>`;
   }).join('') || '<div style="padding:20px;text-align:center;color:#4b5563;font-size:12px;">Nicio baltă publică înregistrată</div>';
