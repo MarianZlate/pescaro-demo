@@ -120,6 +120,59 @@ nav{display:flex;align-items:center;gap:6px;}
 ::-webkit-scrollbar-track{background:#0a0f1a;}
 ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
 @media(max-width:900px){#main{grid-template-columns:1fr;}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #hdr-in{padding:0 12px;height:52px;gap:8px;}
+  .logo-icon{font-size:22px;}
+  .logo-text{font-size:18px;}
+  .logo-badge{display:none;}
+  .nav-btn{padding:6px 8px;font-size:12px;}
+  #nav-add-balta{padding:6px 10px;font-size:12px;}
+  .nav-primary{padding:6px 12px;font-size:12px;}
+  .nav-user-name{display:none;}
+  .nav-admin-badge{font-size:10px;padding:4px 8px;}
+
+  #hero{padding:28px 14px 20px;}
+  .hero-title{font-size:26px;}
+  .hero-sub{font-size:13px;margin-bottom:20px;}
+
+  #search-wrap{padding:0 14px;}
+  #search-input{font-size:14px;}
+
+  #stats-bar{padding:0 14px;}
+
+  #main{padding:0 14px 40px;gap:14px;}
+  #map{height:380px;}
+
+  .hof-modal-inner{max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;margin-top:auto;}
+  #hof-modal{align-items:flex-end;}
+
+  .auth-inner{max-width:100%;border-radius:16px 16px 0 0;padding:24px 18px;margin-top:auto;}
+  #auth-modal{align-items:flex-end;}
+
+  /* Edit modal full screen pe mobil */
+  .edit-inner{max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;}
+  #edit-modal{align-items:flex-end;padding:0;}
+  .edit-hdr{border-radius:16px 16px 0 0;padding:14px 16px;}
+  .edit-title{font-size:14px;}
+  .edit-save-btn{padding:7px 12px;font-size:12px;}
+  .edit-body{padding:16px;}
+  .fg-row,.fg-row3{grid-template-columns:1fr;}
+
+  /* Wizard add balta */
+  .ab-inner{max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;}
+  #add-balta-modal{align-items:flex-end;padding:0;}
+}
+
+@media(max-width:480px){
+  .hero-title{font-size:22px;}
+  .nav-btn span{display:none;}
+  #map{height:300px;}
+  .stat-chip{padding:5px 12px;font-size:12px;}
+  .hof-row{padding:7px 12px;}
+  .balta-row{padding:8px 12px;}
+}
 .judet-opt{padding:9px 14px;cursor:pointer;font-size:13px;color:#f1f5f9;display:flex;align-items:center;gap:8px;border-bottom:1px solid #0f172a;transition:background .1s;}
 .judet-opt:last-child{border-bottom:none;}
 .judet-opt:hover,.judet-opt.focused{background:#1e293b;}
