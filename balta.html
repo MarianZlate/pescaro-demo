@@ -655,7 +655,15 @@ function renderPins() {
 }
 
 // ─── STAND SELECT ──────────────────────────────────────────────────────────
+
+function scrollToMap() {
+  if(window.innerWidth <= 768) {
+    var wrap = document.getElementById('map-wrap');
+    if(wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
 function selStand(id) {
+  scrollToMap();
   selId = id;
   var s = ST.find(function(x) { return x.id === id; });
   renderPins();
@@ -725,6 +733,7 @@ function deselectStand() {
 }
 
 function showAll() {
+  scrollToMap();
   deselectStand();
   document.getElementById('map-yt-iframe').src = '';
   document.getElementById('map-yt-bar').style.display = 'none';
@@ -734,6 +743,7 @@ function showAll() {
 }
 
 function showDrumAcces() {
+  scrollToMap();
   selId = null;
   document.getElementById('stand-overlay').style.display = 'none';
   renderPins();
