@@ -751,6 +751,7 @@ function selStand(id) {
   showMapYT(s);
   document.getElementById('stand-overlay').style.display = 'block';
   document.getElementById('spr').style.display = 'none';
+  document.getElementById('legend-card').style.display = 'none';
   document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
 }
 
