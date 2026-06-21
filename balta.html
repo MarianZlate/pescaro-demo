@@ -34,8 +34,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
 #pins-layer{position:absolute;inset:0;pointer-events:none;}
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
-#map-grid{display:grid;grid-template-columns:min(calc(85vh - 120px), calc(100% - 300px)) 280px;gap:16px;align-items:start;}
-#map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;}
+#main-area{display:flex;flex-direction:row;gap:16px;align-items:start;}
+#map-grid{flex:0 0 min(calc(85vh - 120px), calc(100% - 540px));min-width:0;}
+#map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;width:240px;flex-shrink:0;}
+#rc-top10{width:280px;flex-shrink:0;}
 #img-pins-wrap{position:relative;width:100%;aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
 #lake-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;}
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
@@ -120,12 +122,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Map-wrap pe mobil: lat cat ecranul, grid stivuit */
+  /* Map-wrap pe mobil: lat cat ecranul, main-area stivuit */
   #map-wrap{width:100%;}
-  #map-grid{grid-template-columns:1fr;}
-  #rc-top10{order:3;}
-  #map-sidebar{gap:8px;}
-  /* pins-layer pozitionat de JS via adjustPinsLayer */
+  #main-area{flex-direction:column;}
+  #map-grid{flex:none;width:100%;}
+  #map-sidebar{width:100%;}
+  #rc-top10{width:100%;}
   #pins-layer{position:absolute;pointer-events:none;}
 
   /* Overlay ocupa exact chenarul hartii */
@@ -239,7 +241,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div>
 
-  <!-- Map + Top10 dreapta -->
+  <!-- Map + Sidebar + Top10: wrapper flex pe desktop -->
+  <div id="main-area">
   <div id="map-grid">
     <div id="map-wrap">
       <div id="img-pins-wrap">
@@ -273,22 +276,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
     </div><!-- /#map-wrap -->
 
-    <!-- Top10 — coloana 2 in map-grid pe desktop -->
-    <div id="rc-top10">
-      <div class="t10c" id="top10-card" style="display:none;">
-        <div class="t10tabs">
-          <button class="t10t active" onclick="switchT10('top')" id="tab-top">🏆 Top capturi</button>
-        </div>
-        <div class="t10ct active" id="t10-top">
-          <div class="t10h">Top capturi — cei mai mari pești prinși <span class="lbdg">RECORD</span></div>
-          <div id="t10-list"></div>
-        </div>
-      </div>
-    </div><!-- /#rc-top10 -->
-
   </div><!-- /#map-grid -->
 
-  <!-- Butoane selectie stand + continut — SUB HARTA -->
+  <!-- Butoane selectie stand + continut — SUB HARTA (desktop: coloana 2, mobil: sub harta) -->
   <div id="map-sidebar">
     <div id="pw" style="margin:0;">
       <span class="pl">Selectează rapid:</span>
@@ -326,6 +316,21 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
     </div>
   </div><!-- /#map-sidebar -->
+
+  <!-- Top10 — desktop: coloana 3; mobil: sub map-sidebar (adica sub YT) -->
+  <div id="rc-top10">
+    <div class="t10c" id="top10-card" style="display:none;">
+      <div class="t10tabs">
+        <button class="t10t active" onclick="switchT10('top')" id="tab-top">🏆 Top capturi</button>
+      </div>
+      <div class="t10ct active" id="t10-top">
+        <div class="t10h">Top capturi — cei mai mari pești prinși <span class="lbdg">RECORD</span></div>
+        <div id="t10-list"></div>
+      </div>
+    </div>
+  </div><!-- /#rc-top10 -->
+
+  </div><!-- /#main-area -->
 
 </div><!-- /.lc -->
 </div><!-- /#layout -->
