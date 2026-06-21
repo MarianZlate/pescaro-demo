@@ -6,6 +6,7 @@
 <title>PescaRO — Bălți de pescuit din România</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;}
@@ -125,6 +126,42 @@ nav{display:flex;align-items:center;gap:6px;}
 .judet-opt.match-first{background:#0d1f12;}
 .judet-opt .judet-match{color:#a3e635;font-weight:800;}
 
+/* ── AUTH MODAL ── */
+#auth-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:900;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+#auth-modal.open{display:flex;}
+.auth-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:420px;padding:32px 28px;position:relative;}
+.auth-close{position:absolute;top:16px;right:18px;background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;}
+.auth-logo{text-align:center;font-size:32px;margin-bottom:8px;}
+.auth-title{text-align:center;font-size:20px;font-weight:900;color:#f1f5f9;margin-bottom:4px;}
+.auth-sub{text-align:center;font-size:12px;color:#4b5563;margin-bottom:24px;}
+.auth-tabs{display:flex;gap:0;background:#111827;border-radius:10px;padding:4px;margin-bottom:20px;}
+.auth-tab{flex:1;background:transparent;border:none;color:#4b5563;font-size:13px;font-weight:600;padding:8px;border-radius:7px;cursor:pointer;transition:all .2s;}
+.auth-tab.active{background:#1a6b3a;color:#a3e635;}
+.auth-fg{margin-bottom:14px;}
+.auth-fg label{display:block;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:5px;}
+.auth-fg input{width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;}
+.auth-fg input:focus{border-color:#1a6b3a;}
+.auth-btn{width:100%;background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;margin-top:6px;transition:background .2s;}
+.auth-btn:hover{background:#1e7a42;}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;}
+.auth-err{background:#3b0f0f;border:1px solid #ef4444;border-radius:8px;padding:9px 12px;font-size:12px;color:#fca5a5;margin-bottom:12px;display:none;}
+.auth-ok{background:#0d1f12;border:1px solid #1a6b3a;border-radius:8px;padding:9px 12px;font-size:12px;color:#a3e635;margin-bottom:12px;display:none;}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:#334155;font-size:11px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#1e293b;}
+.auth-google{width:100%;background:#111827;border:1.5px solid #1e293b;color:#f1f5f9;font-size:13px;font-weight:600;padding:11px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .2s;}
+.auth-google:hover{border-color:#334155;}
+.auth-remember{display:flex;align-items:center;gap:8px;margin:10px 0 14px 0;}
+.auth-remember input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#1a6b3a;flex-shrink:0;}
+.auth-remember label{font-size:12px;color:#64748b;cursor:pointer;user-select:none;}
+
+/* NAV USER */
+.nav-user{display:flex;align-items:center;gap:8px;}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#a3e635;cursor:pointer;border:2px solid #1a3020;}
+.nav-user-name{font-size:13px;color:#94a3b8;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nav-logout{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:12px;padding:5px 10px;border-radius:7px;cursor:pointer;}
+.nav-logout:hover{border-color:#ef4444;color:#ef4444;}
+.nav-admin-badge{font-size:10px;background:#f59e0b;color:#000;padding:2px 7px;border-radius:4px;font-weight:800;}
+
 /* ── DRAFT BANNER ── */
 #draft-banner{display:none;background:#1c1500;border:1px solid #92400e;border-radius:10px;padding:10px 16px;margin-bottom:0;align-items:center;gap:10px;flex-wrap:wrap;}
 #draft-banner.show{display:flex;}
@@ -133,9 +170,9 @@ nav{display:flex;align-items:center;gap:6px;}
 .draft-discard{background:transparent;border:1px solid #92400e;color:#92400e;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;}
 
 /* ── MODAL EDIT BALTA ── */
-#edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:700;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:20px;overflow-y:auto;}
+#edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:700;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:80px 20px 20px;overflow-y:auto;}
 #edit-modal.open{display:flex;}
-.edit-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:760px;margin:auto;}
+.edit-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:760px;margin:0 auto;}
 .edit-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;position:sticky;top:0;background:#0a0f1a;border-radius:20px 20px 0 0;z-index:10;}
 .edit-title{font-size:17px;font-weight:800;color:#f1f5f9;}
 .edit-hdr-btns{display:flex;gap:8px;align-items:center;}
@@ -242,10 +279,11 @@ nav{display:flex;align-items:center;gap:6px;}
       <span class="logo-badge">Beta</span>
     </a>
     <nav>
-      <button class="nav-btn">Harta</button>
       <button class="nav-btn" onclick="openHof()">🏆 Hall of Fame</button>
-      <button class="nav-btn" onclick="openAddBalta()">+ Adaugă baltă</button>
-      <button class="nav-primary">Contul meu</button>
+      <button class="nav-btn" id="nav-add-balta" onclick="onClickAddBalta()" style="display:none;">+ Adaugă baltă</button>
+      <div id="nav-auth-area">
+        <button class="nav-primary" onclick="openAuthModal()">Contul meu</button>
+      </div>
     </nav>
   </div>
 </div>
@@ -273,8 +311,8 @@ nav{display:flex;align-items:center;gap:6px;}
     <!-- STATS BAR -->
     <div id="stats-bar">
       <div class="stats-inner">
-        <div class="stat-chip"><strong>5</strong> bălți înregistrate</div>
-        <div class="stat-chip"><strong>24</strong> standuri totale</div>
+        <div class="stat-chip"><strong>1</strong> baltă înregistrată</div>
+        <div class="stat-chip"><strong>10</strong> standuri totale</div>
       </div>
     </div>
     <div id="map-wrap">
@@ -317,7 +355,7 @@ nav{display:flex;align-items:center;gap:6px;}
     <div class="balti-card">
       <div class="balti-header">
         <span class="balti-title">🔥 Top 10 cele mai accesate bălți</span>
-        <span class="balti-count" id="balti-count">5</span>
+        <span class="balti-count" id="balti-count">1</span>
       </div>
       <div id="balti-list"></div>
     </div>
@@ -364,6 +402,10 @@ nav{display:flex;align-items:center;gap:6px;}
       <div class="ab-step" onclick="abGoToStep(3)" style="cursor:pointer;" title="Mergi la Pas 3">
         <div class="step-dot" id="dot-3">3</div>
         <span class="step-lbl" id="lbl-3">Standuri</span>
+      </div>
+      <div class="ab-step" onclick="abGoToStep(4)" style="cursor:pointer;" title="Mergi la Pas 4">
+        <div class="step-dot" id="dot-4">4</div>
+        <span class="step-lbl" id="lbl-4">Hartă baltă</span>
       </div>
     </div>
 
@@ -472,6 +514,45 @@ nav{display:flex;align-items:center;gap:6px;}
         </button>
       </div>
 
+      <!-- PAS 4: Hartă baltă -->
+      <div class="ab-pane" id="pane-4">
+        <div style="font-size:13px;color:#94a3b8;margin-bottom:14px;line-height:1.6;">
+          Încarcă o imagine cu harta baltii (plan de sus, schiță cu standuri etc.). Poți face zoom și muta imaginea după preferință.
+        </div>
+
+        <!-- Drop zone -->
+        <div id="harta-dropzone" onclick="document.getElementById('harta-file-input').click()"
+          style="border:2px dashed #1e293b;border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#0d1014;margin-bottom:14px;">
+          <div style="font-size:36px;margin-bottom:10px;">🗺️</div>
+          <div style="font-size:14px;font-weight:700;color:#64748b;margin-bottom:4px;">Click sau trage o imagine aici</div>
+          <div style="font-size:11px;color:#334155;">JPG, PNG, WEBP — max 10MB</div>
+          <input type="file" id="harta-file-input" accept="image/*" style="display:none;" onchange="hartaOnFile(this)"/>
+        </div>
+
+        <!-- Viewer interactiv (ascuns până se încarcă imagine) -->
+        <div id="harta-viewer-wrap" style="display:none;">
+          <!-- Toolbar -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <button onclick="hartaZoom(1.2)" style="background:#1e293b;border:none;color:#f1f5f9;font-size:18px;width:34px;height:34px;border-radius:7px;cursor:pointer;line-height:1;" title="Zoom in">＋</button>
+            <button onclick="hartaZoom(1/1.2)" style="background:#1e293b;border:none;color:#f1f5f9;font-size:18px;width:34px;height:34px;border-radius:7px;cursor:pointer;line-height:1;" title="Zoom out">－</button>
+            <button onclick="hartaReset()" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;font-weight:700;padding:0 12px;height:34px;border-radius:7px;cursor:pointer;" title="Resetează vedere">↺ Reset</button>
+            <span style="font-size:11px;color:#334155;margin-left:4px;">Scroll = zoom · Drag = mută</span>
+            <button onclick="hartaRemove()" style="margin-left:auto;background:transparent;border:1px solid #334155;color:#64748b;font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;" title="Elimină imaginea">✕ Elimină</button>
+          </div>
+
+          <!-- Canvas viewer -->
+          <div id="harta-canvas-wrap" style="position:relative;width:100%;height:360px;border:1.5px solid #1e293b;border-radius:10px;overflow:hidden;background:#070b12;cursor:grab;">
+            <canvas id="harta-canvas" style="position:absolute;top:0;left:0;"></canvas>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:#1e293b;text-align:center;" id="harta-zoom-label">100%</div>
+        </div>
+
+        <div style="margin-top:10px;background:#0d1f12;border:1px solid #1a3020;border-radius:8px;padding:9px 12px;font-size:11px;color:#64748b;line-height:1.7;">
+          💡 Pasul este opțional — poți salva balta și fără hartă. Imaginea va apărea pe pagina baltii.
+        </div>
+        <div id="harta-upload-status" style="display:none;margin-top:8px;font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;background:#111827;"></div>
+      </div>
+
       <!-- SUCCES -->
       <div class="ab-pane" id="pane-success">
         <div class="ab-success">
@@ -530,37 +611,22 @@ nav{display:flex;align-items:center;gap:6px;}
 
 <script>
 
-// ── DATE ─────────────────────────────────────────────────────────────────────
-const BALTI = [
-  { id:1, nume:"Balta Comana",          judet:"Giurgiu",  lat:44.1619, lng:26.1036, ha:"1.200 ha", pret:"80 lei/zi",  standuri:12, record:"41kg Somn",   telefon:"+40 744 123 456" },
-  { id:2, nume:"Lacul Snagov",          judet:"Ilfov",    lat:44.7000, lng:26.1500, ha:"575 ha",   pret:"60 lei/zi",  standuri:8,  record:"8.9kg Șalău", telefon:"+40 722 987 654" },
-  { id:3, nume:"Balta Clejani",         judet:"Giurgiu",  lat:44.0333, lng:25.9833, ha:"320 ha",   pret:"70 lei/zi",  standuri:6,  record:"41kg Somn",   telefon:"+40 733 456 789" },
-  { id:4, nume:"Lacul Știucilor - Cluj",judet:"Cluj",     lat:46.8333, lng:23.6333, ha:"156 ha",   pret:"50 lei/zi",  standuri:4,  record:"12.1kg Știucă",telefon:"+40 755 321 654" },
-  { id:5, nume:"Balta Ileana Naipu",    judet:"Giurgiu",  lat:44.1619, lng:25.7249, ha:"~8 ha",    pret:"60 lei/zi",  standuri:10, record:"31kg Somn",   telefon:"+40 722 334 556" },
-];
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://emnesflrzptqfttlzusw.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbmVzZmxyenB0cWZ0dGx6dXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NTc5NDUsImV4cCI6MjA5NzUzMzk0NX0.LoR6peujcdm1SLZ8SUSdtSH8wDa_ptCUEYT3qtAPZXk';
+const CLOUDINARY_CLOUD = 'dlafkx65j';
+const CLOUDINARY_PRESET = 'ml_default';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: 'pescaro-auth',
+  }
+});
 
-const HOF = [
-  { loc:1,  pe:"Gheorghe Tanase",    stele:12, rec:"68kg Somn",         balta:"Balta Movila Miresii" },
-  { loc:2,  pe:"Liviu Gheorghe",     stele:9,  rec:"41kg Somn",         balta:"Balta Clejani"        },
-  { loc:3,  pe:"Andrei Constantin",  stele:7,  rec:"32kg Crap Oglindă", balta:"Balta Comana"         },
-  { loc:4,  pe:"Ion Popescu",        stele:6,  rec:"28.5kg Crap",       balta:"Balta Comana"         },
-  { loc:5,  pe:"Nicu Apostol",       stele:5,  rec:"52.3kg Somn",       balta:"Balta Movila Miresii" },
-  { loc:6,  pe:"Petre Lungu",        stele:4,  rec:"47.8kg Somn",       balta:"Balta Movila Miresii" },
-  { loc:7,  pe:"Florin Popa",        stele:4,  rec:"8.9kg Șalău",       balta:"Lacul Snagov"         },
-  { loc:8,  pe:"Tibor Molnar",       stele:3,  rec:"12.1kg Știucă",     balta:"Lacul Știucilor"      },
-  { loc:9,  pe:"Vasile Marinescu",   stele:3,  rec:"22.3kg Crap",       balta:"Balta Comana"         },
-  { loc:10, pe:"Dumitru Vasile",     stele:3,  rec:"35.5kg Somn",       balta:"Balta Clejani"        },
-  { loc:11, pe:"Gheorghe Mitu",      stele:3,  rec:"31kg Somn",         balta:"Balta Ileana Naipu"   },
-  { loc:12, pe:"Relu Stancu",        stele:2,  rec:"22.8kg Crap",       balta:"Balta Ileana Naipu"   },
-  { loc:13, pe:"Vasile Preda",       stele:2,  rec:"19.5kg Crap",       balta:"Balta Ileana Naipu"   },
-  { loc:14, pe:"Adrian Neagu",       stele:2,  rec:"7.2kg Crap",        balta:"Lacul Snagov"         },
-  { loc:15, pe:"Cristian Nedelcu",   stele:2,  rec:"22.1kg Crap",       balta:"Balta Comana"         },
-  { loc:16, pe:"George Petre",       stele:1,  rec:"24.6kg Crap",       balta:"Balta Comana"         },
-  { loc:17, pe:"Florin Marin",       stele:1,  rec:"11.8kg Crap",       balta:"Balta Ileana Naipu"   },
-  { loc:18, pe:"Radu Florescu",      stele:1,  rec:"16.3kg Știucă",     balta:"Balta Comana"         },
-  { loc:19, pe:"Szabo Andras",       stele:1,  rec:"9.7kg Știucă",      balta:"Lacul Știucilor"      },
-  { loc:20, pe:"Dan Popescu",        stele:1,  rec:"6.8kg Caras",       balta:"Balta Ileana Naipu"   },
-];
+// ── DATE ─────────────────────────────────────────────────────────────────────
+let BALTI = [];
+const HOF = [];
 
 const MEDAL_C = ['#FFD700','#C0C0C0','#CD7F32'];
 const MEDAL_I = ['🥇','🥈','🥉'];
@@ -578,30 +644,18 @@ function initMap() {
   }).addTo(map);
 
   BALTI.forEach(b => {
+    if (!b.lat || !b.lng) return;
     const icon = makeMarker(false);
     const m = L.marker([b.lat, b.lng], { icon })
       .addTo(map)
       .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
-      .bindTooltip(b.nume, {
-        permanent: false,
-        direction: 'top',
-        offset: [0, -44],
-        className: 'balta-tooltip'
-      });
+      .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
     m.on('click', () => {});
     b._marker = m;
   });
 
   window.__goToBalta = id => {
-    // Map ID -> fisier pagina balta
-    const pages = {
-      5: 'balta-ileana-naipu-FINAL.html',
-    };
-    if(pages[id]) {
-      window.open(pages[id], '_blank');
-    } else {
-      alert('Pagina pentru această baltă nu este disponibilă momentan.\nID: ' + id);
-    }
+    window.open('balta.html?id=' + id, '_blank');
   };
 
   setTimeout(() => map.invalidateSize(), 200);
@@ -786,13 +840,50 @@ style.textContent = '.balta-row.active-row{background:#1e293b;border-left:3px so
 document.head.appendChild(style);
 
 // ── BOOT ─────────────────────────────────────────────────────────────────────
-
+async function loadBaltiFromSupabase() {
+  const { data, error } = await sb.from('balti').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Eroare Supabase:', error); return; }
+  BALTI = (data || []).map(b => ({
+    id: b.id,
+    nume: b.nume,
+    judet: b.judet,
+    lat: b.lat,
+    lng: b.lng,
+    standuri: b.standuri || 0,
+    telefon: b.telefon || '—',
+    facebook: b.facebook || '',
+    whatsapp: b.whatsapp || '',
+    adresa: b.adresa || '',
+    rec: b.rec || '—',
+    vizibilitate: b.vizibilitate || 'unlisted',
+    vizite: b.vizite || 0,
+    _marker: null,
+  }));
+  // Pune markere pe harta
+  BALTI.forEach(b => {
+    if (!b.lat || !b.lng) return;
+    const icon = makeMarker(false);
+    const m = L.marker([b.lat, b.lng], { icon })
+      .addTo(map)
+      .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
+      .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
+    m.on('click', () => {});
+    b._marker = m;
+  });
+  // Actualizeaza statistici
+  const totalStanduri = BALTI.reduce((sum, b) => sum + (b.standuri || 0), 0);
+  const statChips = document.querySelectorAll('.stat-chip strong');
+  if (statChips[0]) statChips[0].textContent = BALTI.length;
+  if (statChips[1]) statChips[1].textContent = totalStanduri;
+  document.getElementById('balti-count').textContent = BALTI.length;
+  renderBalti();
+  renderHof();
+}
 
 window.addEventListener('load', () => {
   initMap();
-  renderHof();
-  renderBalti();
   checkDraft();
+  loadBaltiFromSupabase();
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -917,9 +1008,11 @@ const BALTI_EXTENDED = {
 
 function openEditBalta(id) {
   editBaltaId = id;
+  window._editHartaFile = null;
+  window._editHartaRemoved = false;
   const b = BALTI.find(x => x.id === id);
   if(!b) return;
-  const ext = BALTI_EXTENDED[id] || { standuri:[], facebook:'', whatsapp:'', adresa:'' };
+  const ext = BALTI_EXTENDED[id] || { standuri:[], facebook:'', whatsapp:'', adresa:'', drum_yt:'', harta_url:'' };
   document.getElementById('edit-modal-title').textContent = '✏️ ' + b.nume;
   document.getElementById('edit-modal-sub').textContent = '📍 ' + b.judet + ' · Modifică informațiile, standurile și media';
   document.getElementById('edit-body').innerHTML = buildEditBody(b, ext);
@@ -932,6 +1025,15 @@ function closeEditBalta() {
 }
 
 function buildEditBody(b, ext) {
+  const drumYt = (ext.drum_yt || b.drum_yt || '').replace(/"/g, '&quot;');
+  const hartaUrl = (ext.harta_url || '');
+  const hartaThumb = hartaUrl
+    ? `<div class="gal-thumb-edit" id="edit-harta-thumb" style="width:100%;height:160px;border-radius:10px;margin-bottom:8px;">
+        <img src="${hartaUrl}" style="width:100%;height:100%;object-fit:contain;background:#070b12;" loading="lazy"/>
+        <button class="gal-thumb-del" style="top:6px;right:6px;width:24px;height:24px;font-size:16px;" onclick="editHartaRemove()" title="Elimină hartă">✕</button>
+       </div>`
+    : '';
+
   return `
   <!-- SECTIUNE: Info generale -->
   <div class="edit-section">
@@ -945,6 +1047,49 @@ function buildEditBody(b, ext) {
     <div class="fg-row">
       <div class="fg"><label>LINK FACEBOOK</label><input type="url" id="e-fb" value="${ext.facebook||''}" placeholder="https://facebook.com/..." /></div>
       <div class="fg"><label>WHATSAPP ADMIN</label><input type="tel" id="e-wa" value="${ext.whatsapp||''}" /></div>
+    </div>
+  </div>
+
+  <!-- SECTIUNE: Media -->
+  <div class="edit-section">
+    <div class="edit-section-title"><span>🎬 MEDIA</span></div>
+
+    <!-- YouTube drum acces -->
+    <div class="fg">
+      <label>🎬 LINK YOUTUBE — VIDEO DRUM DE ACCES</label>
+      <input type="url" id="e-drum-yt" value="${drumYt}" placeholder="https://youtu.be/... sau https://youtube.com/watch?v=..."/>
+      <div style="font-size:10px;color:#4b5563;margin-top:4px;">Videoclip cu drumul de acces — apare pe pagina baltii</div>
+    </div>
+
+    <!-- Hartă baltă -->
+    <div class="fg">
+      <label>🗺️ HARTĂ BALTĂ (imagine)</label>
+      <div id="edit-harta-current">${hartaThumb}</div>
+
+      <!-- Drop zone (ascuns dacă există deja imagine) -->
+      <div id="edit-harta-dropzone"
+        onclick="document.getElementById('edit-harta-input').click()"
+        style="border:2px dashed #1e293b;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:#0d1014;${hartaUrl ? 'display:none;' : ''}">
+        <div style="font-size:28px;margin-bottom:6px;">🗺️</div>
+        <div style="font-size:13px;font-weight:700;color:#64748b;margin-bottom:2px;">Click sau trage o imagine</div>
+        <div style="font-size:10px;color:#334155;">JPG, PNG, WEBP — max 10MB</div>
+        <input type="file" id="edit-harta-input" accept="image/*" style="display:none;" onchange="editHartaOnFile(this)"/>
+      </div>
+
+      <!-- Viewer interactiv (apare după upload) -->
+      <div id="edit-harta-viewer" style="display:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0 6px;">
+          <button onclick="editHartaZoom(1.2)" style="background:#1e293b;border:none;color:#f1f5f9;font-size:18px;width:32px;height:32px;border-radius:6px;cursor:pointer;">＋</button>
+          <button onclick="editHartaZoom(1/1.2)" style="background:#1e293b;border:none;color:#f1f5f9;font-size:18px;width:32px;height:32px;border-radius:6px;cursor:pointer;">－</button>
+          <button onclick="editHartaReset()" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;font-weight:700;padding:0 12px;height:32px;border-radius:6px;cursor:pointer;">↺ Reset</button>
+          <span style="font-size:10px;color:#334155;margin-left:2px;">Scroll = zoom · Drag = mută</span>
+          <button onclick="editHartaRemove()" style="margin-left:auto;background:transparent;border:1px solid #334155;color:#64748b;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;">✕ Elimină</button>
+        </div>
+        <div id="edit-harta-canvas-wrap" style="position:relative;width:100%;height:280px;border:1.5px solid #1e293b;border-radius:10px;overflow:hidden;background:#070b12;cursor:grab;">
+          <canvas id="edit-harta-canvas" style="position:absolute;top:0;left:0;"></canvas>
+        </div>
+        <div style="margin-top:4px;font-size:11px;color:#1e293b;text-align:center;" id="edit-harta-zoom-label">100%</div>
+      </div>
     </div>
   </div>
 
@@ -1072,24 +1217,91 @@ function setEditViz(status) {
   }
 }
 
-function saveEditBalta() {
+async function saveEditBalta() {
   const b = BALTI.find(x => x.id === editBaltaId);
   if(!b) return;
-  // Update date balta
-  b.nume    = document.getElementById('e-nume')?.value   || b.nume;
-  b.judet   = document.getElementById('e-judet')?.value  || b.judet;
-  b.telefon = document.getElementById('e-tel')?.value    || b.telefon;
-  b.vizibilitate = editVizStatus;
-  // Update extended
+
+  const saveBtn = document.querySelector('.edit-save-btn');
+  if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Se salvează...'; }
+
+  // Câmpuri de bază
+  const updates = {
+    nume:         document.getElementById('e-nume')?.value.trim()   || b.nume,
+    judet:        document.getElementById('e-judet')?.value.trim()  || b.judet,
+    telefon:      document.getElementById('e-tel')?.value.trim()    || b.telefon,
+    adresa:       document.getElementById('e-adresa')?.value.trim() || '',
+    facebook:     document.getElementById('e-fb')?.value.trim()     || '',
+    whatsapp:     document.getElementById('e-wa')?.value.trim()     || '',
+    drum_yt:      document.getElementById('e-drum-yt')?.value.trim() || '',
+    vizibilitate: editVizStatus,
+  };
+
+  // Salvează în Supabase
+  const { error: updErr } = await sb.from('balti').update(updates).eq('id', editBaltaId);
+  if(updErr) {
+    showToast('❌ Eroare la salvare: ' + updErr.message);
+    if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
+    return;
+  }
+
+  // Upload hartă nouă dacă există
+  const editHartaUrl  = window._editHartaUrl;
+  const editHartaFile = window._editHartaFile;
+
+  if(editHartaUrl) {
+    await sb.from('poze').delete().eq('balta_id', editBaltaId).is('stand_id', null);
+    await sb.from('poze').insert({ balta_id: editBaltaId, url: editHartaUrl, stand_id: null });
+    console.log('✅ Hartă salvată din pre-upload:', editHartaUrl);
+    window._editHartaUrl = null;
+  } else if(editHartaFile) {
+    try {
+      const fd = new FormData();
+      fd.append('file', editHartaFile);
+      fd.append('upload_preset', CLOUDINARY_PRESET);
+      fd.append('tags', 'harta_balta');
+      const upResp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+      const upData = await upResp.json();
+      if(upData.secure_url) {
+        // Șterge harta veche din poze (dacă există) și inserează noua
+        await sb.from('poze').delete().eq('balta_id', editBaltaId).is('stand_id', null);
+        await sb.from('poze').insert({ balta_id: editBaltaId, url: upData.secure_url, stand_id: null });
+        console.log('✅ Hartă baltă uploadată la salvare:', upData.secure_url);
+      } else {
+        console.error('❌ Cloudinary error (hartă baltă):', upData);
+        showToast('⚠️ Harta nu s-a uploadat: ' + (upData.error?.message || 'eroare Cloudinary'));
+        if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
+        return;
+      }
+    } catch(e) {
+      console.error('❌ Fetch error (hartă baltă):', e);
+      showToast('⚠️ Harta nu s-a uploadat: ' + e.message);
+      if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
+      return;
+    }
+    window._editHartaFile = null;
+  }
+
+  // Dacă hartă eliminată manual (fără nouă imagine)
+  if(window._editHartaRemoved) {
+    await sb.from('poze').delete().eq('balta_id', editBaltaId).is('stand_id', null);
+    window._editHartaRemoved = false;
+  }
+
+  // Update local
+  Object.assign(b, updates);
   if(!BALTI_EXTENDED[editBaltaId]) BALTI_EXTENDED[editBaltaId] = {standuri:[]};
-  BALTI_EXTENDED[editBaltaId].facebook = document.getElementById('e-fb')?.value || '';
-  BALTI_EXTENDED[editBaltaId].whatsapp = document.getElementById('e-wa')?.value || '';
-  BALTI_EXTENDED[editBaltaId].adresa   = document.getElementById('e-adresa')?.value || '';
-  // Update popup marker
+  Object.assign(BALTI_EXTENDED[editBaltaId], {
+    facebook: updates.facebook,
+    whatsapp: updates.whatsapp,
+    adresa:   updates.adresa,
+    drum_yt:  updates.drum_yt,
+  });
+
   if(b._marker) b._marker.setPopupContent(popHtml(b));
   renderBalti();
   closeEditBalta();
   showToast('✅ Balta "' + b.nume + '" a fost actualizată!');
+  if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
@@ -1117,6 +1329,8 @@ const JUDETE_COORDS = {
 
 function openAddBalta() {
   abStep = 1; abCoords = null; abStandCount = 0;
+  window._hartaFile = null;
+  hartaRemove();
   document.getElementById('stands-container').innerHTML = '';
   // reset form
   ['ab-nume','ab-adresa','ab-tel','ab-fb','ab-wa','ab-drum-yt'].forEach(id => {
@@ -1144,7 +1358,7 @@ function closeAddBalta() {
 }
 
 function updateAbUI() {
-  const total = 3;
+  const total = 4;
   // Pane-uri
   document.querySelectorAll('.ab-pane').forEach(p => p.classList.remove('active'));
   const pane = abStep > total ? 'pane-success' : 'pane-' + abStep;
@@ -1179,7 +1393,7 @@ function updateAbUI() {
 }
 
 function abGoToStep(step) {
-  if(abStep > 3) return; // nu navigam din success
+  if(abStep > 4) return; // nu navigam din success
   abStep = step;
   updateAbUI();
   if(step === 2) setTimeout(() => { if(abMap) abMap.invalidateSize(); }, 150);
@@ -1197,8 +1411,7 @@ function abBack() {
   if(abStep === 2) setTimeout(() => { if(abMap) abMap.invalidateSize(); }, 150);
 }
 
-function abSubmit() {
-  // Validare minima la submit
+async function abSubmit() {
   const nume = document.getElementById('ab-nume').value.trim();
   if(!nume) {
     abStep = 1; updateAbUI();
@@ -1207,25 +1420,103 @@ function abSubmit() {
     return;
   }
 
-  const balta = {
-    id: BALTI.length + 1,
+  // Dezactiveaza butonul submit pe durata salvarii
+  const submitBtn = document.getElementById('ab-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⏳ Se salvează...';
+
+  const standuriData = getStanduriData();
+
+  // 1. Salveaza balta in Supabase
+  const { data: baltaSaved, error: baltaErr } = await sb.from('balti').insert({
     nume,
     judet:    document.getElementById('ab-judet').value || '—',
     adresa:   document.getElementById('ab-adresa').value.trim(),
     telefon:  document.getElementById('ab-tel').value.trim() || '—',
-    facebook:  document.getElementById('ab-fb').value.trim(),
-    whatsapp:  document.getElementById('ab-wa').value.trim(),
-    drum_yt:   document.getElementById('ab-drum-yt').value.trim(),
+    facebook: document.getElementById('ab-fb').value.trim(),
+    whatsapp: document.getElementById('ab-wa').value.trim(),
+    drum_yt:  document.getElementById('ab-drum-yt')?.value.trim() || '',
     lat:      abCoords ? abCoords.lat : null,
     lng:      abCoords ? abCoords.lng : null,
-    ha:       '? ha',
-    pret:     '? lei/zi',
+    standuri: standuriData.length,
     rec:      '—',
-    standuri: getStanduriData().length,
-    vizibilitate: 'unlisted', // noua balta e unlisted pana admin o aproba
-  };
+    vizibilitate: 'unlisted',
+  }).select().single();
 
-  // Adauga pe harta daca are coordonate
+  if(baltaErr) {
+    showAbError('Eroare la salvare: ' + baltaErr.message);
+    submitBtn.disabled = false;
+    submitBtn.textContent = '✓ Salvează balta';
+    return;
+  }
+
+  const baltaId = baltaSaved.id;
+
+  // 2. Salveaza standurile
+  if(standuriData.length > 0) {
+    const standuriRows = standuriData.map(s => ({
+      balta_id: baltaId,
+      nume: s.nume,
+      adancime: s.adancime || null,
+      distanta: s.distanta || null,
+      latime: s.latime || null,
+      yt: s.yt || '',
+    }));
+    await sb.from('standuri').insert(standuriRows);
+  }
+
+  // 3. Upload poze standuri pe Cloudinary
+  for(let i = 0; i < standuriData.length; i++) {
+    const s = standuriData[i];
+    if(!s.foto) continue;
+    try {
+      const fotoResp = await fetch(s.foto);
+      const blob = await fotoResp.blob();
+      const fd = new FormData();
+      fd.append('file', blob);
+      fd.append('upload_preset', CLOUDINARY_PRESET);
+      const upResp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+      const upData = await upResp.json();
+      if(upData.secure_url) {
+        await sb.from('poze').insert({ balta_id: baltaId, url: upData.secure_url });
+      }
+    } catch(e) { console.warn('Eroare upload poza stand', e); }
+  }
+
+  // 4. Upload harta baltii pe Cloudinary (dacă există)
+  const hartaUrl  = window._hartaUrl;   // pre-uploadat la selectarea fișierului
+  const hartaFile = window._hartaFile;  // fișier neuploadat încă (fallback)
+
+  if(hartaUrl) {
+    // Deja uploadat — inserăm direct URL-ul
+    await sb.from('poze').insert({ balta_id: baltaId, url: hartaUrl, stand_id: null });
+    console.log('✅ Hartă salvată din pre-upload:', hartaUrl);
+    window._hartaUrl = null;
+  } else if(hartaFile) {
+    // Upload acum (dacă pre-upload-ul a eșuat sau nu s-a terminat)
+    try {
+      const fd = new FormData();
+      fd.append('file', hartaFile);
+      fd.append('upload_preset', CLOUDINARY_PRESET);
+      fd.append('tags', 'harta_balta');
+      const upResp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+      const upData = await upResp.json();
+      if(upData.secure_url) {
+        await sb.from('poze').insert({ balta_id: baltaId, url: upData.secure_url, stand_id: null });
+        console.log('✅ Hartă baltă uploadată la submit:', upData.secure_url);
+      } else {
+        console.error('❌ Cloudinary error (hartă baltă):', upData);
+        showAbError('Balta a fost salvată, dar harta nu s-a uploadat: ' + (upData.error?.message || 'eroare necunoscută Cloudinary'));
+      }
+    } catch(e) {
+      console.error('❌ Fetch error (hartă baltă):', e);
+      showAbError('Balta a fost salvată, dar harta nu s-a uploadat: ' + e.message);
+    }
+    window._hartaFile = null;
+  }
+
+  // 5. Adauga pe harta locala
+  const balta = { ...baltaSaved, _marker: null };
   if(abCoords) {
     balta._marker = L.marker([abCoords.lat, abCoords.lng], { icon: makeMarker(false) })
       .addTo(map)
@@ -1233,9 +1524,19 @@ function abSubmit() {
   }
   BALTI.push(balta);
   renderBalti();
+  const totalStanduri = BALTI.reduce((sum, b) => sum + (b.standuri || 0), 0);
+  const statChips = document.querySelectorAll('.stat-chip strong');
+  if(statChips[0]) statChips[0].textContent = BALTI.length;
+  if(statChips[1]) statChips[1].textContent = totalStanduri;
   document.getElementById('balti-count').textContent = BALTI.length;
 
-  abStep = 4;
+  // Sterge draft
+  try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+  document.getElementById('draft-banner').classList.remove('show');
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = '✓ Salvează balta';
+  abStep = 5;
   updateAbUI();
 }
 
@@ -1651,6 +1952,586 @@ function getStanduriData() {
     </div>
   </div>
 </div>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="auth-inner">
+    <button class="auth-close" onclick="closeAuthModal()">✕</button>
+    <div class="auth-logo">🎣</div>
+    <div class="auth-title">PescaRO</div>
+    <div class="auth-sub">Intră în cont sau creează unul nou</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="authSwitchTab('login')">Autentificare</button>
+      <button class="auth-tab" id="tab-register" onclick="authSwitchTab('register')">Cont nou</button>
+    </div>
+
+    <div id="auth-err" class="auth-err"></div>
+    <div id="auth-ok" class="auth-ok"></div>
+
+    <!-- LOGIN -->
+    <div id="pane-login">
+      <div class="auth-fg">
+        <label>EMAIL</label>
+        <input type="email" id="login-email" placeholder="adresa@email.com" autocomplete="email"/>
+      </div>
+      <div class="auth-fg">
+        <label>PAROLĂ</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="auth-remember">
+        <input type="checkbox" id="remember-me" checked/>
+        <label for="remember-me">Ține-mă logat</label>
+      </div>
+      <button class="auth-btn" id="login-btn" onclick="doLogin()">Intră în cont</button>
+      <div class="auth-divider">sau</div>
+      <button class="auth-google" onclick="doGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continuă cu Google
+      </button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="pane-register" style="display:none;">
+      <div class="auth-fg">
+        <label>EMAIL</label>
+        <input type="email" id="reg-email" placeholder="adresa@email.com" autocomplete="email"/>
+      </div>
+      <div class="auth-fg">
+        <label>PAROLĂ</label>
+        <input type="password" id="reg-pass" placeholder="Minim 6 caractere" autocomplete="new-password"/>
+      </div>
+      <div class="auth-fg">
+        <label>CONFIRMĂ PAROLA</label>
+        <input type="password" id="reg-pass2" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"/>
+      </div>
+      <button class="auth-btn" id="reg-btn" onclick="doRegister()">Creează cont</button>
+      <div class="auth-divider">sau</div>
+      <button class="auth-google" onclick="doGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continuă cu Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUTH SYSTEM ───────────────────────────────────────────────────────────────
+let currentUser = null;
+let currentRole = 'user';
+let _roleCache  = null; // cache: { userId, rol } — evită query repetate
+
+function openAuthModal()  { document.getElementById('auth-modal').classList.add('open'); }
+function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); authClearMsg(); }
+
+function authSwitchTab(tab) {
+  document.getElementById('pane-login').style.display    = tab === 'login'    ? 'block' : 'none';
+  document.getElementById('pane-register').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  authClearMsg();
+}
+
+function authShowErr(msg) {
+  const el = document.getElementById('auth-err');
+  el.textContent = '⚠️ ' + msg; el.style.display = 'block';
+  document.getElementById('auth-ok').style.display = 'none';
+}
+function authShowOk(msg) {
+  const el = document.getElementById('auth-ok');
+  el.textContent = '✓ ' + msg; el.style.display = 'block';
+  document.getElementById('auth-err').style.display = 'none';
+}
+function authClearMsg() {
+  document.getElementById('auth-err').style.display = 'none';
+  document.getElementById('auth-ok').style.display  = 'none';
+}
+
+async function doLogin() {
+  const email      = document.getElementById('login-email').value.trim();
+  const pass       = document.getElementById('login-pass').value;
+  const rememberMe = document.getElementById('remember-me').checked;
+  if(!email || !pass) { authShowErr('Completează email și parola.'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Se conectează...';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false; btn.textContent = 'Intră în cont';
+  if(error) { authShowErr('Email sau parolă incorectă.'); return; }
+  if(!rememberMe) sessionStorage.setItem('pescaro-session-only', '1');
+  else            sessionStorage.removeItem('pescaro-session-only');
+  // closeAuthModal() va fi chemat de onAuthStateChange SIGNED_IN
+}
+
+async function doRegister() {
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  if(!email || !pass)  { authShowErr('Completează toate câmpurile.'); return; }
+  if(pass !== pass2)   { authShowErr('Parolele nu coincid.'); return; }
+  if(pass.length < 6)  { authShowErr('Parola trebuie să aibă minim 6 caractere.'); return; }
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true; btn.textContent = 'Se creează contul...';
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  btn.disabled = false; btn.textContent = 'Creează cont';
+  if(error) { authShowErr(error.message); return; }
+  if(data.user) await sb.from('user_roles').insert({ id: data.user.id, rol: 'user' });
+  authShowOk('Cont creat! Verifică emailul pentru confirmare.');
+}
+
+async function doGoogleLogin() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/index.html' }
+  });
+  if(error) authShowErr('Eroare Google login: ' + error.message);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+}
+
+async function updateNavForUser(user) {
+  const area   = document.getElementById('nav-auth-area');
+  const addBtn = document.getElementById('nav-add-balta');
+  if(!user) {
+    area.innerHTML = `<button class="nav-primary" onclick="openAuthModal()">Contul meu</button>`;
+    addBtn.style.display = 'none';
+    currentRole = 'user';
+    _roleCache  = null;
+    return;
+  }
+
+  // Folosim cache-ul dacă e același user — evităm query inutil la TOKEN_REFRESHED
+  if(_roleCache && _roleCache.userId === user.id) {
+    currentRole = _roleCache.rol;
+  } else {
+    const { data: roleData } = await sb.from('user_roles').select('rol').eq('id', user.id).single();
+    currentRole = roleData?.rol || 'user';
+    _roleCache  = { userId: user.id, rol: currentRole };
+  }
+
+  const isAdmin  = currentRole === 'admin';
+  const initials = user.email.slice(0, 2).toUpperCase();
+  area.innerHTML = `
+    <div class="nav-user">
+      ${isAdmin ? '<a href="admin.html" class="nav-admin-badge" style="text-decoration:none;cursor:pointer;" title="Panou de administrare">⚙️ Admin</a>' : ''}
+      <div class="nav-avatar" title="${user.email}">${initials}</div>
+      <span class="nav-user-name">${user.email.split('@')[0]}</span>
+      <button class="nav-logout" onclick="doLogout()">Ieși</button>
+    </div>`;
+  addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+}
+
+function onClickAddBalta() {
+  if(currentRole !== 'admin') { authShowErr('Doar adminul poate adăuga bălți.'); return; }
+  openAddBalta();
+}
+
+// La load: INITIAL_SESSION e garantat cu starea reală din localStorage
+sb.auth.onAuthStateChange(async (event, session) => {
+  if(event === 'INITIAL_SESSION') {
+    currentUser = session?.user || null;
+    await updateNavForUser(currentUser);
+    if(currentUser && sessionStorage.getItem('pescaro-session-only') === '1') {
+      window.addEventListener('beforeunload', () => { sb.auth.signOut(); });
+    }
+  } else if(event === 'SIGNED_IN') {
+    currentUser = session?.user || null;
+    await updateNavForUser(currentUser);
+    closeAuthModal();
+  } else if(event === 'SIGNED_OUT') {
+    currentUser = null;
+    _roleCache  = null;
+    await updateNavForUser(null);
+  }
+});
+
+// ── HARTĂ BALTĂ — UPLOAD + VIEWER INTERACTIV ─────────────────────────────────
+(function() {
+  let img = null;
+  let scale = 1, offX = 0, offY = 0;
+  let dragging = false, startX = 0, startY = 0, startOX = 0, startOY = 0;
+  const MIN_SCALE = 0.1, MAX_SCALE = 8;
+
+  function getCanvas() { return document.getElementById('harta-canvas'); }
+  function getWrap()   { return document.getElementById('harta-canvas-wrap'); }
+
+  function draw() {
+    const canvas = getCanvas();
+    const wrap = getWrap();
+    if(!canvas || !wrap || !img) return;
+    canvas.width  = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(offX, offY);
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0);
+    ctx.restore();
+    const lbl = document.getElementById('harta-zoom-label');
+    if(lbl) lbl.textContent = Math.round(scale * 100) + '%';
+  }
+
+  function fitToView() {
+    const wrap = getWrap();
+    if(!wrap || !img) return;
+    const ww = wrap.clientWidth, wh = wrap.clientHeight;
+    const scaleW = ww / img.naturalWidth;
+    const scaleH = wh / img.naturalHeight;
+    scale = Math.min(scaleW, scaleH, 1);
+    offX = (ww - img.naturalWidth * scale) / 2;
+    offY = (wh - img.naturalHeight * scale) / 2;
+    draw();
+  }
+
+  window.hartaOnFile = function(input) {
+    const file = input.files[0];
+    if(!file) return;
+    window._hartaFile = file;
+
+    // Afișează status upload în timp real
+    const statusEl = document.getElementById('harta-upload-status');
+    if(statusEl) { statusEl.textContent = '⏳ Se verifică imaginea...'; statusEl.style.color = '#64748b'; statusEl.style.display = 'block'; }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      img = new Image();
+      img.onload = function() {
+        document.getElementById('harta-dropzone').style.display = 'none';
+        document.getElementById('harta-viewer-wrap').style.display = 'block';
+        setTimeout(fitToView, 50);
+        attachEvents();
+
+        // Test upload Cloudinary imediat — să vedem dacă preset-ul funcționează
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', CLOUDINARY_PRESET);
+        fd.append('tags', 'harta_balta');
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd })
+          .then(r => r.json())
+          .then(data => {
+            if(data.secure_url) {
+              // Succes — stocăm URL-ul direct, nu mai re-uploadăm la submit
+              window._hartaUrl = data.secure_url;
+              window._hartaFile = null; // nu mai e nevoie de fișier
+              if(statusEl) { statusEl.textContent = '✅ Imaginea a fost uploadată cu succes'; statusEl.style.color = '#a3e635'; }
+              console.log('✅ Hartă pre-uploadată:', data.secure_url);
+            } else {
+              window._hartaFile = file; // păstrăm fișierul pentru retry la submit
+              if(statusEl) { statusEl.textContent = '⚠️ ' + (data.error?.message || 'Eroare Cloudinary — verifică setările preset-ului'); statusEl.style.color = '#f59e0b'; }
+              console.error('❌ Cloudinary pre-upload error:', data);
+            }
+          })
+          .catch(err => {
+            window._hartaFile = file;
+            if(statusEl) { statusEl.textContent = '⚠️ Eroare rețea: ' + err.message; statusEl.style.color = '#ef4444'; }
+            console.error('❌ Fetch error pre-upload:', err);
+          });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.hartaZoom = function(factor) {
+    const wrap = getWrap();
+    if(!wrap) return;
+    const cx = wrap.clientWidth / 2, cy = wrap.clientHeight / 2;
+    const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
+    offX = cx - (cx - offX) * (newScale / scale);
+    offY = cy - (cy - offY) * (newScale / scale);
+    scale = newScale;
+    draw();
+  };
+
+  window.hartaReset = fitToView;
+
+  window.hartaRemove = function() {
+    img = null;
+    window._hartaFile = null;
+    const fi = document.getElementById('harta-file-input');
+    if(fi) fi.value = '';
+    const dz = document.getElementById('harta-dropzone');
+    const vw = document.getElementById('harta-viewer-wrap');
+    if(dz) dz.style.display = '';
+    if(vw) vw.style.display = 'none';
+  };
+
+  function attachEvents() {
+    const wrap = getWrap();
+    if(!wrap || wrap._hartaEventsAttached) return;
+    wrap._hartaEventsAttached = true;
+
+    // Mouse drag
+    wrap.addEventListener('mousedown', function(e) {
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      startOX = offX; startOY = offY;
+      wrap.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', function(e) {
+      if(!dragging) return;
+      offX = startOX + (e.clientX - startX);
+      offY = startOY + (e.clientY - startY);
+      draw();
+    });
+    window.addEventListener('mouseup', function() {
+      dragging = false;
+      if(wrap) wrap.style.cursor = 'grab';
+    });
+
+    // Touch drag + pinch zoom
+    let lastTouchDist = null;
+    wrap.addEventListener('touchstart', function(e) {
+      if(e.touches.length === 1) {
+        dragging = true;
+        startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+        startOX = offX; startOY = offY;
+      }
+      if(e.touches.length === 2) {
+        lastTouchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+      e.preventDefault();
+    }, { passive: false });
+    wrap.addEventListener('touchmove', function(e) {
+      if(e.touches.length === 1 && dragging) {
+        offX = startOX + (e.touches[0].clientX - startX);
+        offY = startOY + (e.touches[0].clientY - startY);
+        draw();
+      }
+      if(e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if(lastTouchDist) {
+          const rect = wrap.getBoundingClientRect();
+          const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+          const cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+          const factor = dist / lastTouchDist;
+          const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
+          offX = cx - (cx - offX) * (newScale / scale);
+          offY = cy - (cy - offY) * (newScale / scale);
+          scale = newScale;
+          draw();
+        }
+        lastTouchDist = dist;
+      }
+      e.preventDefault();
+    }, { passive: false });
+    wrap.addEventListener('touchend', function() { dragging = false; lastTouchDist = null; });
+
+    // Scroll wheel zoom
+    wrap.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      const rect = wrap.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
+      offX = cx - (cx - offX) * (newScale / scale);
+      offY = cy - (cy - offY) * (newScale / scale);
+      scale = newScale;
+      draw();
+    }, { passive: false });
+
+    // Drag & drop fișier pe dropzone
+    const dz = document.getElementById('harta-dropzone');
+    if(dz) {
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#1a6b3a'; dz.style.background = '#0d1f12'; });
+      dz.addEventListener('dragleave', () => { dz.style.borderColor = '#1e293b'; dz.style.background = '#0d1014'; });
+      dz.addEventListener('drop', e => {
+        e.preventDefault();
+        dz.style.borderColor = '#1e293b'; dz.style.background = '#0d1014';
+        const file = e.dataTransfer && e.dataTransfer.files[0];
+        if(file && file.type.startsWith('image/')) {
+          window._hartaFile = file;
+          const input = document.getElementById('harta-file-input');
+          try { const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; } catch(err) {}
+          window.hartaOnFile({ files: [file] });
+        }
+      });
+    }
+  }
+
+  window.addEventListener('resize', function() { if(img) draw(); });
+})();
+
+// ── HARTĂ BALTĂ — VIEWER MODAL EDITARE ───────────────────────────────────────
+(function() {
+  let img = null;
+  let scale = 1, offX = 0, offY = 0;
+  let dragging = false, startX = 0, startY = 0, startOX = 0, startOY = 0;
+  const MIN_SCALE = 0.1, MAX_SCALE = 8;
+
+  function getCanvas() { return document.getElementById('edit-harta-canvas'); }
+  function getWrap()   { return document.getElementById('edit-harta-canvas-wrap'); }
+
+  function draw() {
+    const canvas = getCanvas(); const wrap = getWrap();
+    if(!canvas || !wrap || !img) return;
+    canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save(); ctx.translate(offX, offY); ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0); ctx.restore();
+    const lbl = document.getElementById('edit-harta-zoom-label');
+    if(lbl) lbl.textContent = Math.round(scale * 100) + '%';
+  }
+
+  function fitToView() {
+    const wrap = getWrap();
+    if(!wrap || !img) return;
+    const scaleW = wrap.clientWidth / img.naturalWidth;
+    const scaleH = wrap.clientHeight / img.naturalHeight;
+    scale = Math.min(scaleW, scaleH, 1);
+    offX = (wrap.clientWidth  - img.naturalWidth  * scale) / 2;
+    offY = (wrap.clientHeight - img.naturalHeight * scale) / 2;
+    draw();
+  }
+
+  window.editHartaOnFile = function(input) {
+    const file = (input.files || [])[0];
+    if(!file) return;
+    window._editHartaFile = file;
+    window._editHartaRemoved = false;
+    window._editHartaUrl = null;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      img = new Image();
+      img.onload = function() {
+        // Ascunde thumb curent și dropzone, arată viewer
+        const cur = document.getElementById('edit-harta-current');
+        const dz  = document.getElementById('edit-harta-dropzone');
+        const vw  = document.getElementById('edit-harta-viewer');
+        if(cur) cur.innerHTML = '';
+        if(dz)  dz.style.display = 'none';
+        if(vw)  vw.style.display = 'block';
+        setTimeout(fitToView, 50);
+        attachEvents();
+
+        // Pre-upload imediat pe Cloudinary
+        const zoomLbl = document.getElementById('edit-harta-zoom-label');
+        if(zoomLbl) { zoomLbl.textContent = '⏳ Se uploadează...'; zoomLbl.style.color = '#64748b'; }
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', CLOUDINARY_PRESET);
+        fd.append('tags', 'harta_balta');
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: fd })
+          .then(r => r.json())
+          .then(data => {
+            if(data.secure_url) {
+              window._editHartaUrl  = data.secure_url;
+              window._editHartaFile = null;
+              if(zoomLbl) { zoomLbl.textContent = '✅ Uploadat'; zoomLbl.style.color = '#a3e635'; }
+              console.log('✅ Hartă edit pre-uploadată:', data.secure_url);
+            } else {
+              if(zoomLbl) { zoomLbl.textContent = '⚠️ ' + (data.error?.message || 'Eroare Cloudinary'); zoomLbl.style.color = '#f59e0b'; }
+              console.error('❌ Cloudinary edit pre-upload error:', data);
+            }
+          })
+          .catch(err => {
+            if(zoomLbl) { zoomLbl.textContent = '⚠️ Eroare rețea: ' + err.message; zoomLbl.style.color = '#ef4444'; }
+            console.error('❌ Fetch error edit pre-upload:', err);
+          });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.editHartaZoom = function(factor) {
+    const wrap = getWrap(); if(!wrap) return;
+    const cx = wrap.clientWidth / 2, cy = wrap.clientHeight / 2;
+    const ns = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
+    offX = cx - (cx - offX) * (ns / scale);
+    offY = cy - (cy - offY) * (ns / scale);
+    scale = ns; draw();
+  };
+
+  window.editHartaReset = fitToView;
+
+  window.editHartaRemove = function() {
+    img = null;
+    window._editHartaFile = null;
+    window._editHartaRemoved = true;
+    const fi = document.getElementById('edit-harta-input');
+    if(fi) fi.value = '';
+    const cur = document.getElementById('edit-harta-current');
+    const dz  = document.getElementById('edit-harta-dropzone');
+    const vw  = document.getElementById('edit-harta-viewer');
+    if(cur) cur.innerHTML = '';
+    if(dz)  dz.style.display = '';
+    if(vw)  vw.style.display = 'none';
+  };
+
+  function attachEvents() {
+    const wrap = getWrap();
+    if(!wrap || wrap._editHartaEvt) return;
+    wrap._editHartaEvt = true;
+
+    wrap.addEventListener('mousedown', function(e) {
+      dragging = true; startX = e.clientX; startY = e.clientY;
+      startOX = offX; startOY = offY; wrap.style.cursor = 'grabbing'; e.preventDefault();
+    });
+    window.addEventListener('mousemove', function(e) {
+      if(!dragging) return;
+      offX = startOX + (e.clientX - startX); offY = startOY + (e.clientY - startY); draw();
+    });
+    window.addEventListener('mouseup', function() { dragging = false; if(wrap) wrap.style.cursor = 'grab'; });
+
+    let lastDist = null;
+    wrap.addEventListener('touchstart', function(e) {
+      if(e.touches.length === 1) { dragging = true; startX = e.touches[0].clientX; startY = e.touches[0].clientY; startOX = offX; startOY = offY; }
+      if(e.touches.length === 2) lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      e.preventDefault();
+    }, { passive: false });
+    wrap.addEventListener('touchmove', function(e) {
+      if(e.touches.length === 1 && dragging) { offX = startOX + (e.touches[0].clientX - startX); offY = startOY + (e.touches[0].clientY - startY); draw(); }
+      if(e.touches.length === 2) {
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        if(lastDist) {
+          const rect = wrap.getBoundingClientRect();
+          const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+          const cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+          const ns = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (d / lastDist)));
+          offX = cx - (cx - offX) * (ns / scale); offY = cy - (cy - offY) * (ns / scale); scale = ns; draw();
+        }
+        lastDist = d;
+      }
+      e.preventDefault();
+    }, { passive: false });
+    wrap.addEventListener('touchend', function() { dragging = false; lastDist = null; });
+
+    wrap.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      const rect = wrap.getBoundingClientRect();
+      const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+      const f = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      const ns = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * f));
+      offX = cx - (cx - offX) * (ns / scale); offY = cy - (cy - offY) * (ns / scale); scale = ns; draw();
+    }, { passive: false });
+
+    // Drag & drop pe dropzone
+    const dz = document.getElementById('edit-harta-dropzone');
+    if(dz && !dz._evtAttached) {
+      dz._evtAttached = true;
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#1a6b3a'; dz.style.background = '#0d1f12'; });
+      dz.addEventListener('dragleave', () => { dz.style.borderColor = '#1e293b'; dz.style.background = '#0d1014'; });
+      dz.addEventListener('drop', e => {
+        e.preventDefault(); dz.style.borderColor = '#1e293b'; dz.style.background = '#0d1014';
+        const file = e.dataTransfer && e.dataTransfer.files[0];
+        if(file && file.type.startsWith('image/')) window.editHartaOnFile({ files: [file] });
+      });
+    }
+  }
+})();
+</script>
 
 </body>
 </html>
