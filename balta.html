@@ -34,8 +34,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
 #pins-layer{position:absolute;inset:0;pointer-events:none;}
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
-#img-pins-wrap{position:relative;width:100%;}
-#lake-img{display:block;width:100%;height:auto;max-width:100%;pointer-events:none;}
+#img-pins-wrap{position:relative;width:100%;aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
+#lake-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;}
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
 .stand-pin svg{display:block;}
 
@@ -118,40 +118,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pw{gap:5px;flex-wrap:wrap;}
   .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
 
-  /* Harta 1:1 pe mobil, fundal verde, imaginea centrata */
-  #map-wrap{
-    width:100%;
-    aspect-ratio:1/1;
-    background:#0d2010;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  /* img-pins-wrap se dimensioneaza dupa imagine, centrat in chenarul verde */
-  #img-pins-wrap{
-    position:relative;
-    width:100%;
-    max-width:100%;
-    max-height:100%;
-    /* Limiteaza inaltimea la chenarul 1:1 */
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  #lake-img{
-    display:block;
-    max-width:100%;
-    max-height:100%;
-    width:auto;
-    height:auto;
-    object-fit:contain;
-  }
-  /* pins-layer trebuie sa acopere exact imaginea, nu tot wrap-ul */
-  #pins-layer{
-    position:absolute;
-    pointer-events:none;
-  }
+  /* Map-wrap pe mobil: lat cat ecranul */
+  #map-wrap{width:100%;}
+  /* pins-layer pozitionat de JS via adjustPinsLayer */
+  #pins-layer{position:absolute;pointer-events:none;}
 
   /* Overlay ocupa exact chenarul hartii */
   #stand-overlay{
@@ -698,7 +668,6 @@ function renderPins() {
 // ─── STAND SELECT ──────────────────────────────────────────────────────────
 
 function adjustPinsLayer() {
-  if(window.innerWidth > 768) return; // doar pe mobil
   var img = document.getElementById('lake-img');
   var layer = document.getElementById('pins-layer');
   if(!img || !layer || !img.naturalWidth) return;
