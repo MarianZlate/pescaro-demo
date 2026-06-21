@@ -595,11 +595,11 @@ function selStand(id) {
   document.getElementById('ov-nr').textContent = 'Stand ' + s.nr + ' — ' + s.z;
 
   // Record (dacă există)
-  document.getElementById('ov-kg').textContent = s.r.kg && s.r.kg !== '-' ? s.r.kg + ' kg' : '—';
-  document.getElementById('ov-pe').textContent = s.r.pe && s.r.pe !== '-' ? s.r.pe : '—';
-  document.getElementById('ov-da').textContent = s.r.da && s.r.da !== '-' ? s.r.da : '—';
-  document.getElementById('ov-la').textContent = s.la ? s.la + 'm' : '—';
-  document.getElementById('ov-di').textContent = s.di ? s.di + 'm' : '—';
+  document.getElementById('ov-kg').textContent = (s.r.kg !== '' && s.r.kg !== null && s.r.kg !== '-') ? s.r.kg + ' kg' : '—';
+  document.getElementById('ov-pe').textContent = (s.r.pe && s.r.pe !== '-') ? s.r.pe : '—';
+  document.getElementById('ov-da').textContent = (s.r.da && s.r.da !== '-') ? s.r.da : '—';
+  document.getElementById('ov-la').textContent = (s.la !== '' && s.la != null && s.la != 0) ? s.la + 'm' : '—';
+  document.getElementById('ov-di').textContent = (s.di !== '' && s.di != null && s.di != 0) ? s.di + 'm' : '—';
 
   // Foto record
   var oldRec = document.getElementById('ov-rec-foto');
