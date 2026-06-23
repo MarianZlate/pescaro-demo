@@ -178,6 +178,14 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <input type="email" id="inp-email" disabled/>
         <div class="fg-hint">Emailul nu poate fi modificat din această pagină.</div>
       </div>
+      <div class="fg">
+        <label>ID UNIC PESCARO</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="text" id="inp-pescaro-id" disabled style="font-family:monospace;color:#a3e635;letter-spacing:.05em;"/>
+          <button onclick="copyPescaroId()" title="Copiază ID" style="flex-shrink:0;background:#1e293b;border:none;color:#94a3b8;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;" onmouseover="this.style.color='#f1f5f9'" onmouseout="this.style.color='#94a3b8'">📋</button>
+        </div>
+        <div class="fg-hint">ID-ul tău unic pe platformă. Folosit pentru identificare în clasamente.</div>
+      </div>
 
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px;">
         <button class="save-btn" id="save-profile-btn" onclick="saveProfile()">💾 Salvează profilul</button>
@@ -325,8 +333,9 @@ async function boot() {
 function renderProfile() {
   const u = currentUser;
   const p = currentProfile;
-  const username = p.username || '';
+  const username  = p.username  || '';
   const avatarUrl = p.avatar_url || '';
+  const pescaroId = p.pescaro_id || ('PESCARO-' + u.id.replace(/-/g,'').slice(0,8).toUpperCase());
 
   // Avatar
   const avatarEl = document.getElementById('avatar-display');
@@ -345,8 +354,14 @@ function renderProfile() {
     'Membru din ' + created.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
 
   // Inputs
-  document.getElementById('inp-username').value = username;
-  document.getElementById('inp-email').value = u.email;
+  document.getElementById('inp-username').value   = username;
+  document.getElementById('inp-email').value      = u.email;
+  document.getElementById('inp-pescaro-id').value = pescaroId;
+}
+
+function copyPescaroId() {
+  const id = document.getElementById('inp-pescaro-id').value;
+  navigator.clipboard.writeText(id).then(() => showToast('✓ ID copiat!'));
 }
 
 // ── AVATAR UPLOAD ─────────────────────────────────────────────────────────────
@@ -415,9 +430,13 @@ async function saveProfile() {
 
 // ── UPSERT PROFILE (helper) ────────────────────────────────────────────────────
 async function upsertProfile(fields) {
+  // Generăm pescaro_id dacă nu există
+  const pescaro_id = currentProfile.pescaro_id ||
+    ('PESCARO-' + currentUser.id.replace(/-/g,'').slice(0,8).toUpperCase());
   const { error } = await sb.from('user_profiles').upsert({
     id: currentUser.id,
     email: currentUser.email,
+    pescaro_id,
     ...currentProfile,
     ...fields,
   }, { onConflict: 'id' });
