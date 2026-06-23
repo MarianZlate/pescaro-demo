@@ -762,17 +762,6 @@ function initMap() {
     maxZoom: 22, maxNativeZoom: 20, opacity: 0.85
   }).addTo(map);
 
-  BALTI.forEach(b => {
-    if (!b.lat || !b.lng) return;
-    const icon = makeMarker(false);
-    const m = L.marker([b.lat, b.lng], { icon })
-      .addTo(map)
-      .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
-      .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
-    m.on('click', () => { flyToBalta(b.id); });
-    b._marker = m;
-  });
-
   window.__goToBalta = id => {
     window.location.href = 'balta.html?id=' + id;
   };
@@ -824,9 +813,11 @@ function onSearch(q) {
   document.getElementById('clear-btn').style.display = q ? 'block' : 'none';
   const dd = document.getElementById('dropdown');
   if (!q.trim()) { dd.style.display = 'none'; return; }
+  const isAdmin = currentRole === 'admin';
   const res = BALTI.filter(b =>
-    b.nume.toLowerCase().includes(q.toLowerCase()) ||
-    b.judet.toLowerCase().includes(q.toLowerCase())
+    (isAdmin || b.vizibilitate === 'public') &&
+    (b.nume.toLowerCase().includes(q.toLowerCase()) ||
+     b.judet.toLowerCase().includes(q.toLowerCase()))
   );
   if (!res.length) {
     dd.innerHTML = '<div style="padding:14px 16px;color:#4b5563;font-size:13px;">Nicio baltă găsită</div>';
@@ -968,25 +959,54 @@ async function loadBaltiFromSupabase() {
     vizite: b.vizite || 0,
     _marker: null,
   }));
-  // Pune markere pe harta
-  BALTI.forEach(b => {
-    if (!b.lat || !b.lng) return;
-    const icon = makeMarker(false);
-    const m = L.marker([b.lat, b.lng], { icon })
-      .addTo(map)
-      .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
-      .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
-    m.on('click', () => { flyToBalta(b.id); });
-    b._marker = m;
-  });
-  // Actualizeaza statistici
-  const totalStanduri = BALTI.reduce((sum, b) => sum + (b.standuri || 0), 0);
-  const statChips = document.querySelectorAll('.stat-chip strong');
-  if (statChips[0]) statChips[0].textContent = BALTI.length;
-  if (statChips[1]) statChips[1].textContent = totalStanduri;
-  document.getElementById('balti-count').textContent = BALTI.length;
+  renderMapMarkers();
   renderBalti();
   renderHof();
+}
+
+// Adaugă/actualizează markerii pe hartă în funcție de rolul curent.
+// Adminii văd toate bălțile (inclusiv unlisted); userii obișnuiți văd doar public.
+function renderMapMarkers() {
+  const isAdmin = currentRole === 'admin';
+
+  BALTI.forEach(b => {
+    const visible = isAdmin || b.vizibilitate === 'public';
+
+    if (!b.lat || !b.lng) return;
+
+    if (!b._marker) {
+      // Prima dată — creăm markerul
+      const icon = makeMarker(false);
+      const m = L.marker([b.lat, b.lng], { icon })
+        .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
+        .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
+      m.on('click', () => { flyToBalta(b.id); });
+      b._marker = m;
+    }
+
+    if (visible) {
+      if (!map.hasLayer(b._marker)) b._marker.addTo(map);
+      // Unlisted vizibil adminului → marker semi-transparent cu badge
+      if (isAdmin && b.vizibilitate === 'unlisted') {
+        b._marker.setOpacity(0.55);
+        b._marker.setTooltipContent(b.nume + ' 🔒');
+      } else {
+        b._marker.setOpacity(1);
+        b._marker.setTooltipContent(b.nume);
+      }
+    } else {
+      if (map.hasLayer(b._marker)) map.removeLayer(b._marker);
+    }
+  });
+
+  // Actualizează statistici (numere vizibile publicului)
+  const publicCount   = BALTI.filter(b => b.vizibilitate === 'public').length;
+  const visibleCount  = isAdmin ? BALTI.length : publicCount;
+  const totalStanduri = BALTI.reduce((sum, b) => sum + (b.standuri || 0), 0);
+  const statChips = document.querySelectorAll('.stat-chip strong');
+  if (statChips[0]) statChips[0].textContent = visibleCount;
+  if (statChips[1]) statChips[1].textContent = totalStanduri;
+  document.getElementById('balti-count').textContent = visibleCount;
 }
 
 window.addEventListener('load', () => {
@@ -1800,19 +1820,18 @@ async function abSubmit() {
   }
 
   // 5. Adauga pe harta locala
-  const balta = { ...baltaSaved, _marker: null };
-  if(abCoords) {
-    balta._marker = L.marker([abCoords.lat, abCoords.lng], { icon: makeMarker(false) })
-      .addTo(map)
-      .bindPopup(popHtml(balta), { maxWidth:240, minWidth:220 });
-  }
+  const balta = {
+    id: baltaSaved.id, nume: baltaSaved.nume, judet: baltaSaved.judet || '—',
+    lat: baltaSaved.lat, lng: baltaSaved.lng,
+    standuri: baltaSaved.standuri || 0, telefon: baltaSaved.telefon || '—',
+    facebook: baltaSaved.facebook || '', whatsapp: baltaSaved.whatsapp || '',
+    adresa: baltaSaved.adresa || '', rec: baltaSaved.rec || '—',
+    vizibilitate: baltaSaved.vizibilitate || 'unlisted',
+    vizite: 0, _marker: null,
+  };
   BALTI.push(balta);
+  renderMapMarkers();
   renderBalti();
-  const totalStanduri = BALTI.reduce((sum, b) => sum + (b.standuri || 0), 0);
-  const statChips = document.querySelectorAll('.stat-chip strong');
-  if(statChips[0]) statChips[0].textContent = BALTI.length;
-  if(statChips[1]) statChips[1].textContent = totalStanduri;
-  document.getElementById('balti-count').textContent = BALTI.length;
 
   // Sterge draft
   try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
@@ -2404,6 +2423,8 @@ async function updateNavForUser(user) {
       <button class="nav-logout" onclick="doLogout()">Ieși</button>
     </div>`;
   addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  // Re-renderăm markerii după ce știm rolul (poate fi admin → arată unlisted)
+  if (BALTI.length) { renderMapMarkers(); renderBalti(); }
 }
 
 function onClickAddBalta() {
@@ -2427,6 +2448,8 @@ sb.auth.onAuthStateChange(async (event, session) => {
     currentUser = null;
     _roleCache  = null;
     await updateNavForUser(null);
+    // Ascunde markerii unlisted după logout
+    if (BALTI.length) { renderMapMarkers(); renderBalti(); }
   }
 });
 
