@@ -755,11 +755,9 @@ let map, highlightId = null;
 
 function initMap() {
   map = L.map('map', { center: [45.5, 24.8], zoom: 7 });
-  L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    attribution: 'Tiles © Google', maxZoom: 22, maxNativeZoom: 20
-  }).addTo(map);
-  L.tileLayer('https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
-    maxZoom: 22, maxNativeZoom: 20, opacity: 0.85
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+    maxZoom: 19
   }).addTo(map);
 
   window.__goToBalta = id => {
@@ -1859,11 +1857,9 @@ function showAbError(msg) {
 function initAbMap() {
   if(abMap) { abMap.invalidateSize(); return; }
   abMap = L.map('ab-map', { center:[45.5, 24.8], zoom:7 });
-  L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    attribution:'Tiles © Google', maxZoom:22, maxNativeZoom:20
-  }).addTo(abMap);
-  L.tileLayer('https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
-    maxZoom:22, maxNativeZoom:20, opacity:.8
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+    maxZoom: 19
   }).addTo(abMap);
 
   abMap.on('click', e => {
