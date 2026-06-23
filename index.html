@@ -2438,8 +2438,15 @@ async function doRegister() {
   const { data, error } = await sb.auth.signUp({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Creează cont';
   if(error) { authShowErr(error.message); return; }
-  if(data.user) await sb.from('user_roles').insert({ id: data.user.id, rol: 'user' });
-  authShowOk('Cont creat! Verifică emailul pentru confirmare.');
+  if(data.user) {
+    // Inserăm rol și profil de bază
+    await sb.from('user_roles').insert({ id: data.user.id, rol: 'user' });
+    await sb.from('user_profiles').upsert({
+      id: data.user.id,
+      email: email,
+    }, { onConflict: 'id' });
+  }
+  authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
 
 async function doGoogleLogin() {
@@ -2475,12 +2482,15 @@ async function updateNavForUser(user) {
   }
 
   const isAdmin  = currentRole === 'admin';
-  const initials = user.email.slice(0, 2).toUpperCase();
+  const username = user.email.split('@')[0];
+  const initials = username.slice(0, 2).toUpperCase();
   area.innerHTML = `
     <div class="nav-user">
       ${isAdmin ? '<a href="admin.html" class="nav-admin-badge" style="text-decoration:none;cursor:pointer;" title="Panou de administrare">⚙️ Admin</a>' : ''}
-      <div class="nav-avatar" title="${user.email}">${initials}</div>
-      <span class="nav-user-name">${user.email.split('@')[0]}</span>
+      <a href="cont.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;background:#111827;border:1px solid #1e293b;border-radius:8px;padding:5px 10px;transition:border-color .2s;" title="Contul meu" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">
+        <div class="nav-avatar" style="cursor:default;">${initials}</div>
+        <span class="nav-user-name">${username}</span>
+      </a>
       <button class="nav-logout" onclick="doLogout()">Ieși</button>
     </div>`;
   addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
