@@ -5,45 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>PescaRO - Baltă</title>
 <style>
+/* ============================================================
+   RESET & BAZĂ COMUNĂ
+   ============================================================ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:#0a0f1a;}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
+
+/* ============================================================
+   COMPONENTE COMUNE
+   ============================================================ */
+
+/* HEADER */
 #hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
-#hdr-in{max-width:1600px;margin:0 auto;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+#hdr-in{max-width:1600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  /* mobil */
+  padding:0 12px;height:48px;}
 .logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;}
 .badge{font-size:10px;background:#7c3aed;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:6px;}
 #hdr-balta-info{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;}
-#hdr-balta-name{font-weight:700;font-size:15px;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#hdr-balta-loc{color:#64748b;font-size:12px;white-space:nowrap;}
-.back-btn{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:6px 12px;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;}
+#hdr-balta-name{font-weight:700;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  /* mobil */
+  font-size:13px;}
+#hdr-balta-loc{color:#64748b;font-size:12px;white-space:nowrap;
+  /* mobil */
+  display:none;}
+.back-btn{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;color:#94a3b8;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;
+  /* mobil */
+  padding:5px 10px;font-size:11px;}
 .back-btn:hover{border-color:#a3e635;color:#a3e635;}
 
-#layout{max-width:1600px;margin:0 auto;padding:14px 20px 50px;display:block;}
+/* LAYOUT */
+#layout{max-width:1600px;margin:0 auto;display:block;
+  /* mobil */
+  padding:10px 12px 40px;}
 .lc,.rc{display:flex;flex-direction:column;gap:12px;min-width:0;}
-.info-bar{display:flex;align-items:center;gap:10px;background:#111827;border:1px solid #1e293b;border-radius:10px;padding:10px 14px;flex-wrap:wrap;}
-.ebtn{border-radius:8px;font-weight:700;font-size:13px;padding:8px 18px;cursor:pointer;border:none;}
 
-/* Edit bar admin */
+/* INFO BAR */
+.info-bar{display:flex;align-items:center;gap:6px;background:#111827;border:1px solid #1e293b;border-radius:10px;flex-wrap:wrap;
+  /* mobil */
+  padding:8px 10px;}
+.ebtn{border-radius:8px;font-weight:700;cursor:pointer;border:none;
+  /* mobil */
+  font-size:12px;padding:6px 12px;}
+
+/* EDIT BAR */
 #edit-bar{display:none;flex-direction:column;gap:0;background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;}
-#edit-bar-top{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;}
+#edit-bar-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  /* mobil */
+  padding:8px 10px;}
 #edit-bar-hint{font-size:11px;color:#4b5563;background:#0a0f1a;border-top:1px solid #1e293b;padding:8px 14px;display:none;line-height:1.6;}
 #edit-bar-hint.active{display:block;}
-.ebtn{border-radius:8px;font-weight:700;font-size:13px;padding:8px 18px;cursor:pointer;border:none;}
 
-/* Pin drag — cursor changes */
-.stand-pin.dragging{cursor:grabbing!important;}
-.stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
-#pins-layer{position:absolute;inset:0;pointer-events:none;}
+/* MAIN AREA — mobil: coloane stivuite */
+#main-area{display:flex;gap:16px;align-items:start;
+  /* mobil */
+  flex-direction:column;}
+
+/* MAP GRID */
+#map-grid{min-width:0;
+  /* mobil */
+  flex:none;width:100%;}
+
+/* MAP WRAP */
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
-#main-area{display:flex;flex-direction:row;gap:16px;align-items:start;}
-#map-grid{flex:0 0 min(calc(85vh - 120px), calc(100% - 540px));min-width:0;}
-#map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;width:240px;flex-shrink:0;}
-#rc-top10{width:280px;flex-shrink:0;}
 #img-pins-wrap{position:relative;width:100%;aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
 #lake-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;}
+#pins-layer{position:absolute;pointer-events:none;}
+
+/* STAND PINS */
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
 .stand-pin svg{display:block;}
+.stand-pin.dragging{cursor:grabbing!important;}
+.stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
 
-#stand-overlay{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;width:460px;max-width:95%;box-shadow:0 8px 40px rgba(0,0,0,.85);}
+/* STAND OVERLAY — mobil: acoperă harta */
+#stand-overlay{
+  display:none;z-index:100;background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.85);
+  /* mobil: acoperă exact chenarul hărții */
+  position:absolute;top:0;left:0;right:0;bottom:0;width:100%;max-width:100%;max-height:100%;overflow-y:auto;}
+#stand-overlay[style*="display: block"],
+#stand-overlay[style*="display:block"]{display:flex!important;flex-direction:column;}
+#stand-overlay > div:nth-child(2){grid-template-columns:1fr 1fr!important;flex:1;}
+#ov-rec-foto,#ov-stand-foto{display:block!important;}
 .ov-hdr{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#0d1f12;border-bottom:1px solid #1a3020;}
 .spnr{font-size:14px;font-weight:900;color:#a3e635;}
 .xbtn{background:transparent;border:none;color:#4b5563;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;}
@@ -58,20 +104,44 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stat-val{color:#a3e635;font-size:14px;font-weight:900;}
 .ov-yt{padding:8px 10px;border-top:1px solid #1e293b;}
 
-#pw{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+/* MAP SIDEBAR — mobil: lățime 100% */
+#map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;
+  /* mobil */
+  width:100%;}
+
+/* PILLS */
+#pw{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
 .pl{color:#64748b;font-size:12px;white-space:nowrap;}
-.pill{border:1.5px solid #166534;border-radius:20px;padding:4px 12px;cursor:pointer;font-size:12px;font-weight:700;background:#1e3a2e;color:#a3e635;}
+.pill{border:1.5px solid #166534;border-radius:20px;cursor:pointer;font-size:11px;font-weight:700;background:#1e3a2e;color:#a3e635;
+  /* mobil */
+  padding:3px 10px;}
 .pill.active{background:#f59e0b;color:#000;border-color:#fcd34d;}
-#pill-all{border:1.5px solid #a3e635;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#1e3a2e;color:#a3e635;}
+#pill-all{border:1.5px solid #a3e635;border-radius:20px;cursor:pointer;font-size:11px;font-weight:700;background:#1e3a2e;color:#a3e635;
+  /* mobil */
+  padding:3px 10px;}
+#pill-drum{border:1.5px solid #334155;border-radius:20px;cursor:pointer;font-size:11px;font-weight:700;background:#0a0f1a;color:#64748b;
+  /* mobil */
+  padding:3px 10px;}
+
+/* PLACEHOLDER */
 #spr{background:#111827;border:1px dashed #1e293b;border-radius:12px;padding:28px 20px;text-align:center;}
 
+/* CARD GENERIC */
 .card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px;}
 .ct{font-weight:700;font-size:13px;color:#e2e8f0;margin-bottom:8px;}
+
+/* TOP 10 — mobil: lățime 100% */
+#rc-top10{
+  /* mobil */
+  width:100%;}
 .t10c{background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;}
-.t10tabs{display:flex;border-bottom:1px solid #1e293b;padding:0 14px;}
-.t10t{background:transparent;border:none;color:#64748b;padding:10px 8px;cursor:pointer;font-size:11px;font-weight:600;border-bottom:2px solid transparent;}
+.t10tabs{display:flex;border-bottom:1px solid #1e293b;padding:0 14px;overflow-x:auto;}
+.t10t{background:transparent;border:none;color:#64748b;cursor:pointer;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;
+  /* mobil */
+  font-size:11px;padding:8px 10px;}
 .t10t.active{color:#a3e635;border-bottom-color:#a3e635;font-weight:700;}
-.t10ct{display:none;}.t10ct.active{display:block;}
+.t10ct{display:none;}
+.t10ct.active{display:block;}
 .t10h{display:flex;align-items:center;gap:7px;padding:10px 14px 6px;font-weight:700;font-size:12px;color:#e2e8f0;}
 .lbdg{background:#1a3020;color:#a3e635;font-size:9px;padding:2px 7px;border-radius:8px;font-weight:600;}
 .t10e{padding:14px;color:#4b5563;text-align:center;font-size:12px;}
@@ -88,81 +158,77 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .isub{display:flex;gap:5px;padding:8px 14px;flex-wrap:wrap;}
 .ist{background:#0a0f1a;border:1px solid #1e293b;color:#64748b;font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;cursor:pointer;}
 .ist.active{background:#1a3020;border-color:#166534;color:#a3e635;font-weight:700;}
+
+/* LEGENDĂ */
 .lgd{display:flex;flex-direction:column;gap:5px;}
 .li{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;border:1px solid #1e293b;cursor:pointer;transition:all .15s;background:#111827;}
 .li:hover,.li.active{background:#1e3a2e;border-color:#a3e635;}
 .lnr{width:22px;height:22px;border-radius:50%;background:#e8142a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#fff;flex-shrink:0;}
-.lz{font-size:11px;color:#94a3b8;}.ls{font-size:9px;color:#4b5563;margin-top:1px;}
+.lz{font-size:11px;color:#94a3b8;}
+.ls{font-size:9px;color:#4b5563;margin-top:1px;}
 .lrec{font-weight:700;color:#f59e0b;font-size:11px;white-space:nowrap;margin-left:auto;}
 
-/* Loading & Error states */
-#loading-screen{position:fixed;inset:0;background:#0a0f1a;display:flex;align-items:center;justify-content:center;z-index:9000;flex-direction:column;gap:16px;}
-.spinner{width:40px;height:40px;border:3px solid #1e293b;border-top-color:#a3e635;border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-#error-screen{display:none;position:fixed;inset:0;background:#0a0f1a;align-items:center;justify-content:center;z-index:9000;flex-direction:column;gap:12px;text-align:center;padding:24px;}
-
-::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#0a0f1a;}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
-@media(max-width:960px){#layout{grid-template-columns:1fr;}}
-
-@media(max-width:768px){
-  #hdr-in{padding:0 12px;height:48px;gap:8px;}
-  #hdr-balta-name{font-size:13px;}
-  #hdr-balta-loc{display:none;}
-  .back-btn{padding:5px 10px;font-size:11px;}
-
-  #layout{padding:10px 12px 40px;gap:10px;}
-
-  .info-bar{padding:8px 10px;gap:6px;flex-wrap:wrap;}
-  #ib-name{font-size:13px;}
-  #btn-tel,#btn-fb,#btn-wa,#btn-waze,#btn-gmaps{padding:5px 9px;font-size:11px;}
-
-  #edit-bar-top{padding:8px 10px;gap:6px;flex-wrap:wrap;}
-  .ebtn{padding:6px 12px;font-size:12px;}
-
-  #pw{gap:5px;flex-wrap:wrap;}
-  .pill,#pill-all,#pill-drum{padding:3px 10px;font-size:11px;}
-
-  /* Map-wrap pe mobil: lat cat ecranul, main-area stivuit */
-  #map-wrap{width:100%;}
-  #main-area{flex-direction:column;}
-  #map-grid{flex:none;width:100%;}
-  #map-sidebar{width:100%;}
-  #rc-top10{width:100%;}
-  #pins-layer{position:absolute;pointer-events:none;}
-
-  /* Overlay ocupa exact chenarul hartii */
-  #stand-overlay{
-    position:absolute !important;
-    top:0 !important; left:0 !important;
-    right:0 !important; bottom:0 !important;
-    width:100% !important;
-    max-width:100% !important;
-    transform:none !important;
-    border-radius:14px !important;
-    overflow-y:auto !important;
-    max-height:100% !important;
-    flex-direction:column;
-  }
-  /* display e controlat doar de JS (block/none) — nu suprascrie cu CSS */
-  #stand-overlay[style*="display: block"],
-  #stand-overlay[style*="display:block"]{
-    display:flex !important;
-  }
-  #stand-overlay > div:nth-child(2){
-    grid-template-columns:1fr 1fr !important;
-    flex:1;
-  }
-  #ov-rec-foto, #ov-stand-foto{ display:block !important; }
-
-  .t10tabs{overflow-x:auto;}
-  .t10t{white-space:nowrap;padding:8px 10px;font-size:11px;}
-}
-
+/* INFO BAR — mobil mic: stivuit */
 @media(max-width:480px){
   .info-bar{flex-direction:column;align-items:flex-start;}
   #btn-tel,#btn-fb,#btn-wa{width:100%;justify-content:center;}
   #btn-waze,#btn-gmaps{flex:1;}
   .ebtn{flex:1;text-align:center;}
+}
+
+/* LOADING & ERROR */
+#loading-screen{position:fixed;inset:0;background:#0a0f1a;display:flex;align-items:center;justify-content:center;z-index:9000;flex-direction:column;gap:16px;}
+.spinner{width:40px;height:40px;border:3px solid #1e293b;border-top-color:#a3e635;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#error-screen{display:none;position:fixed;inset:0;background:#0a0f1a;align-items:center;justify-content:center;z-index:9000;flex-direction:column;gap:12px;text-align:center;padding:24px;}
+
+/* ============================================================
+   DESKTOP (min-width: 769px) — adăugăm peste baza mobilă
+   ============================================================ */
+@media(min-width:769px){
+  /* HEADER */
+  #hdr-in{padding:0 20px;height:52px;gap:12px;}
+  #hdr-balta-name{font-size:15px;}
+  #hdr-balta-loc{display:block;}
+  .back-btn{padding:6px 12px;font-size:12px;}
+
+  /* LAYOUT */
+  #layout{padding:14px 20px 50px;}
+
+  /* INFO BAR */
+  .info-bar{padding:10px 14px;gap:10px;}
+  #btn-tel,#btn-fb,#btn-wa,#btn-waze,#btn-gmaps{padding:7px 12px;font-size:13px;}
+
+  /* EDIT BAR */
+  #edit-bar-top{padding:10px 14px;gap:10px;}
+  .ebtn{font-size:13px;padding:8px 18px;}
+
+  /* MAIN AREA — desktop: 4 coloane flex */
+  #main-area{flex-direction:row;}
+
+  /* MAP GRID — desktop: lățime calculată */
+  #map-grid{flex:0 0 min(calc(85vh - 120px), calc(100% - 540px));}
+
+  /* MAP SIDEBAR — desktop: lățime fixă */
+  #map-sidebar{width:240px;flex-shrink:0;}
+
+  /* STAND OVERLAY — desktop: centrat peste hartă */
+  #stand-overlay{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:460px;max-width:95%;
+    max-height:unset;overflow-y:unset;}
+
+  /* PILLS */
+  .pill,#pill-all,#pill-drum{padding:4px 12px;font-size:12px;}
+  #pill-all{padding:4px 14px;}
+
+  /* TOP 10 — desktop: lățime fixă */
+  #rc-top10{width:280px;flex-shrink:0;}
+
+  /* TABS */
+  .t10t{font-size:11px;padding:10px 8px;}
 }
 </style>
 </head>
