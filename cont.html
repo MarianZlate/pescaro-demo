@@ -171,7 +171,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div class="fg">
         <label>NUME DE UTILIZATOR</label>
         <input type="text" id="inp-username" placeholder="ex: Pescarul_Ion" maxlength="32"/>
-        <div class="fg-hint">Apare în clasamente și pe capturile tale. Doar litere, cifre și _</div>
+        <div class="fg-hint">Apare în clasamente și pe capturile tale. Între 2 și 32 de caractere.</div>
       </div>
       <div class="fg">
         <label>EMAIL</label>
@@ -387,8 +387,8 @@ async function saveProfile() {
   const msgEl = document.getElementById('save-profile-msg');
   const btn   = document.getElementById('save-profile-btn');
 
-  if (username && !/^[a-zA-Z0-9_]{2,32}$/.test(username)) {
-    msgEl.textContent = '⚠️ Doar litere, cifre și _ (2-32 caractere)';
+  if (username && (username.length < 2 || username.length > 32)) {
+    msgEl.textContent = '⚠️ Numele trebuie să aibă între 2 și 32 de caractere';
     msgEl.className = 'save-msg err';
     return;
   }
