@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PescaRO — Contul meu</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ============================================================
+   RESET & BAZĂ COMUNĂ
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:#0a0f1a;}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
+
+/* HEADER */
+#hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);}
+#hdr-in{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:12px;
+  padding:0 14px;height:52px;}
+.logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;}
+.badge{font-size:10px;background:#7c3aed;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:6px;}
+.hdr-title{font-size:14px;font-weight:700;color:#64748b;}
+.back-btn{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;color:#94a3b8;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;margin-left:auto;
+  padding:5px 12px;font-size:12px;}
+.back-btn:hover{border-color:#a3e635;color:#a3e635;}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:#0a0f1a;display:flex;align-items:center;justify-content:center;z-index:9000;flex-direction:column;gap:16px;}
+.spinner{width:40px;height:40px;border:3px solid #1e293b;border-top-color:#a3e635;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* LAYOUT PRINCIPAL */
+#page{display:none;max-width:1000px;margin:0 auto;
+  padding:20px 14px 60px;}
+
+/* ── SECȚIUNEA PROFIL ── */
+.section{background:#111827;border:1px solid #1e293b;border-radius:16px;margin-bottom:16px;overflow:hidden;}
+.section-hdr{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #1e293b;}
+.section-icon{font-size:18px;}
+.section-title{font-size:14px;font-weight:800;color:#f1f5f9;}
+.section-sub{font-size:11px;color:#4b5563;margin-top:1px;}
+.section-body{padding:20px;}
+
+/* AVATAR */
+.avatar-row{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.avatar-wrap{position:relative;flex-shrink:0;}
+#avatar-img{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #1e293b;background:#0d2010;display:block;}
+.avatar-initials{width:72px;height:72px;border-radius:50%;background:#1a6b3a;border:2px solid #166534;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#a3e635;}
+.avatar-edit-btn{position:absolute;bottom:0;right:0;width:24px;height:24px;background:#1a6b3a;border:2px solid #0a0f1a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;}
+.avatar-edit-btn:hover{background:#1e7a42;}
+.avatar-info{flex:1;min-width:0;}
+.avatar-name{font-size:16px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
+.avatar-email{font-size:12px;color:#4b5563;}
+.avatar-member{font-size:11px;color:#334155;margin-top:4px;}
+
+/* FORM */
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:6px;}
+.fg input{width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
+.fg input:focus{border-color:#1a6b3a;}
+.fg input:disabled{color:#334155;cursor:not-allowed;}
+.fg-hint{font-size:10px;color:#334155;margin-top:4px;}
+
+.save-btn{background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:10px 24px;border-radius:8px;cursor:pointer;transition:background .2s;}
+.save-btn:hover{background:#1e7a42;}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;}
+.save-msg{font-size:12px;margin-left:12px;font-weight:600;}
+.save-msg.ok{color:#a3e635;}
+.save-msg.err{color:#ef4444;}
+
+/* SCHIMBARE PAROLĂ */
+.pwd-toggle{background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;padding:6px 14px;border-radius:7px;cursor:pointer;margin-bottom:14px;}
+.pwd-toggle:hover{border-color:#334155;color:#94a3b8;}
+#pwd-section{display:none;}
+
+/* ── REALIZĂRI ── */
+.realizari-grid{display:grid;gap:12px;
+  grid-template-columns:1fr;}
+.rez-card{background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;}
+.rez-icon{font-size:28px;flex-shrink:0;}
+.rez-info{flex:1;min-width:0;}
+.rez-label{font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;}
+.rez-val{font-size:20px;font-weight:900;color:#a3e635;}
+.rez-sub{font-size:10px;color:#334155;margin-top:2px;}
+.rez-coming{display:inline-flex;align-items:center;gap:5px;background:#1c1500;border:1px solid #92400e;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#f59e0b;margin-top:6px;}
+
+/* CAPTURI LISTA */
+.capture-empty{text-align:center;padding:32px 20px;}
+.capture-empty-icon{font-size:48px;margin-bottom:12px;}
+.capture-empty-title{font-size:14px;font-weight:700;color:#334155;margin-bottom:6px;}
+.capture-empty-sub{font-size:12px;color:#1e293b;line-height:1.6;}
+
+.capture-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #0f172a;}
+.capture-row:last-child{border-bottom:none;}
+.capture-foto{width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#0a0f1a;}
+.capture-foto-empty{width:52px;height:52px;border-radius:8px;background:#0d1520;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.capture-info{flex:1;min-width:0;}
+.capture-balta{font-size:12px;font-weight:700;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.capture-stand{font-size:10px;color:#4b5563;margin-top:1px;}
+.capture-data{font-size:10px;color:#334155;margin-top:2px;}
+.capture-kg{font-size:16px;font-weight:900;color:#a3e635;flex-shrink:0;}
+
+/* DANGER ZONE */
+.danger-btn{background:transparent;border:1px solid #334155;color:#64748b;font-size:12px;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .2s;}
+.danger-btn:hover{border-color:#ef4444;color:#ef4444;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{background:#7f1d1d;}
+
+/* ============================================================
+   DESKTOP (min-width: 769px)
+   ============================================================ */
+@media(min-width:769px){
+  #hdr-in{padding:0 24px;height:62px;gap:16px;}
+  .logo{font-size:18px;}
+  .back-btn{padding:7px 16px;font-size:13px;}
+  #page{padding:32px 24px 80px;}
+  .realizari-grid{grid-template-columns:1fr 1fr;}
+  #avatar-img,.avatar-initials{width:88px;height:88px;font-size:30px;}
+  .avatar-edit-btn{width:28px;height:28px;font-size:13px;}
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div style="color:#64748b;font-size:13px;">Se încarcă...</div>
+</div>
+
+<div id="hdr" style="display:none;">
+  <div id="hdr-in">
+    <a href="index.html" class="logo">🎣 PescaRO<span class="badge">BETA</span></a>
+    <span class="hdr-title">Contul meu</span>
+    <a href="index.html" class="back-btn">← Înapoi</a>
+  </div>
+</div>
+
+<div id="page">
+
+  <!-- ── PROFIL ── -->
+  <div class="section">
+    <div class="section-hdr">
+      <span class="section-icon">👤</span>
+      <div>
+        <div class="section-title">Profilul meu</div>
+        <div class="section-sub">Numele, poza și informațiile contului</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- Avatar + info -->
+      <div class="avatar-row">
+        <div class="avatar-wrap">
+          <div id="avatar-display"></div>
+          <label for="avatar-input" class="avatar-edit-btn" title="Schimbă poza de profil">📷</label>
+          <input type="file" id="avatar-input" accept="image/*" style="display:none;" onchange="onAvatarFile(this)"/>
+        </div>
+        <div class="avatar-info">
+          <div class="avatar-name" id="display-name">—</div>
+          <div class="avatar-email" id="display-email">—</div>
+          <div class="avatar-member" id="display-member"></div>
+        </div>
+      </div>
+
+      <!-- Formular -->
+      <div class="fg">
+        <label>NUME DE UTILIZATOR</label>
+        <input type="text" id="inp-username" placeholder="ex: Pescarul_Ion" maxlength="32"/>
+        <div class="fg-hint">Apare în clasamente și pe capturile tale. Doar litere, cifre și _</div>
+      </div>
+      <div class="fg">
+        <label>EMAIL</label>
+        <input type="email" id="inp-email" disabled/>
+        <div class="fg-hint">Emailul nu poate fi modificat din această pagină.</div>
+      </div>
+
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px;">
+        <button class="save-btn" id="save-profile-btn" onclick="saveProfile()">💾 Salvează profilul</button>
+        <span class="save-msg" id="save-profile-msg"></span>
+      </div>
+
+      <!-- Schimbare parolă -->
+      <div style="border-top:1px solid #1e293b;margin-top:20px;padding-top:20px;">
+        <button class="pwd-toggle" onclick="togglePwd()">🔑 Schimbă parola</button>
+        <div id="pwd-section">
+          <div class="fg">
+            <label>PAROLĂ NOUĂ</label>
+            <input type="password" id="inp-pwd1" placeholder="Minim 6 caractere"/>
+          </div>
+          <div class="fg">
+            <label>CONFIRMĂ PAROLA NOUĂ</label>
+            <input type="password" id="inp-pwd2" placeholder="Repetă parola"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="save-btn" id="save-pwd-btn" onclick="savePassword()">Schimbă parola</button>
+            <span class="save-msg" id="save-pwd-msg"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── REALIZĂRI ── -->
+  <div class="section">
+    <div class="section-hdr">
+      <span class="section-icon">🏆</span>
+      <div>
+        <div class="section-title">Realizările mele</div>
+        <div class="section-sub">Statistici, capturi și clasamente</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- Stats cards -->
+      <div class="realizari-grid" style="margin-bottom:20px;">
+        <div class="rez-card">
+          <span class="rez-icon">🐟</span>
+          <div class="rez-info">
+            <div class="rez-label">CAPTURI ÎNREGISTRATE</div>
+            <div class="rez-val" id="stat-capturi">0</div>
+            <div class="rez-sub">trimise pe platformă</div>
+          </div>
+        </div>
+        <div class="rez-card">
+          <span class="rez-icon">⭐</span>
+          <div class="rez-info">
+            <div class="rez-label">STELE ACUMULATE</div>
+            <div class="rez-val" id="stat-stele">—</div>
+            <div class="rez-sub">din clasamente bălți</div>
+            <div class="rez-coming">⏳ În curând</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista capturi -->
+      <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:10px;">CAPTURILE MELE</div>
+      <div id="capturi-list">
+        <div class="capture-empty">
+          <div class="capture-empty-icon">🎣</div>
+          <div class="capture-empty-title">Nicio captură înregistrată</div>
+          <div class="capture-empty-sub">
+            Funcționalitatea de trimitere capturi<br/>va fi disponibilă în curând.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── DANGER ZONE ── -->
+  <div class="section" style="border-color:#334155;">
+    <div class="section-hdr" style="border-bottom-color:#1e293b;">
+      <span class="section-icon">⚠️</span>
+      <div>
+        <div class="section-title" style="color:#94a3b8;">Zona periculoasă</div>
+        <div class="section-sub">Acțiuni ireversibile</div>
+      </div>
+    </div>
+    <div class="section-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#64748b;">Șterge contul</div>
+        <div style="font-size:11px;color:#334155;margin-top:3px;">Toate datele tale vor fi șterse permanent.</div>
+      </div>
+      <button class="danger-btn" onclick="confirmDeleteAccount()">Șterge contul meu</button>
+    </div>
+  </div>
+
+</div><!-- /#page -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://emnesflrzptqfttlzusw.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbmVzZmxyenB0cWZ0dGx6dXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NTc5NDUsImV4cCI6MjA5NzUzMzk0NX0.LoR6peujcdm1SLZ8SUSdtSH8wDa_ptCUEYT3qtAPZXk';
+const CLOUDINARY_CLOUD  = 'dlafkx65j';
+const CLOUDINARY_PRESET = 'ml_default';
+
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'pescaro-auth' }
+});
+
+let currentUser = null;
+let currentProfile = null;
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+async function boot() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) {
+    // Neautentificat — redirect la index
+    window.location.href = 'index.html';
+    return;
+  }
+  currentUser = user;
+
+  // Citim profilul din user_profiles
+  const { data: profile } = await sb.from('user_profiles')
+    .select('*').eq('id', user.id).single();
+  currentProfile = profile || {};
+
+  renderProfile();
+  await loadCapturi();
+
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('hdr').style.display = 'block';
+  document.getElementById('page').style.display = 'block';
+}
+
+// ── RENDER PROFIL ─────────────────────────────────────────────────────────────
+function renderProfile() {
+  const u = currentUser;
+  const p = currentProfile;
+  const username = p.username || '';
+  const avatarUrl = p.avatar_url || '';
+
+  // Avatar
+  const avatarEl = document.getElementById('avatar-display');
+  if (avatarUrl) {
+    avatarEl.innerHTML = `<img id="avatar-img" src="${avatarUrl}" alt="Avatar"/>`;
+  } else {
+    const initials = (username || u.email).slice(0, 2).toUpperCase();
+    avatarEl.innerHTML = `<div class="avatar-initials">${initials}</div>`;
+  }
+
+  // Info
+  document.getElementById('display-name').textContent = username || u.email.split('@')[0];
+  document.getElementById('display-email').textContent = u.email;
+  const created = new Date(u.created_at);
+  document.getElementById('display-member').textContent =
+    'Membru din ' + created.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
+
+  // Inputs
+  document.getElementById('inp-username').value = username;
+  document.getElementById('inp-email').value = u.email;
+}
+
+// ── AVATAR UPLOAD ─────────────────────────────────────────────────────────────
+async function onAvatarFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const btn = document.querySelector('.avatar-edit-btn');
+  btn.textContent = '⏳';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  fd.append('tags', 'avatar_pescaro');
+
+  try {
+    const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST', body: fd
+    });
+    const data = await resp.json();
+    if (!data.secure_url) throw new Error(data.error?.message || 'Eroare Cloudinary');
+
+    // Salvăm în user_profiles
+    await upsertProfile({ avatar_url: data.secure_url });
+    currentProfile.avatar_url = data.secure_url;
+    renderProfile();
+    showToast('✅ Poza de profil actualizată!');
+  } catch(e) {
+    showToast('⚠️ Eroare la upload: ' + e.message, true);
+  } finally {
+    btn.textContent = '📷';
+  }
+}
+
+// ── SAVE PROFILE ──────────────────────────────────────────────────────────────
+async function saveProfile() {
+  const username = document.getElementById('inp-username').value.trim();
+  const msgEl = document.getElementById('save-profile-msg');
+  const btn   = document.getElementById('save-profile-btn');
+
+  if (username && !/^[a-zA-Z0-9_]{2,32}$/.test(username)) {
+    msgEl.textContent = '⚠️ Doar litere, cifre și _ (2-32 caractere)';
+    msgEl.className = 'save-msg err';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Se salvează...';
+  msgEl.textContent = '';
+
+  try {
+    await upsertProfile({ username: username || null });
+    currentProfile.username = username;
+    renderProfile();
+    msgEl.textContent = '✓ Salvat!';
+    msgEl.className = 'save-msg ok';
+    setTimeout(() => { msgEl.textContent = ''; }, 3000);
+  } catch(e) {
+    msgEl.textContent = '⚠️ ' + e.message;
+    msgEl.className = 'save-msg err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Salvează profilul';
+  }
+}
+
+// ── UPSERT PROFILE (helper) ────────────────────────────────────────────────────
+async function upsertProfile(fields) {
+  const { error } = await sb.from('user_profiles').upsert({
+    id: currentUser.id,
+    email: currentUser.email,
+    ...currentProfile,
+    ...fields,
+  }, { onConflict: 'id' });
+  if (error) throw new Error(error.message);
+}
+
+// ── PAROLĂ ───────────────────────────────────────────────────────────────────
+function togglePwd() {
+  const sec = document.getElementById('pwd-section');
+  sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
+}
+
+async function savePassword() {
+  const p1 = document.getElementById('inp-pwd1').value;
+  const p2 = document.getElementById('inp-pwd2').value;
+  const msgEl = document.getElementById('save-pwd-msg');
+  const btn   = document.getElementById('save-pwd-btn');
+
+  if (!p1) { msgEl.textContent = '⚠️ Completează parola nouă'; msgEl.className='save-msg err'; return; }
+  if (p1 !== p2) { msgEl.textContent = '⚠️ Parolele nu coincid'; msgEl.className='save-msg err'; return; }
+  if (p1.length < 6) { msgEl.textContent = '⚠️ Minim 6 caractere'; msgEl.className='save-msg err'; return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Se schimbă...';
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  btn.disabled = false; btn.textContent = 'Schimbă parola';
+
+  if (error) {
+    msgEl.textContent = '⚠️ ' + error.message;
+    msgEl.className = 'save-msg err';
+  } else {
+    msgEl.textContent = '✓ Parolă schimbată!';
+    msgEl.className = 'save-msg ok';
+    document.getElementById('inp-pwd1').value = '';
+    document.getElementById('inp-pwd2').value = '';
+    setTimeout(() => {
+      msgEl.textContent = '';
+      document.getElementById('pwd-section').style.display = 'none';
+    }, 3000);
+  }
+}
+
+// ── CAPTURI ───────────────────────────────────────────────────────────────────
+async function loadCapturi() {
+  // Căutăm în standuri unde rec_pescar coincide cu username-ul userului
+  // (sistemul de capturi propriu-zis e în backlog — afișăm ce există deja)
+  const username = currentProfile?.username;
+  const listEl = document.getElementById('capturi-list');
+
+  if (!username) {
+    // Fără username nu putem căuta capturi
+    document.getElementById('stat-capturi').textContent = '0';
+    return;
+  }
+
+  const { data: capturi } = await sb
+    .from('standuri')
+    .select('id, nume, rec_kg, rec_pescar, rec_data, rec_foto, balta_id, balti(nume, judet)')
+    .ilike('rec_pescar', username);
+
+  const count = (capturi || []).length;
+  document.getElementById('stat-capturi').textContent = count;
+
+  if (!count) return; // lasă empty state
+
+  listEl.innerHTML = (capturi || []).map(c => `
+    <div class="capture-row">
+      ${c.rec_foto
+        ? `<img class="capture-foto" src="${c.rec_foto}" alt="captură"/>`
+        : `<div class="capture-foto-empty">🐟</div>`}
+      <div class="capture-info">
+        <div class="capture-balta">${c.balti?.nume || '—'}</div>
+        <div class="capture-stand">📍 ${c.nume} · ${c.balti?.judet || ''}</div>
+        <div class="capture-data">${c.rec_data || ''}</div>
+      </div>
+      <div class="capture-kg">${c.rec_kg ? c.rec_kg + ' kg' : '—'}</div>
+    </div>`).join('');
+}
+
+// ── ȘTERGERE CONT ─────────────────────────────────────────────────────────────
+function confirmDeleteAccount() {
+  const ok = confirm(
+    '⚠️ Ești sigur că vrei să ștergi contul?\n\n' +
+    'Această acțiune este ireversibilă. ' +
+    'Toate datele tale vor fi șterse permanent.'
+  );
+  if (!ok) return;
+  const ok2 = confirm('Ultima confirmare: ștergi definitiv contul ' + currentUser.email + '?');
+  if (!ok2) return;
+  deleteAccount();
+}
+
+async function deleteAccount() {
+  showToast('⏳ Se șterge contul...');
+  try {
+    // Ștergem profilul și rolul
+    await sb.from('user_profiles').delete().eq('id', currentUser.id);
+    await sb.from('user_roles').delete().eq('id', currentUser.id);
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  } catch(e) {
+    showToast('⚠️ Eroare la ștergere: ' + e.message, true);
+  }
+}
+
+// ── START ────────────────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
