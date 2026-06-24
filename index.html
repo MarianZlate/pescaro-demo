@@ -2376,7 +2376,6 @@ sb.auth.onAuthStateChange(async (event, session) => {
   } else if(event === 'SIGNED_IN') {
     currentUser = session?.user || null;
     if (currentUser) {
-      // Verificăm profilul — îl creăm dacă nu există (ex: Google login prima dată)
       const { data: profile } = await sb.from('user_profiles')
         .select('*').eq('id', currentUser.id).single();
 
@@ -2391,11 +2390,11 @@ sb.auth.onAuthStateChange(async (event, session) => {
         }, { onConflict: 'id' });
         await sb.from('user_roles').upsert({ id: uid, rol: 'user' }, { onConflict: 'id' });
       } else if (profile.deleted_at) {
-        // Cont soft-deleted — blocăm accesul și redirecționăm la recuperare
-        await sb.auth.signOut();
-        closeAuthModal();
-        // Relogăm silențios ca să putem afișa ecranul de recuperare
-        authShowErr('Contul tău a fost marcat pentru ștergere. Reintră în cont și vei putea recupera accesul.');
+        // Cont soft-deleted — redirecționăm la cont.html pentru recuperare
+        // NU facem signOut ca să evităm loop-ul OAuth
+        if (!window.location.pathname.includes('cont.html')) {
+          window.location.href = 'cont.html';
+        }
         return;
       }
     }
