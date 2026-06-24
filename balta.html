@@ -709,22 +709,16 @@ function showError(msg) {
 
 // ─── PINS ──────────────────────────────────────────────────────────────────
 function pinSVG(nr, active, editing) {
-  var glow = editing ? 'drop-shadow(0 0 5px rgba(124,58,237,.7))' : 'drop-shadow(0 2px 6px rgba(0,0,0,.9))';
+  var glow = editing ? 'drop-shadow(0 0 4px rgba(124,58,237,.7))' : 'drop-shadow(0 1px 4px rgba(0,0,0,.9))';
   var ballCol = active ? '#f59e0b' : editing ? '#a78bfa' : '#e8142a';
   var ballStroke = active ? '#92400e' : editing ? '#5b21b6' : '#9b0f1e';
-  var fs = nr > 9 ? '9' : '11';
-  // Pushpin: cerc mare (capul), tijă subțire verticală în jos
-  return '<svg width="32" height="44" viewBox="0 0 32 44" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;overflow:visible;">'
-    // umbra cercului
-    +'<circle cx="16" cy="15" r="13" fill="rgba(0,0,0,.3)" transform="translate(1.5,1.5)"/>'
-    // corpul cercului
-    +'<circle cx="16" cy="15" r="13" fill="'+ballCol+'" stroke="'+ballStroke+'" stroke-width="1.5"/>'
-    // luciu
-    +'<ellipse cx="10" cy="9" rx="5" ry="3.5" fill="rgba(255,255,255,.35)" transform="rotate(-30,10,9)"/>'
-    // număr
-    +'<text x="16" y="20" text-anchor="middle" font-family="system-ui,sans-serif" font-size="'+fs+'" font-weight="900" fill="#fff" stroke="#0005" stroke-width="0.5">'+nr+'</text>'
-    // tija
-    +'<line x1="16" y1="28" x2="16" y2="43" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>'
+  var fs = nr > 9 ? '7' : '8';
+  return '<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;overflow:visible;">'
+    +'<circle cx="10" cy="9" r="8" fill="rgba(0,0,0,.3)" transform="translate(1,1)"/>'
+    +'<circle cx="10" cy="9" r="8" fill="'+ballCol+'" stroke="'+ballStroke+'" stroke-width="1.2"/>'
+    +'<ellipse cx="6.5" cy="5.5" rx="3" ry="2" fill="rgba(255,255,255,.35)" transform="rotate(-30,6.5,5.5)"/>'
+    +'<text x="10" y="13" text-anchor="middle" font-family="system-ui,sans-serif" font-size="'+fs+'" font-weight="900" fill="#fff" stroke="#0005" stroke-width="0.5">'+nr+'</text>'
+    +'<line x1="10" y1="17" x2="10" y2="27" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/>'
     +'</svg>';
 }
 
