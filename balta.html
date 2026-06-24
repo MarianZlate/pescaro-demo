@@ -772,7 +772,7 @@ function selStand(id) {
   var s = ST.find(function(x) { return x.id === id; });
   renderPins();
   updatePills();
-  document.getElementById('ov-nr').textContent = 'Stand ' + s.nr + ' — ' + s.z;
+  document.getElementById('ov-nr').textContent = s.z || ('Stand ' + s.nr);
 
   // Record (dacă există)
   document.getElementById('ov-kg').textContent = (s.r.kg !== '' && s.r.kg !== null && s.r.kg !== '-') ? s.r.kg + ' kg' : '—';
