@@ -148,24 +148,14 @@ th,td{padding:8px 6px;}
 .balti-table .col-standuri,
 .users-table .col-data{display:none;}
 
-/* Mobil: tabelul utilizatori — email + acțiuni pe rânduri separate */
-.users-table .col-email{width:100%;}
-.users-table .col-actiuni{
-  display:block;
-  border-top:none;
-  padding-top:0;
-}
-/* Grupăm email+rol pe un rând, acțiunile pe rândul următor
-   prin colspan simulat: ascundem celula de rol, lărgim email-ul */
-.users-table .col-rol{display:none;}
+/* users-table: email, rol, actiuni mereu vizibile */
+.users-table .col-email{word-break:break-all;}
 
 @media(min-width:480px){
-  .users-table .col-rol{display:table-cell;}
-  .users-table .col-actiuni{display:table-cell;}
+  .users-table .col-data{display:table-cell;}
 }
 @media(min-width:600px){
-  .balti-table .col-judet,
-  .users-table .col-data{display:table-cell;}
+  .balti-table .col-judet{display:table-cell;}
   .balti-table td,
   .users-table td{font-size:13px;padding:10px 14px;}
   .balti-table th,
