@@ -184,13 +184,13 @@ th,td{padding:8px 6px;}
 .role-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
 .role-admin{background:#1c1000;color:#f59e0b;border:1px solid #92400e;}
 .role-user{background:#111827;color:#64748b;border:1px solid #1e293b;}
-.btn-make-admin{background:#1c1000;border:1px solid #92400e;color:#f59e0b;font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;cursor:pointer;white-space:nowrap;}
+.btn-make-admin{background:#1c1000;border:1px solid #92400e;color:#f59e0b;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-make-admin:hover{background:#2a1800;}
-.btn-remove-admin{background:#0d1f12;border:1px solid #1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;cursor:pointer;white-space:nowrap;}
+.btn-remove-admin{background:#0d1f12;border:1px solid #1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-remove-admin:hover{background:#1a3020;}
-.users-table .col-email{width:65%;}
-.users-table .col-rol{width:16%;}
-.users-table .col-actiuni{width:19%;}
+.users-table .col-email{width:55%;}
+.users-table .col-rol{width:15%;}
+.users-table .col-actiuni{width:15%;}
 
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
@@ -899,16 +899,16 @@ async function loadUsers() {
       <td class="col-email" style="color:#e2e8f0;word-break:break-all;">${displayName}</td>
       <td class="col-rol">
         ${rol === 'admin'
-          ? '<span class="role-badge role-admin">⭐ Admin</span>'
+          ? '<span class="role-badge role-admin">Admin</span>'
           : '<span class="role-badge role-user">User</span>'}
       </td>
       <td class="col-data" style="color:#4b5563;">${createdAt}</td>
       <td class="col-actiuni">
         ${rol !== 'admin'
-          ? `<button class="btn-make-admin" onclick="setUserRole('${u.id}','admin')">⭐ Fă admin</button>`
+          ? `<button class="btn-make-admin" onclick="setUserRole('${u.id}','admin')">Fă admin</button>`
           : (u.id === SUPREME_ADMIN_UID
-              ? '<span style="font-size:11px;color:#4b5563;font-style:italic;">Admin suprem</span>'
-              : `<button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">↓ Revocă admin</button>`)}
+              ? '<span style="font-size:11px;color:#4b5563;font-style:italic;">Suprem</span>'
+              : `<button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">Revocă</button>`)}
       </td>
     </tr>`;
   }).join('');
