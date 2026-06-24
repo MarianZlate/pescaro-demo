@@ -598,6 +598,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 <script>
 const SUPA_URL = 'https://emnesflrzptqfttlzusw.supabase.co';
+const SUPREME_ADMIN_UID = '8d1a2a22-5de0-490c-abf1-90776035dd3e';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbmVzZmxyenB0cWZ0dGx6dXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NTc5NDUsImV4cCI6MjA5NzUzMzk0NX0.LoR6peujcdm1SLZ8SUSdtSH8wDa_ptCUEYT3qtAPZXk';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: {
@@ -815,21 +816,27 @@ async function loadUsers() {
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Se încarcă...</td></tr>';
 
-  // Citim profilurile ca sursă primară — toți userii înregistrați apar aici
-  const { data: profiles, error } = await sb.from('user_profiles').select('id, email, created_at, username').order('created_at', { ascending: false });
-  if(error || !profiles?.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Niciun utilizator înregistrat.</td></tr>';
+  const { data: profiles, error: profErr } = await sb.from('user_profiles').select('id, email, created_at, username').order('created_at', { ascending: false });
+  const { data: roles, error: roleErr } = await sb.from('user_roles').select('id, rol');
+
+  // Debug — afișăm în consolă câte rânduri am primit
+
+  if(profErr || !profiles?.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="empty-state">
+      ${profErr ? '⚠️ Eroare RLS: ' + profErr.message : 'Niciun utilizator în user_profiles.'}
+      <br/><span style="font-size:11px;color:#334155;">Verifică RLS policies pe user_profiles în Supabase.</span>
+    </td></tr>`;
     return;
   }
 
-  // Fetch roluri și construim map
-  const { data: roles } = await sb.from('user_roles').select('id, rol');
   const roleMap = {};
   (roles || []).forEach(r => roleMap[r.id] = r.rol);
 
   tbody.innerHTML = profiles.map(u => {
     const rol = roleMap[u.id] || 'user';
-    const displayName = u.username ? `${u.username} <span style="font-size:10px;color:#4b5563;">&lt;${u.email}&gt;</span>` : u.email || '—';
+    const displayName = u.username
+      ? `${u.username} <span style="font-size:10px;color:#4b5563;">&lt;${u.email}&gt;</span>`
+      : u.email || '—';
     const createdAt = u.created_at
       ? new Date(u.created_at).toLocaleDateString('ro-RO')
       : '—';
@@ -845,13 +852,19 @@ async function loadUsers() {
       <td>
         ${rol !== 'admin'
           ? `<button class="btn-make-admin" onclick="setUserRole('${u.id}','admin')">⭐ Fă admin</button>`
-          : `<button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">↓ Revocă admin</button>`}
+          : (u.id === SUPREME_ADMIN_UID
+              ? '<span style="font-size:11px;color:#4b5563;font-style:italic;">Admin suprem</span>'
+              : `<button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">↓ Revocă admin</button>`)}
       </td>
     </tr>`;
   }).join('');
 }
 
 async function setUserRole(userId, rol) {
+  if (userId === SUPREME_ADMIN_UID) {
+    showToast('⛔ Contul de admin suprem nu poate fi modificat.', true);
+    return;
+  }
   const { error } = await sb.from('user_roles').update({ rol }).eq('id', userId);
   if(error) { showToast('Eroare la actualizare rol', true); return; }
   showToast(rol === 'admin' ? '⭐ Admin acordat!' : '✓ Admin revocat');
