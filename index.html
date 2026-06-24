@@ -362,7 +362,7 @@ nav{display:flex;align-items:center;gap:6px;}
     <div id="stats-bar">
       <div class="stats-inner">
         <div class="stat-chip"><strong>1</strong> baltă înregistrată</div>
-        <div class="stat-chip"><strong>10</strong> standuri totale</div>
+        <div class="stat-chip"><strong id="stat-useri">—</strong> pescari înregistrați</div>
       </div>
     </div>
     <div id="map-wrap">
@@ -894,6 +894,10 @@ async function loadBaltiFromSupabase() {
   renderMapMarkers();
   renderBalti();
   renderHof();
+  // Număr useri înregistrați
+  const { count } = await sb.from('user_profiles').select('id', { count: 'exact', head: true });
+  const statUseri = document.getElementById('stat-useri');
+  if (statUseri) statUseri.textContent = count || 0;
 }
 
 // Adaugă/actualizează markerii pe hartă în funcție de rol.
@@ -920,10 +924,8 @@ function renderMapMarkers() {
   });
   const publicCount  = BALTI.filter(b => b.vizibilitate === 'public').length;
   const visibleCount = isAdmin ? BALTI.length : publicCount;
-  const totalStanduri = BALTI.reduce((sum, b) => sum + (b.standuri || 0), 0);
   const statChips = document.querySelectorAll('.stat-chip strong');
   if (statChips[0]) statChips[0].textContent = visibleCount;
-  if (statChips[1]) statChips[1].textContent = totalStanduri;
   document.getElementById('balti-count').textContent = visibleCount;
 }
 
