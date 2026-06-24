@@ -739,7 +739,7 @@ function renderPins() {
       div.addEventListener('mousedown',  function(e) { startDrag(e, s.id); });
       div.addEventListener('touchstart', function(e) { startDrag(e, s.id); }, { passive: false });
     } else {
-      div.addEventListener('click', function(e) { e.stopPropagation(); selStand(s.id); });
+      div.addEventListener('click', function(e) { e.stopPropagation(); openOverlay(s.id); });
     }
     layer.appendChild(div);
   });
@@ -767,21 +767,27 @@ function scrollToMap() {
   }
 }
 function selStand(id) {
-  scrollToMap();
   selId = id;
-  var s = ST.find(function(x) { return x.id === id; });
   renderPins();
   updatePills();
+  document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
+}
+
+function openOverlay(id) {
+  selId = id;
+  renderPins();
+  updatePills();
+  document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
+
+  var s = ST.find(function(x) { return x.id === id; });
   document.getElementById('ov-nr').textContent = s.z || ('Stand ' + s.nr);
 
-  // Record (dacă există)
   document.getElementById('ov-kg').textContent = (s.r.kg !== '' && s.r.kg !== null && s.r.kg !== '-') ? s.r.kg + ' kg' : '—';
   document.getElementById('ov-pe').textContent = (s.r.pe && s.r.pe !== '-') ? s.r.pe : '—';
   document.getElementById('ov-da').textContent = (s.r.da && s.r.da !== '-') ? s.r.da : '—';
   document.getElementById('ov-la').textContent = (s.la !== '' && s.la != null && s.la != 0) ? s.la + 'm' : '—';
   document.getElementById('ov-di').textContent = (s.di !== '' && s.di != null && s.di != 0) ? s.di + 'm' : '—';
 
-  // Foto record
   var oldRec = document.getElementById('ov-rec-foto');
   var recFoto = oldRec.cloneNode(false); recFoto.id = 'ov-rec-foto';
   oldRec.parentNode.replaceChild(recFoto, oldRec);
@@ -796,7 +802,6 @@ function selStand(id) {
     recFoto.innerHTML = '<span style="font-size:24px;">🐟</span><span>Fără fotografie</span>';
   }
 
-  // Foto stand
   var oldSt = document.getElementById('ov-stand-foto');
   var stFoto = oldSt.cloneNode(false); stFoto.id = 'ov-stand-foto';
   oldSt.parentNode.replaceChild(stFoto, oldSt);
@@ -816,7 +821,6 @@ function selStand(id) {
   document.getElementById('stand-overlay').style.display = 'block';
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
-  document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
 }
 
 function closeOverlay() {
@@ -838,7 +842,6 @@ function deselectStand() {
 }
 
 function showAll() {
-  scrollToMap();
   deselectStand();
   document.getElementById('map-yt-iframe').src = '';
   document.getElementById('map-yt-bar').style.display = 'none';
@@ -848,7 +851,6 @@ function showAll() {
 }
 
 function showDrumAcces() {
-  scrollToMap();
   selId = null;
   document.getElementById('stand-overlay').style.display = 'none';
   renderPins();
