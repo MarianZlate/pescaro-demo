@@ -140,7 +140,108 @@ th:nth-child(2),td:nth-child(2){max-width:100px;overflow:hidden;text-overflow:el
 .section-title{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 
 /* BALTI TABLE */
-.balti-table{width:100%;border-collapse:collapse;background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1e293b;}
+.table-wrap{width:100%;}
+
+/* ── MOBIL: tabel → carduri ── */
+.balti-table thead,
+.users-table thead{display:none;}
+
+.balti-table,
+.balti-table tbody,
+.balti-table tr,
+.users-table,
+.users-table tbody,
+.users-table tr{display:block;width:100%;}
+
+.balti-table tr,
+.users-table tr{
+  background:#111827;
+  border:1px solid #1e293b;
+  border-radius:12px;
+  margin-bottom:10px;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.balti-table tr:hover,
+.users-table tr:hover{background:#0f172a;}
+
+.balti-table td,
+.users-table td{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  padding:0;
+  border:none;
+  font-size:13px;
+  line-height:1.4;
+}
+.balti-table td::before,
+.users-table td::before{
+  content:attr(data-label);
+  font-size:10px;
+  font-weight:700;
+  color:#4b5563;
+  letter-spacing:.06em;
+  min-width:72px;
+  padding-top:1px;
+  flex-shrink:0;
+}
+/* Acțiuni — ocupă toată lățimea */
+.balti-table td:last-child,
+.users-table td:last-child{flex-direction:column;}
+.balti-table td:last-child::before,
+.users-table td:last-child::before{display:none;}
+.balti-table td:last-child .action-btns,
+.users-table td:last-child .action-btns{flex-wrap:wrap;}
+
+/* empty state */
+.balti-table td[colspan],
+.users-table td[colspan]{justify-content:center;padding:16px 0;}
+.balti-table td[colspan]::before,
+.users-table td[colspan]::before{display:none;}
+
+@media(min-width:769px){
+  /* Desktop: revert la tabel normal */
+  .balti-table,
+  .balti-table tbody,
+  .balti-table tr,
+  .users-table,
+  .users-table tbody,
+  .users-table tr{display:table;display:revert;width:100%;}
+
+  .balti-table,
+  .users-table{display:table;border-collapse:collapse;}
+
+  .balti-table tbody,
+  .users-table tbody{display:table-row-group;}
+
+  .balti-table thead,
+  .users-table thead{display:table-header-group;}
+
+  .balti-table tr,
+  .users-table tr{
+    display:table-row;
+    background:transparent;
+    border:none;
+    border-radius:0;
+    margin-bottom:0;
+    padding:0;
+    flex-direction:unset;
+    gap:0;
+  }
+  .balti-table td,
+  .users-table td{
+    display:table-cell;
+    padding:12px 14px;
+    border-bottom:1px solid #0f172a;
+  }
+  .balti-table td::before,
+  .users-table td::before{display:none;}
+  .balti-table td:last-child,
+  .users-table td:last-child{flex-direction:unset;}
+}
 .balti-table th{background:#0a0f1a;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;border-bottom:1px solid #1e293b;}
 .balti-table td{padding:12px 14px;border-bottom:1px solid #0f172a;font-size:13px;vertical-align:middle;}
 .balti-table tr:last-child td{border-bottom:none;}
@@ -385,7 +486,7 @@ th:nth-child(2),td:nth-child(2){max-width:100px;overflow:hidden;text-overflow:el
         ＋ Adaugă baltă nouă
       </button>
     </div>
-    <div style="overflow-x:auto;">
+    <div class="table-wrap">
       <table class="balti-table">
         <thead>
           <tr>
@@ -407,7 +508,7 @@ th:nth-child(2),td:nth-child(2){max-width:100px;overflow:hidden;text-overflow:el
   <!-- USERS PANEL -->
   <div id="panel-users" style="display:none;">
     <div class="section-title">👥 Utilizatori înregistrați</div>
-    <div style="overflow-x:auto;">
+    <div class="table-wrap">
       <table class="users-table">
         <thead>
           <tr>
@@ -800,11 +901,11 @@ async function loadBalti() {
 
   tbody.innerHTML = data.map(b => `
     <tr>
-      <td style="color:#4b5563;font-size:11px;">#${b.id}</td>
-      <td><strong style="color:#f1f5f9;">${b.nume}</strong></td>
-      <td style="color:#64748b;">📍 ${b.judet || '—'}</td>
-      <td style="color:#64748b;">🎣 ${b.standuri || 0}</td>
-      <td>
+      <td data-label="ID" style="color:#4b5563;font-size:11px;">#${b.id}</td>
+      <td data-label="NUME"><strong style="color:#f1f5f9;">${b.nume}</strong></td>
+      <td data-label="JUDEȚ" style="color:#64748b;">📍 ${b.judet || '—'}</td>
+      <td data-label="STANDURI" style="color:#64748b;">🎣 ${b.standuri || 0}</td>
+      <td data-label="STATUS">
         ${b.vizibilitate === 'public'
           ? '<span class="vis-badge vis-public">🌍 Publică</span>'
           : '<span class="vis-badge vis-unlisted">🔒 Unlisted</span>'}
@@ -816,7 +917,7 @@ async function loadBalti() {
             : `<button class="btn-unlist" onclick="setBaltaVis(${b.id},'unlisted')">🔒 Unlisted</button>`}
           <button class="btn-edit" onclick="openEditBalta(${b.id})">✏️ Editează</button>
           <a class="btn-view" href="balta.html?id=${b.id}&edit=1&token=${token}">👁️ Vezi / Editează</a>
-          <button class="btn-del" onclick="confirmDeleteBalta(${b.id},'${b.nume.replace(/'/g,"\\'")}')">🗑️</button>
+          <button class="btn-del" onclick="confirmDeleteBalta(${b.id},'${b.nume.replace(/'/g,"\\'")}'">🗑️</button>
         </div>
       </td>
     </tr>`).join('');
@@ -877,13 +978,13 @@ async function loadUsers() {
       : '—';
     return `
     <tr>
-      <td style="color:#e2e8f0;">${displayName}</td>
-      <td>
+      <td data-label="EMAIL" style="color:#e2e8f0;">${displayName}</td>
+      <td data-label="ROL">
         ${rol === 'admin'
           ? '<span class="role-badge role-admin">⭐ Admin</span>'
           : '<span class="role-badge role-user">User</span>'}
       </td>
-      <td style="color:#4b5563;">${createdAt}</td>
+      <td data-label="ÎNREGISTRAT" style="color:#4b5563;">${createdAt}</td>
       <td>
         ${rol !== 'admin'
           ? `<button class="btn-make-admin" onclick="setUserRole('${u.id}','admin')">⭐ Fă admin</button>`
