@@ -815,34 +815,35 @@ async function loadUsers() {
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Se încarcă...</td></tr>';
 
-  const { data: roles, error } = await sb.from('user_roles').select('id, rol');
-  if(error || !roles?.length) {
+  // Citim profilurile ca sursă primară — toți userii înregistrați apar aici
+  const { data: profiles, error } = await sb.from('user_profiles').select('id, email, created_at, username').order('created_at', { ascending: false });
+  if(error || !profiles?.length) {
     tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Niciun utilizator înregistrat.</td></tr>';
     return;
   }
 
-  // Fetch profiluri cu emailuri
-  const { data: profiles } = await sb.from('user_profiles').select('id, email, created_at');
-  const profileMap = {};
-  (profiles || []).forEach(p => profileMap[p.id] = p);
+  // Fetch roluri și construim map
+  const { data: roles } = await sb.from('user_roles').select('id, rol');
+  const roleMap = {};
+  (roles || []).forEach(r => roleMap[r.id] = r.rol);
 
-  tbody.innerHTML = roles.map(u => {
-    const profile = profileMap[u.id];
-    const email = profile?.email || '—';
-    const createdAt = profile?.created_at
-      ? new Date(profile.created_at).toLocaleDateString('ro-RO')
+  tbody.innerHTML = profiles.map(u => {
+    const rol = roleMap[u.id] || 'user';
+    const displayName = u.username ? `${u.username} <span style="font-size:10px;color:#4b5563;">&lt;${u.email}&gt;</span>` : u.email || '—';
+    const createdAt = u.created_at
+      ? new Date(u.created_at).toLocaleDateString('ro-RO')
       : '—';
     return `
     <tr>
-      <td style="color:#e2e8f0;">${email}</td>
+      <td style="color:#e2e8f0;">${displayName}</td>
       <td>
-        ${u.rol === 'admin'
+        ${rol === 'admin'
           ? '<span class="role-badge role-admin">⭐ Admin</span>'
           : '<span class="role-badge role-user">User</span>'}
       </td>
       <td style="color:#4b5563;">${createdAt}</td>
       <td>
-        ${u.rol !== 'admin'
+        ${rol !== 'admin'
           ? `<button class="btn-make-admin" onclick="setUserRole('${u.id}','admin')">⭐ Fă admin</button>`
           : `<button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">↓ Revocă admin</button>`}
       </td>
