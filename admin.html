@@ -865,8 +865,8 @@ async function setUserRole(userId, rol) {
     showToast('⛔ Contul de admin suprem nu poate fi modificat.', true);
     return;
   }
-  const { error } = await sb.from('user_roles').update({ rol }).eq('id', userId);
-  if(error) { showToast('Eroare la actualizare rol', true); return; }
+  const { error } = await sb.from('user_roles').upsert({ id: userId, rol }, { onConflict: 'id' });
+  if(error) { showToast('Eroare: ' + error.message, true); return; }
   showToast(rol === 'admin' ? '⭐ Admin acordat!' : '✓ Admin revocat');
   loadUsers();
 }
