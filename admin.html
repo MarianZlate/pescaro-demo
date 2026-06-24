@@ -18,9 +18,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .admin-badge{font-size:11px;background:#f59e0b;color:#000;padding:3px 9px;border-radius:5px;font-weight:800;}
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .hdr-user{font-size:12px;color:#64748b;}
-.logout-btn{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:12px;padding:6px 12px;border-radius:7px;cursor:pointer;}
+.logout-btn{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:11px;padding:5px 10px;border-radius:7px;cursor:pointer;}
 .logout-btn:hover{border-color:#ef4444;color:#ef4444;}
-.back-btn{background:transparent;border:1px solid #1e293b;color:#94a3b8;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px;}
+.back-btn{background:transparent;border:1px solid #1e293b;color:#94a3b8;font-size:11px;padding:5px 10px;border-radius:8px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px;white-space:nowrap;}
 .back-btn:hover{border-color:#334155;color:#f1f5f9;}
 
 /* ACCESS DENIED */
@@ -335,9 +335,9 @@ th,td{padding:8px 6px;}
     </a>
     <span class="admin-badge">⚙️ ADMIN</span>
     <div class="hdr-right">
-      <span class="hdr-user" id="hdr-user"></span>
-      <a class="back-btn" href="index.html">← Hartă principală</a>
+      <a class="back-btn" href="index.html">← Hartă</a>
       <button class="logout-btn" onclick="doLogout()">Ieși</button>
+      <div id="hdr-avatar" style="width:32px;height:32px;border-radius:50%;background:#1e293b;border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#a3e635;cursor:default;flex-shrink:0;overflow:hidden;"></div>
     </div>
   </div>
 </div>
@@ -778,7 +778,17 @@ async function bootAdmin() {
     return;
   }
 
-  document.getElementById('hdr-user').textContent = user.email;
+  // Avatar în header
+  const avatarEl = document.getElementById('hdr-avatar');
+  const { data: profile } = await sb.from('user_profiles').select('avatar_url, username').eq('id', user.id).single();
+  if(profile?.avatar_url) {
+    avatarEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;"/>`;
+  } else {
+    const initials = (profile?.username || user.email || '?').charAt(0).toUpperCase();
+    avatarEl.textContent = initials;
+  }
+  avatarEl.title = user.email;
+
   showScreen('dashboard');
   loadBalti();
   loadStats();
