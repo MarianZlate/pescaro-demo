@@ -2375,16 +2375,27 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
   } else if(event === 'SIGNED_IN') {
     currentUser = session?.user || null;
-    // Verificăm dacă contul e marcat ca șters
     if (currentUser) {
+      // Verificăm profilul — îl creăm dacă nu există (ex: Google login prima dată)
       const { data: profile } = await sb.from('user_profiles')
-        .select('deleted_at').eq('id', currentUser.id).single();
-      if (profile?.deleted_at) {
-        // Cont soft-deleted — redirecționăm la pagina de cont pentru recuperare
+        .select('*').eq('id', currentUser.id).single();
+
+      if (!profile) {
+        // User nou prin Google — creăm profil și rol
+        const uid = currentUser.id;
+        const email = currentUser.email;
+        const pescaro_id = 'PESCARO-' + uid.replace(/-/g,'').slice(0,8).toUpperCase();
+        const username = email.split('@')[0];
+        await sb.from('user_profiles').upsert({
+          id: uid, email, username, pescaro_id,
+        }, { onConflict: 'id' });
+        await sb.from('user_roles').upsert({ id: uid, rol: 'user' }, { onConflict: 'id' });
+      } else if (profile.deleted_at) {
+        // Cont soft-deleted — blocăm accesul și redirecționăm la recuperare
+        await sb.auth.signOut();
         closeAuthModal();
-        await updateNavForUser(currentUser);
-        showToast('⚠️ Contul tău este marcat pentru ștergere. Intră în Contul meu pentru a-l recupera.');
-        setTimeout(() => { window.location.href = 'cont.html'; }, 2500);
+        // Relogăm silențios ca să putem afișa ecranul de recuperare
+        authShowErr('Contul tău a fost marcat pentru ștergere. Reintră în cont și vei putea recupera accesul.');
         return;
       }
     }
