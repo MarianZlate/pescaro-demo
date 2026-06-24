@@ -768,7 +768,7 @@ function onSearch(q) {
     <div class="dd-item" onclick="flyToBalta(${b.id})">
       <div style="flex:1;">
         <div class="dd-name">${b.nume}</div>
-        <div class="dd-meta">📍 ${b.judet} · ${b.ha} · ${b.standuri} standuri</div>
+        <div class="dd-meta">📍 ${b.judet}${b.adresa ? ' · ' + b.adresa : ''} · ${b.standuri} standuri</div>
       </div>
       <button class="dd-open" onclick="event.stopPropagation();__goToBalta(${b.id})">Deschide →</button>
     </div>`).join('');
