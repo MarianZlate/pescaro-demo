@@ -361,11 +361,12 @@ function showDeletedScreen() {
         Contul tău a fost marcat pentru ștergere pe <strong style="color:#f59e0b;">${deletedAt.toLocaleDateString('ro-RO')}</strong>.<br/>
         Dacă nu faci nimic, va fi șters definitiv în <strong style="color:#ef4444;">${daysLeft} ${daysLeft === 1 ? 'zi' : 'zile'}</strong>.
       </div>
+      <div id="recover-msg" style="display:none;background:#0d1f12;border:1px solid #1a6b3a;border-radius:8px;padding:10px;font-size:12px;color:#a3e635;margin-bottom:12px;"></div>
       <button onclick="recoverAccount()" style="width:100%;background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:13px;border-radius:10px;cursor:pointer;margin-bottom:12px;">
         ✅ Recuperează contul
       </button>
       <button onclick="doLogout()" style="width:100%;background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:13px;padding:10px;border-radius:10px;cursor:pointer;">
-        Ieși din cont
+        Nu vreau să recuperez — Ieși din cont
       </button>
     </div>`;
 }
@@ -374,9 +375,13 @@ async function recoverAccount() {
   const { error } = await sb.from('user_profiles')
     .update({ deleted_at: null })
     .eq('id', currentUser.id);
-  if (error) { showToast('⚠️ Eroare la recuperare: ' + error.message, true); return; }
-  showToast('✅ Cont recuperat cu succes!');
-  setTimeout(() => window.location.reload(), 1200);
+  if (error) {
+    showToast('⚠️ Eroare la recuperare: ' + error.message, true);
+    return;
+  }
+  const msg = document.getElementById('recover-msg');
+  if (msg) { msg.textContent = '✅ Cont recuperat! Te redirecționăm...'; msg.style.display = 'block'; }
+  setTimeout(() => window.location.href = 'index.html', 1500);
 }
 
 // ── RENDER PROFIL ─────────────────────────────────────────────────────────────
