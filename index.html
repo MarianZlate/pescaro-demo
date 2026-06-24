@@ -2375,6 +2375,19 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
   } else if(event === 'SIGNED_IN') {
     currentUser = session?.user || null;
+    // Verificăm dacă contul e marcat ca șters
+    if (currentUser) {
+      const { data: profile } = await sb.from('user_profiles')
+        .select('deleted_at').eq('id', currentUser.id).single();
+      if (profile?.deleted_at) {
+        // Cont soft-deleted — redirecționăm la pagina de cont pentru recuperare
+        closeAuthModal();
+        await updateNavForUser(currentUser);
+        showToast('⚠️ Contul tău este marcat pentru ștergere. Intră în Contul meu pentru a-l recupera.');
+        setTimeout(() => { window.location.href = 'cont.html'; }, 2500);
+        return;
+      }
+    }
     await updateNavForUser(currentUser);
     closeAuthModal();
   } else if(event === 'SIGNED_OUT') {
