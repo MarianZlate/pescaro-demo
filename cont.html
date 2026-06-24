@@ -261,6 +261,21 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div>
 
+  <!-- ── LOGOUT ── -->
+  <div class="section" style="border-color:#1e293b;">
+    <div class="section-hdr">
+      <span class="section-icon">🚪</span>
+      <div>
+        <div class="section-title">Ieșire din cont</div>
+        <div class="section-sub">Deconectează-te de pe acest dispozitiv</div>
+      </div>
+    </div>
+    <div class="section-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="font-size:13px;color:#64748b;">Vei fi redirecționat către pagina principală după ieșire.</div>
+      <button onclick="doLogout()" style="background:#1e293b;border:1px solid #334155;color:#f1f5f9;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444';" onmouseout="this.style.borderColor='#334155';this.style.color='#f1f5f9';">🚪 Ieși din cont</button>
+    </div>
+  </div>
+
   <!-- ── DANGER ZONE ── -->
   <div class="section" style="border-color:#334155;">
     <div class="section-hdr" style="border-bottom-color:#1e293b;">
@@ -539,6 +554,11 @@ async function deleteAccount() {
   } catch(e) {
     showToast('⚠️ Eroare la ștergere: ' + e.message, true);
   }
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  window.location.href = 'index.html';
 }
 
 // ── START ────────────────────────────────────────────────────────────────────
