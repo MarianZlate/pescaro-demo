@@ -767,6 +767,10 @@ function scrollToMap() {
   }
 }
 function selStand(id) {
+  if (selId === id) {
+    openOverlay(id);
+    return;
+  }
   selId = id;
   document.getElementById('stand-overlay').style.display = 'none';
   document.getElementById('spr').style.display = 'block';
