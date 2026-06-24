@@ -710,17 +710,20 @@ function showError(msg) {
 // ─── PINS ──────────────────────────────────────────────────────────────────
 function pinSVG(nr, active, editing) {
   var col = active ? '#f59e0b' : editing ? '#7c3aed' : '#e8142a';
-  var stk = active ? '#cc4400' : editing ? '#a78bfa' : '#c8a800';
-  var glow = editing ? 'drop-shadow(0 0 5px rgba(124,58,237,.7))' : 'drop-shadow(0 2px 5px rgba(0,0,0,.8))';
-  var fs = nr > 9 ? '9' : '11';
-  return '<svg width="36" height="44" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;">'
-    +'<line x1="26" y1="12" x2="5" y2="42" stroke="'+stk+'" stroke-width="2" stroke-linecap="round"/>'
-    +'<circle cx="26" cy="11" r="11" fill="rgba(0,0,0,.2)" transform="translate(1.5,1.5)"/>'
-    +'<circle cx="26" cy="11" r="11" fill="'+col+'" stroke="'+stk+'" stroke-width="1.5"/>'
-    +'<circle cx="26" cy="11" r="4" fill="'+stk+'" opacity="0.5"/>'
-    +'<circle cx="26" cy="11" r="2" fill="rgba(255,255,255,.45)"/>'
-    +'<ellipse cx="22" cy="7" rx="3.5" ry="2.5" fill="rgba(255,255,255,.28)" transform="rotate(-20,22,7)"/>'
-    +'<text x="26" y="16" text-anchor="middle" font-family="system-ui" font-size="'+fs+'" font-weight="900" fill="#1a1a1a" opacity="0.9">'+nr+'</text>'
+  var dark = active ? '#b45309' : editing ? '#5b21b6' : '#9b0f1e';
+  var glow = editing ? 'drop-shadow(0 0 5px rgba(124,58,237,.7))' : 'drop-shadow(0 2px 6px rgba(0,0,0,.9))';
+  var fs = nr > 9 ? '10' : '12';
+  // Forma lacrimă: cerc în vârf, se îngustează spre vârf de ac jos
+  // viewBox 32x44: centrul cercului la (16,15), raza 14, vârful la (16,43)
+  return '<svg width="32" height="44" viewBox="0 0 32 44" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;overflow:visible;">'
+    // umbra
+    +'<path d="M16,42 C16,42 3,26 3,16 A13,13 0 0,1 29,16 C29,26 16,42 16,42 Z" fill="rgba(0,0,0,.25)" transform="translate(1.5,1.5)"/>'
+    // corpul
+    +'<path d="M16,42 C16,42 3,26 3,16 A13,13 0 0,1 29,16 C29,26 16,42 16,42 Z" fill="'+col+'" stroke="'+dark+'" stroke-width="1.5"/>'
+    // luciu
+    +'<ellipse cx="11" cy="11" rx="5" ry="3.5" fill="rgba(255,255,255,.30)" transform="rotate(-30,11,11)"/>'
+    // număr
+    +'<text x="16" y="20" text-anchor="middle" font-family="system-ui,sans-serif" font-size="'+fs+'" font-weight="900" fill="#fff">'+nr+'</text>'
     +'</svg>';
 }
 
