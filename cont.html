@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>PescaRO — Contul meu</title>
+<title>Baltis — Contul meu</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* ============================================================
@@ -134,7 +134,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 <div id="hdr" style="display:none;">
   <div id="hdr-in">
-    <a href="index.html" class="logo">🎣 PescaRO<span class="badge">BETA</span></a>
+    <a href="index.html" class="logo">Baltis<span class="badge">BETA</span></a>
     <span class="hdr-title">Contul meu</span>
     <a href="index.html" class="back-btn">← Înapoi</a>
   </div>
@@ -179,7 +179,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div class="fg-hint">Emailul nu poate fi modificat din această pagină.</div>
       </div>
       <div class="fg">
-        <label>ID UNIC PESCARO</label>
+        <label>ID UNIC BALTIS</label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="text" id="inp-pescaro-id" disabled style="font-family:monospace;color:#a3e635;letter-spacing:.05em;"/>
           <button onclick="copyPescaroId()" title="Copiază ID" style="flex-shrink:0;background:#1e293b;border:none;color:#94a3b8;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;" onmouseover="this.style.color='#f1f5f9'" onmouseout="this.style.color='#94a3b8'">📋</button>
@@ -306,7 +306,7 @@ const CLOUDINARY_CLOUD  = 'dlafkx65j';
 const CLOUDINARY_PRESET = 'ml_default';
 
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'pescaro-auth' }
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'baltis-auth' }
 });
 
 let currentUser = null;
@@ -390,7 +390,7 @@ function renderProfile() {
   const p = currentProfile;
   const username  = p.username  || '';
   const avatarUrl = p.avatar_url || '';
-  const pescaroId = p.pescaro_id || ('PESCARO-' + u.id.replace(/-/g,'').slice(0,8).toUpperCase());
+  const pescaroId = p.pescaro_id || ('BALTIS-' + u.id.replace(/-/g,'').slice(0,8).toUpperCase());
 
   // Avatar
   const avatarEl = document.getElementById('avatar-display');
@@ -430,7 +430,7 @@ async function onAvatarFile(input) {
   const fd = new FormData();
   fd.append('file', file);
   fd.append('upload_preset', CLOUDINARY_PRESET);
-  fd.append('tags', 'avatar_pescaro');
+  fd.append('tags', 'avatar_baltis');
 
   try {
     const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
@@ -487,7 +487,7 @@ async function saveProfile() {
 async function upsertProfile(fields) {
   // Generăm pescaro_id dacă nu există
   const pescaro_id = currentProfile.pescaro_id ||
-    ('PESCARO-' + currentUser.id.replace(/-/g,'').slice(0,8).toUpperCase());
+    ('BALTIS-' + currentUser.id.replace(/-/g,'').slice(0,8).toUpperCase());
   const { error } = await sb.from('user_profiles').upsert({
     id: currentUser.id,
     email: currentUser.email,
