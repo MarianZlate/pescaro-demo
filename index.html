@@ -18,26 +18,18 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
 
 /* ============================================================
-   COMPONENTE COMUNE (aceleași pe mobil și desktop)
+   COMPONENTE COMUNE
    ============================================================ */
-
-/* HEADER */
 #hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;backdrop-filter:blur(8px);}
-#hdr-in{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;
-  /* mobil */
-  padding:0 12px;height:52px;gap:8px;}
+#hdr-in{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:52px;gap:8px;}
 .logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;}
 .logo-icon{font-size:22px;}
 .logo-text{font-size:18px;font-weight:900;color:#a3e635;letter-spacing:-.5px;}
 .logo-badge{display:none;font-size:10px;background:#1a6b3a;color:#a3e635;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:.04em;}
 nav{display:flex;align-items:center;gap:6px;}
-.nav-btn{background:transparent;border:none;color:#94a3b8;cursor:pointer;border-radius:8px;transition:color .2s;
-  /* mobil */
-  font-size:12px;padding:6px 8px;}
+.nav-btn{background:transparent;border:none;color:#94a3b8;cursor:pointer;border-radius:8px;transition:color .2s;font-size:12px;padding:6px 8px;}
 .nav-btn:hover{color:#f1f5f9;}
-.nav-primary{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;cursor:pointer;border-radius:8px;
-  /* mobil */
-  font-size:12px;padding:6px 12px;}
+.nav-primary{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;cursor:pointer;border-radius:8px;font-size:12px;padding:6px 12px;}
 .nav-primary:hover{background:#1e7a42;}
 .nav-user{display:flex;align-items:center;gap:8px;}
 .nav-avatar{width:32px;height:32px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#a3e635;cursor:pointer;border:2px solid #1a3020;}
@@ -45,28 +37,14 @@ nav{display:flex;align-items:center;gap:6px;}
 .nav-logout{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:12px;padding:5px 10px;border-radius:7px;cursor:pointer;}
 .nav-logout:hover{border-color:#ef4444;color:#ef4444;}
 .nav-admin-badge{font-size:10px;background:#f59e0b;color:#000;padding:2px 7px;border-radius:4px;font-weight:800;}
-
-/* HERO */
-#hero{max-width:1400px;margin:0 auto;text-align:center;
-  /* mobil */
-  padding:28px 14px 20px;}
-.hero-title{font-weight:900;line-height:1.15;color:#f8fafc;margin-bottom:14px;
-  /* mobil */
-  font-size:26px;}
+#hero{max-width:1400px;margin:0 auto;text-align:center;padding:28px 14px 20px;}
+.hero-title{font-weight:900;line-height:1.15;color:#f8fafc;margin-bottom:14px;font-size:26px;}
 .hero-accent{color:#a3e635;}
-.hero-sub{color:#64748b;margin-bottom:20px;
-  /* mobil */
-  font-size:13px;}
-
-/* SEARCH */
-#search-wrap{position:relative;max-width:580px;margin:0 auto 10px;
-  /* mobil */
-  padding:0 14px;}
+.hero-sub{color:#64748b;margin-bottom:20px;font-size:13px;}
+#search-wrap{position:relative;max-width:580px;margin:0 auto 10px;padding:0 14px;}
 #search-box{display:flex;align-items:center;gap:10px;background:#111827;border:2px solid #1e293b;border-radius:14px;padding:13px 18px;transition:border-color .2s;}
 #search-box:focus-within{border-color:#1a6b3a;}
-#search-input{flex:1;background:transparent;border:none;outline:none;color:#f1f5f9;
-  /* mobil */
-  font-size:14px;}
+#search-input{flex:1;background:transparent;border:none;outline:none;color:#f1f5f9;font-size:14px;}
 #search-input::placeholder{color:#4b5563;}
 #clear-btn{background:transparent;border:none;color:#4b5563;cursor:pointer;font-size:18px;line-height:1;display:none;}
 #dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none;}
@@ -76,29 +54,13 @@ nav{display:flex;align-items:center;gap:6px;}
 .dd-name{font-weight:700;font-size:14px;color:#f1f5f9;}
 .dd-meta{font-size:11px;color:#64748b;margin-top:2px;}
 .dd-open{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-
-/* STATS BAR */
-#stats-bar{margin-bottom:10px;
-  /* mobil */
-  padding:0 14px;}
+#stats-bar{margin-bottom:10px;padding:0 14px;}
 .stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;color:#64748b;text-align:center;
-  /* mobil */
-  padding:5px 12px;font-size:12px;}
+.stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;color:#64748b;text-align:center;padding:5px 12px;font-size:12px;}
 .stat-chip strong{color:#a3e635;font-size:16px;}
-
-/* MAIN LAYOUT — mobil: o coloană */
-#main{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr;align-items:start;
-  /* mobil */
-  padding:0 8px 40px;gap:10px;}
-
-/* MAP */
-#map-wrap{position:relative;border:1px solid #1e293b;overflow:hidden;
-  /* mobil */
-  border-radius:10px;}
-#map{width:100%;
-  /* mobil */
-  height:calc(100vw - 16px);}
+#main{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr;align-items:start;padding:0 8px 40px;gap:10px;}
+#map-wrap{position:relative;border:1px solid #1e293b;overflow:hidden;border-radius:10px;}
+#map{width:100%;height:calc(100vw - 16px);}
 .leaflet-control{z-index:400!important;}
 .leaflet-top,.leaflet-bottom{z-index:400!important;}
 .leaflet-popup-content-wrapper{background:#111827;border:1px solid #1e293b;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.6);}
@@ -114,95 +76,51 @@ nav{display:flex;align-items:center;gap:6px;}
 #map-legend{position:absolute;bottom:14px;left:14px;background:rgba(10,15,26,.85);border:1px solid #1e293b;border-radius:8px;padding:8px 12px;font-size:11px;color:#64748b;z-index:10;pointer-events:none;}
 .balta-tooltip{background:#111827!important;border:1px solid #1e293b!important;border-radius:7px!important;color:#f1f5f9!important;font-size:12px!important;font-weight:700!important;padding:5px 10px!important;box-shadow:0 4px 14px rgba(0,0,0,.6)!important;white-space:nowrap;}
 .balta-tooltip::before{border-top-color:#1e293b!important;}
-
-/* SIDEBAR — mobil: 2 coloane */
 #sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;}
 .hof-card,.balti-card{min-width:0;}
-
-/* HALL OF FAME */
 .hof-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
-.hof-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;
-  /* mobil */
-  padding:10px 12px;}
-.hof-title{font-weight:800;color:#f59e0b;display:flex;align-items:center;gap:7px;
-  /* mobil */
-  font-size:12px;}
+.hof-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding:10px 12px;}
+.hof-title{font-weight:800;color:#f59e0b;display:flex;align-items:center;gap:7px;font-size:12px;}
 .hof-sub{font-size:10px;color:#4b5563;margin-top:1px;}
-.hof-row{display:flex;align-items:center;border-bottom:1px solid #0f172a;
-  /* mobil */
-  gap:7px;padding:7px 10px;}
+.hof-row{display:flex;align-items:center;border-bottom:1px solid #0f172a;gap:7px;padding:7px 10px;}
 .hof-row:last-child{border-bottom:none;}
-.hof-loc{border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;
-  /* mobil */
-  width:22px;height:22px;font-size:10px;}
-.hof-name{font-weight:700;color:#e2e8f0;
-  /* mobil */
-  font-size:11px;}
-.hof-detail{color:#4b5563;margin-top:1px;
-  /* mobil */
-  font-size:9px;}
+.hof-loc{border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;width:22px;height:22px;font-size:10px;}
+.hof-name{font-weight:700;color:#e2e8f0;font-size:11px;}
+.hof-detail{color:#4b5563;margin-top:1px;font-size:9px;}
 .hof-stars{display:flex;align-items:center;gap:2px;margin-left:auto;flex-shrink:0;}
 .star{color:#f59e0b;font-size:11px;}
 .hof-count{font-size:13px;color:#f59e0b;font-weight:800;}
 .hof-star-legend{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
 .hof-star-legend-label{font-size:9px;color:#4b5563;font-weight:600;letter-spacing:.04em;white-space:nowrap;}
 .see-all:hover{color:#a3e635;}
-
-/* LISTA BALTI */
 .balti-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
-.balti-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;
-  /* mobil */
-  padding:10px 12px;}
-.balti-title{font-weight:800;color:#e2e8f0;
-  /* mobil */
-  font-size:12px;}
+.balti-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding:10px 12px;}
+.balti-title{font-weight:800;color:#e2e8f0;font-size:12px;}
 .balti-count{background:#1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
-.balta-row{display:flex;align-items:center;border-bottom:1px solid #0f172a;cursor:pointer;transition:background .15s;
-  /* mobil */
-  gap:7px;padding:8px 10px;}
+.balta-row{display:flex;align-items:center;border-bottom:1px solid #0f172a;cursor:pointer;transition:background .15s;gap:7px;padding:8px 10px;}
 .balta-row:last-child{border-bottom:none;}
 .balta-row:hover{background:#1e293b;}
-.balta-emoji{background:#0d2010;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  /* mobil */
-  width:28px;height:28px;font-size:14px;}
-.balta-name{font-weight:700;color:#f1f5f9;
-  /* mobil */
-  font-size:11px;}
-.balta-meta{color:#64748b;margin-top:2px;
-  /* mobil */
-  font-size:9px;}
+.balta-emoji{background:#0d2010;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px;font-size:14px;}
+.balta-name{font-weight:700;color:#f1f5f9;font-size:11px;}
+.balta-meta{color:#64748b;margin-top:2px;font-size:9px;}
 .balta-price{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}
 .balta-arrow{color:#334155;font-size:16px;margin-left:4px;}
-
-/* HOF MODAL — mobil: sheet de jos */
-#hof-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;backdrop-filter:blur(4px);
-  /* mobil */
-  align-items:flex-end;justify-content:center;}
+#hof-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;}
 #hof-modal.open{display:flex;}
-.hof-modal-inner{background:#0a0f1a;border:1px solid #1e293b;overflow:hidden;display:flex;flex-direction:column;width:100%;
-  /* mobil */
-  max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;margin-top:auto;}
+.hof-modal-inner{background:#0a0f1a;border:1px solid #1e293b;overflow:hidden;display:flex;flex-direction:column;width:100%;max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;margin-top:auto;}
 .hof-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;}
 .hof-modal-title{font-size:20px;font-weight:900;color:#f59e0b;}
 .hof-modal-sub{font-size:12px;color:#4b5563;margin-top:3px;}
 .modal-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;}
 .hof-modal-list{overflow-y:auto;padding:8px 0;}
-
-/* JUDET DROPDOWN */
 .judet-opt{padding:9px 14px;cursor:pointer;font-size:13px;color:#f1f5f9;display:flex;align-items:center;gap:8px;border-bottom:1px solid #0f172a;transition:background .1s;}
 .judet-opt:last-child{border-bottom:none;}
 .judet-opt:hover,.judet-opt.focused{background:#1e293b;}
 .judet-opt.match-first{background:#0d1f12;}
 .judet-opt .judet-match{color:#a3e635;font-weight:800;}
-
-/* AUTH MODAL — mobil: sheet de jos */
-#auth-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:900;backdrop-filter:blur(6px);
-  /* mobil */
-  align-items:flex-end;justify-content:center;}
+#auth-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:900;backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;}
 #auth-modal.open{display:flex;}
-.auth-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;position:relative;
-  /* mobil */
-  max-width:100%;border-radius:16px 16px 0 0;padding:24px 18px;margin-top:auto;}
+.auth-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;position:relative;max-width:100%;border-radius:16px 16px 0 0;padding:24px 18px;margin-top:auto;}
 .auth-close{position:absolute;top:16px;right:18px;background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;}
 .auth-logo{text-align:center;font-size:32px;margin-bottom:8px;}
 .auth-title{text-align:center;font-size:20px;font-weight:900;color:#f1f5f9;margin-bottom:4px;}
@@ -226,42 +144,24 @@ nav{display:flex;align-items:center;gap:6px;}
 .auth-remember{display:flex;align-items:center;gap:8px;margin:10px 0 14px 0;}
 .auth-remember input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#1a6b3a;flex-shrink:0;}
 .auth-remember label{font-size:12px;color:#64748b;cursor:pointer;user-select:none;}
-
-/* DRAFT BANNER */
 #draft-banner{display:none;background:#1c1500;border:1px solid #92400e;border-radius:10px;padding:10px 16px;margin-bottom:0;align-items:center;gap:10px;flex-wrap:wrap;}
 #draft-banner.show{display:flex;}
 .draft-txt{flex:1;font-size:12px;color:#fbbf24;}
 .draft-resume{background:#f59e0b;border:none;color:#000;font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;}
 .draft-discard{background:transparent;border:1px solid #92400e;color:#92400e;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;}
-
-/* MODAL EDIT BALTA — mobil: sheet de jos */
-#edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:700;backdrop-filter:blur(6px);overflow-y:auto;
-  /* mobil */
-  align-items:flex-end;justify-content:center;padding:0;}
+#edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:700;backdrop-filter:blur(6px);overflow-y:auto;align-items:flex-end;justify-content:center;padding:0;}
 #edit-modal.open{display:flex;}
-.edit-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;margin:0 auto;
-  /* mobil */
-  max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;}
-.edit-hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;position:sticky;top:0;background:#0a0f1a;z-index:10;
-  /* mobil */
-  border-radius:16px 16px 0 0;padding:14px 16px;}
-.edit-title{font-weight:800;color:#f1f5f9;
-  /* mobil */
-  font-size:14px;}
+.edit-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;margin:0 auto;max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;}
+.edit-hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;position:sticky;top:0;background:#0a0f1a;z-index:10;border-radius:16px 16px 0 0;padding:14px 16px;}
+.edit-title{font-weight:800;color:#f1f5f9;font-size:14px;}
 .edit-hdr-btns{display:flex;gap:8px;align-items:center;}
-.edit-save-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;cursor:pointer;border-radius:8px;
-  /* mobil */
-  font-size:12px;padding:7px 12px;}
+.edit-save-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;cursor:pointer;border-radius:8px;font-size:12px;padding:7px 12px;}
 .edit-save-btn:hover{background:#1e7a42;}
 .edit-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;}
-.edit-body{
-  /* mobil */
-  padding:16px;}
+.edit-body{padding:16px;}
 .edit-section{margin-bottom:28px;}
 .edit-section-title{font-size:11px;font-weight:800;color:#4b5563;letter-spacing:.08em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px;}
 .edit-section-title span{flex:1;}
-
-/* Stand edit card */
 .se-card{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:14px;margin-bottom:10px;position:relative;}
 .se-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;}
 .se-nr-badge{width:28px;height:28px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
@@ -279,15 +179,9 @@ nav{display:flex;align-items:center;gap:6px;}
 .gal-add-btn:hover{border-color:#1a6b3a;color:#a3e635;}
 .save-toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;}
 .save-toast.show{opacity:1;transform:translateY(0);}
-
-/* MODAL ADAUGA BALTA — mobil: sheet de jos */
-#ab-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;backdrop-filter:blur(6px);
-  /* mobil */
-  align-items:flex-end;justify-content:center;}
+#ab-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;}
 #ab-modal.open{display:flex;}
-.ab-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;
-  /* mobil */
-  max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;}
+.ab-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;}
 .ab-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;flex-shrink:0;}
 .ab-title{font-size:18px;font-weight:900;color:#f1f5f9;}
 .ab-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;}
@@ -315,8 +209,6 @@ nav{display:flex;align-items:center;gap:6px;}
 .ab-success-icon{font-size:56px;margin-bottom:16px;}
 .ab-success-title{font-size:20px;font-weight:800;color:#a3e635;margin-bottom:8px;}
 .ab-success-sub{color:#64748b;font-size:13px;line-height:1.6;}
-
-/* FORM ELEMENTS (wizard + edit) */
 .fg{margin-bottom:16px;}
 .fg label{display:block;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;}
 .fg input,.fg select,.fg textarea{width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
@@ -336,10 +228,9 @@ nav{display:flex;align-items:center;gap:6px;}
 .add-stand-btn:hover{border-color:#1a6b3a;color:#a3e635;background:#0d1f12;}
 
 /* ============================================================
-   DESKTOP (min-width: 769px) — adăugăm peste baza mobilă
+   DESKTOP (min-width: 769px)
    ============================================================ */
 @media(min-width:769px){
-  /* HEADER */
   #hdr-in{padding:0 24px;height:62px;gap:16px;}
   .logo-icon{font-size:28px;}
   .logo-text{font-size:22px;}
@@ -347,68 +238,42 @@ nav{display:flex;align-items:center;gap:6px;}
   .nav-btn{font-size:14px;padding:8px 14px;}
   .nav-primary{font-size:13px;padding:8px 18px;}
   .nav-user-name{display:block;}
-
-  /* HERO */
   #hero{padding:60px 24px 36px;}
   .hero-title{font-size:42px;}
   .hero-sub{font-size:16px;margin-bottom:36px;}
-
-  /* SEARCH */
   #search-wrap{padding:0;}
   #search-input{font-size:15px;}
-
-  /* STATS */
   #stats-bar{padding:0;}
   .stat-chip{padding:7px 20px;font-size:14px;}
-
-  /* MAIN — 2 coloane pe desktop */
   #main{padding:0 24px 60px;grid-template-columns:1fr 340px;gap:20px;}
-
-  /* MAP */
   #map-wrap{border-radius:16px;}
   #map{height:560px;}
-
-  /* SIDEBAR — 1 coloană verticală pe desktop */
   #sidebar{display:flex;flex-direction:column;gap:16px;}
   .hof-card,.balti-card{min-width:unset;}
-
-  /* HALL OF FAME */
   .hof-header{padding:14px 16px;}
   .hof-title{font-size:14px;}
   .hof-row{gap:10px;padding:9px 14px;}
   .hof-loc{width:26px;height:26px;font-size:12px;}
   .hof-name{font-size:12px;}
   .hof-detail{font-size:10px;}
-
-  /* LISTA BALTI */
   .balti-header{padding:14px 16px;}
   .balti-title{font-size:14px;}
   .balta-row{gap:10px;padding:10px 14px;}
   .balta-emoji{width:36px;height:36px;font-size:18px;}
   .balta-name{font-size:13px;}
   .balta-meta{font-size:10px;}
-
-  /* HOF MODAL — centrat pe desktop */
   #hof-modal{align-items:center;justify-content:center;}
   .hof-modal-inner{max-width:560px;max-height:85vh;border-radius:20px;margin-top:0;}
-
-  /* AUTH MODAL — centrat pe desktop */
   #auth-modal{align-items:center;justify-content:center;}
   .auth-inner{max-width:420px;border-radius:20px;padding:32px 28px;margin-top:0;}
-
-  /* EDIT MODAL — centrat pe desktop */
   #edit-modal{align-items:flex-start;justify-content:center;padding:80px 20px 20px;}
   .edit-inner{max-width:760px;border-radius:20px;margin-top:0;}
   .edit-hdr{border-radius:20px 20px 0 0;padding:20px 24px;}
   .edit-title{font-size:17px;}
   .edit-save-btn{font-size:13px;padding:8px 20px;}
   .edit-body{padding:24px;}
-
-  /* MODAL ADAUGA BALTA — centrat pe desktop */
   #ab-modal{align-items:center;justify-content:center;}
   .ab-inner{max-width:680px;border-radius:20px;margin-top:0;}
-
-  /* FORM — grile multi-coloana pe desktop */
   .fg-row{grid-template-columns:1fr 1fr;}
   .fg-row3{grid-template-columns:1fr 1fr 1fr;}
 }
@@ -426,7 +291,6 @@ nav{display:flex;align-items:center;gap:6px;}
     </a>
     <nav>
       <button class="nav-btn" onclick="openHof()">🏆 Hall of Fame</button>
-      <button class="nav-btn" id="nav-add-balta" onclick="onClickAddBalta()" style="display:none;">+ Adaugă baltă</button>
       <button class="nav-btn" onclick="openRegModal()" style="background:#1e3a2e;color:#a3e635;font-weight:700;border:1px solid #166534;">📋 Înregistrează balta</button>
       <div id="nav-auth-area">
         <button class="nav-primary" onclick="openAuthModal()">Contul meu</button>
@@ -825,6 +689,17 @@ function initMap() {
     maxZoom: 19
   }).addTo(map);
 
+  BALTI.forEach(b => {
+    if (!b.lat || !b.lng) return;
+    const icon = makeMarker(false);
+    const m = L.marker([b.lat, b.lng], { icon })
+      .addTo(map)
+      .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
+      .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
+    m.on('click', () => { flyToBalta(b.id); });
+    b._marker = m;
+  });
+
   window.__goToBalta = id => {
     window.location.href = 'balta.html?id=' + id;
   };
@@ -1007,70 +882,49 @@ async function loadBaltiFromSupabase() {
   const { data, error } = await sb.from('balti').select('*').order('created_at', { ascending: false });
   if (error) { console.error('Eroare Supabase:', error); return; }
   BALTI = (data || []).map(b => ({
-    id: b.id,
-    nume: b.nume,
-    judet: b.judet,
-    lat: b.lat,
-    lng: b.lng,
-    standuri: b.standuri || 0,
-    telefon: b.telefon || '—',
-    facebook: b.facebook || '',
-    whatsapp: b.whatsapp || '',
-    adresa: b.adresa || '',
-    rec: b.rec || '—',
+    id: b.id, nume: b.nume, judet: b.judet, lat: b.lat, lng: b.lng,
+    standuri: b.standuri || 0, telefon: b.telefon || '—',
+    facebook: b.facebook || '', whatsapp: b.whatsapp || '',
+    adresa: b.adresa || '', rec: b.rec || '—',
     vizibilitate: b.vizibilitate || 'unlisted',
-    vizite: b.vizite || 0,
-    _marker: null,
+    vizite: b.vizite || 0, _marker: null,
   }));
   renderMapMarkers();
   renderBalti();
   renderHof();
 }
 
-// Adaugă/actualizează markerii pe hartă în funcție de rolul curent.
-// Adminii văd toate bălțile (inclusiv unlisted); userii obișnuiți văd doar public.
+// Adaugă/actualizează markerii pe hartă în funcție de rol.
+// Admini văd toate bălțile (unlisted semi-transparent); userii văd doar public.
 function renderMapMarkers() {
   const isAdmin = currentRole === 'admin';
-
   BALTI.forEach(b => {
     const visible = isAdmin || b.vizibilitate === 'public';
-
     if (!b.lat || !b.lng) return;
-
     if (!b._marker) {
-      // Prima dată — creăm markerul
-      const icon = makeMarker(false);
-      const m = L.marker([b.lat, b.lng], { icon })
+      const m = L.marker([b.lat, b.lng], { icon: makeMarker(false) })
         .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
         .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
       m.on('click', () => { flyToBalta(b.id); });
       b._marker = m;
     }
-
     if (visible) {
       if (!map.hasLayer(b._marker)) b._marker.addTo(map);
-      // Unlisted vizibil adminului → marker semi-transparent cu badge
-      if (isAdmin && b.vizibilitate === 'unlisted') {
-        b._marker.setOpacity(0.55);
-        b._marker.setTooltipContent(b.nume + ' 🔒');
-      } else {
-        b._marker.setOpacity(1);
-        b._marker.setTooltipContent(b.nume);
-      }
+      b._marker.setOpacity(isAdmin && b.vizibilitate === 'unlisted' ? 0.55 : 1);
+      b._marker.setTooltipContent(isAdmin && b.vizibilitate === 'unlisted' ? b.nume + ' 🔒' : b.nume);
     } else {
       if (map.hasLayer(b._marker)) map.removeLayer(b._marker);
     }
   });
-
-  // Actualizează statistici (numere vizibile publicului)
-  const publicCount   = BALTI.filter(b => b.vizibilitate === 'public').length;
-  const visibleCount  = isAdmin ? BALTI.length : publicCount;
+  const publicCount  = BALTI.filter(b => b.vizibilitate === 'public').length;
+  const visibleCount = isAdmin ? BALTI.length : publicCount;
   const totalStanduri = BALTI.reduce((sum, b) => sum + (b.standuri || 0), 0);
   const statChips = document.querySelectorAll('.stat-chip strong');
   if (statChips[0]) statChips[0].textContent = visibleCount;
   if (statChips[1]) statChips[1].textContent = totalStanduri;
   document.getElementById('balti-count').textContent = visibleCount;
 }
+
 
 window.addEventListener('load', () => {
   initMap();
@@ -2435,11 +2289,11 @@ async function doRegister() {
   const email = document.getElementById('reg-email').value.trim();
   const pass  = document.getElementById('reg-pass').value;
   const pass2 = document.getElementById('reg-pass2').value;
-  if(!username)        { authShowErr('Completează numele de utilizator.'); return; }
+  if(!username)           { authShowErr('Completează numele de utilizator.'); return; }
   if(username.length < 2) { authShowErr('Numele trebuie să aibă minim 2 caractere.'); return; }
-  if(!email || !pass)  { authShowErr('Completează toate câmpurile.'); return; }
-  if(pass !== pass2)   { authShowErr('Parolele nu coincid.'); return; }
-  if(pass.length < 6)  { authShowErr('Parola trebuie să aibă minim 6 caractere.'); return; }
+  if(!email || !pass)     { authShowErr('Completează toate câmpurile.'); return; }
+  if(pass !== pass2)      { authShowErr('Parolele nu coincid.'); return; }
+  if(pass.length < 6)     { authShowErr('Parola trebuie să aibă minim 6 caractere.'); return; }
   const btn = document.getElementById('reg-btn');
   btn.disabled = true; btn.textContent = 'Se creează contul...';
   const { data, error } = await sb.auth.signUp({ email, password: pass });
@@ -2447,15 +2301,9 @@ async function doRegister() {
   if(error) { authShowErr(error.message); return; }
   if(data.user) {
     const uid = data.user.id;
-    // ID unic pescaro: primele 8 caractere din UUID
     const pescaro_id = 'PESCARO-' + uid.replace(/-/g,'').slice(0,8).toUpperCase();
     await sb.from('user_roles').insert({ id: uid, rol: 'user' });
-    await sb.from('user_profiles').upsert({
-      id: uid,
-      email: email,
-      username: username,
-      pescaro_id: pescaro_id,
-    }, { onConflict: 'id' });
+    await sb.from('user_profiles').upsert({ id: uid, email, username, pescaro_id }, { onConflict: 'id' });
   }
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
@@ -2473,17 +2321,14 @@ async function doLogout() {
 }
 
 async function updateNavForUser(user) {
-  const area   = document.getElementById('nav-auth-area');
-  const addBtn = document.getElementById('nav-add-balta');
+  const area = document.getElementById('nav-auth-area');
   if(!user) {
     area.innerHTML = `<button class="nav-primary" onclick="openAuthModal()">Contul meu</button>`;
-    addBtn.style.display = 'none';
     currentRole = 'user';
     _roleCache  = null;
     return;
   }
 
-  // Folosim cache-ul dacă e același user — evităm query inutil la TOKEN_REFRESHED
   if(_roleCache && _roleCache.userId === user.id) {
     currentRole = _roleCache.rol;
   } else {
@@ -2494,9 +2339,9 @@ async function updateNavForUser(user) {
 
   // Citim profilul pentru username + avatar
   const { data: profile } = await sb.from('user_profiles').select('username,avatar_url').eq('id', user.id).single();
-  const username   = profile?.username || user.email.split('@')[0];
-  const avatarUrl  = profile?.avatar_url || '';
-  const initials   = username.slice(0, 2).toUpperCase();
+  const username  = profile?.username || user.email.split('@')[0];
+  const avatarUrl = profile?.avatar_url || '';
+  const initials  = username.slice(0, 2).toUpperCase();
 
   const avatarHtml = avatarUrl
     ? `<img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #1a3020;flex-shrink:0;" alt="avatar"/>`
@@ -2512,15 +2357,10 @@ async function updateNavForUser(user) {
       </a>
       <button class="nav-logout" onclick="doLogout()">Ieși</button>
     </div>`;
-  addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-  // Re-renderăm markerii după ce știm rolul (poate fi admin → arată unlisted)
+  // Re-renderăm markerii după ce știm rolul
   if (BALTI.length) { renderMapMarkers(); renderBalti(); }
 }
 
-function onClickAddBalta() {
-  if(currentRole !== 'admin') { authShowErr('Doar adminul poate adăuga bălți.'); return; }
-  openAddBalta();
-}
 
 // La load: INITIAL_SESSION e garantat cu starea reală din localStorage
 sb.auth.onAuthStateChange(async (event, session) => {
@@ -2538,7 +2378,6 @@ sb.auth.onAuthStateChange(async (event, session) => {
     currentUser = null;
     _roleCache  = null;
     await updateNavForUser(null);
-    // Ascunde markerii unlisted după logout
     if (BALTI.length) { renderMapMarkers(); renderBalti(); }
   }
 });
