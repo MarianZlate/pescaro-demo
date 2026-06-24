@@ -188,9 +188,12 @@ th,td{padding:8px 6px;}
 .btn-make-admin:hover{background:#2a1800;}
 .btn-remove-admin{background:#0d1f12;border:1px solid #1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-remove-admin:hover{background:#1a3020;}
-.users-table .col-email{width:55%;}
-.users-table .col-rol{width:15%;}
-.users-table .col-actiuni{width:15%;}
+.users-table{table-layout:auto;}
+.users-table .col-email{width:auto;}
+.users-table .col-rol{width:1%;white-space:nowrap;}
+.users-table .col-actiuni{width:1%;white-space:nowrap;}
+.user-name{font-weight:700;color:#f1f5f9;font-size:13px;line-height:1.3;}
+.user-email{font-size:10px;color:#4b5563;margin-top:2px;word-break:break-all;}
 
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
@@ -888,15 +891,15 @@ async function loadUsers() {
 
   tbody.innerHTML = profiles.map(u => {
     const rol = roleMap[u.id] || 'user';
-    const displayName = u.username
-      ? `${u.username} <span style="font-size:10px;color:#4b5563;">&lt;${u.email}&gt;</span>`
-      : u.email || '—';
+    const nameHtml = u.username
+      ? `<div class="user-name">${u.username}</div><div class="user-email">${u.email || ''}</div>`
+      : `<div class="user-name">${u.email || '—'}</div>`;
     const createdAt = u.created_at
       ? new Date(u.created_at).toLocaleDateString('ro-RO')
       : '—';
     return `
     <tr>
-      <td class="col-email" style="color:#e2e8f0;word-break:break-all;">${displayName}</td>
+      <td class="col-email">${nameHtml}</td>
       <td class="col-rol">
         ${rol === 'admin'
           ? '<span class="role-badge role-admin">Admin</span>'
