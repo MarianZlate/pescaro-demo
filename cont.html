@@ -325,16 +325,20 @@ function showToast(msg, isErr = false) {
 async function boot() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) {
-    // Neautentificat — redirect la index
     window.location.href = 'index.html';
     return;
   }
   currentUser = user;
 
-  // Citim profilul din user_profiles
   const { data: profile } = await sb.from('user_profiles')
     .select('*').eq('id', user.id).single();
   currentProfile = profile || {};
+
+  // Cont marcat ca șters — afișăm ecran de recuperare
+  if (currentProfile.deleted_at) {
+    showDeletedScreen();
+    return;
+  }
 
   renderProfile();
   await loadCapturi();
@@ -342,6 +346,37 @@ async function boot() {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
   document.getElementById('page').style.display = 'block';
+}
+
+function showDeletedScreen() {
+  const deletedAt = new Date(currentProfile.deleted_at);
+  const deleteAfter = new Date(deletedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const daysLeft = Math.ceil((deleteAfter - new Date()) / (1000 * 60 * 60 * 24));
+
+  document.getElementById('loading-screen').innerHTML = `
+    <div style="max-width:440px;width:100%;padding:32px 24px;text-align:center;">
+      <div style="font-size:52px;margin-bottom:16px;">🗑️</div>
+      <div style="font-size:20px;font-weight:900;color:#f1f5f9;margin-bottom:10px;">Cont marcat pentru ștergere</div>
+      <div style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:24px;">
+        Contul tău a fost marcat pentru ștergere pe <strong style="color:#f59e0b;">${deletedAt.toLocaleDateString('ro-RO')}</strong>.<br/>
+        Dacă nu faci nimic, va fi șters definitiv în <strong style="color:#ef4444;">${daysLeft} ${daysLeft === 1 ? 'zi' : 'zile'}</strong>.
+      </div>
+      <button onclick="recoverAccount()" style="width:100%;background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:13px;border-radius:10px;cursor:pointer;margin-bottom:12px;">
+        ✅ Recuperează contul
+      </button>
+      <button onclick="doLogout()" style="width:100%;background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:13px;padding:10px;border-radius:10px;cursor:pointer;">
+        Ieși din cont
+      </button>
+    </div>`;
+}
+
+async function recoverAccount() {
+  const { error } = await sb.from('user_profiles')
+    .update({ deleted_at: null })
+    .eq('id', currentUser.id);
+  if (error) { showToast('⚠️ Eroare la recuperare: ' + error.message, true); return; }
+  showToast('✅ Cont recuperat cu succes!');
+  setTimeout(() => window.location.reload(), 1200);
 }
 
 // ── RENDER PROFIL ─────────────────────────────────────────────────────────────
@@ -544,15 +579,17 @@ function confirmDeleteAccount() {
 }
 
 async function deleteAccount() {
-  showToast('⏳ Se șterge contul...');
+  showToast('⏳ Se procesează...');
   try {
-    // Ștergem profilul și rolul
-    await sb.from('user_profiles').delete().eq('id', currentUser.id);
-    await sb.from('user_roles').delete().eq('id', currentUser.id);
+    // Soft delete — marcăm cu deleted_at, nu ștergem efectiv
+    const { error } = await sb.from('user_profiles')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', currentUser.id);
+    if (error) throw new Error(error.message);
     await sb.auth.signOut();
     window.location.href = 'index.html';
   } catch(e) {
-    showToast('⚠️ Eroare la ștergere: ' + e.message, true);
+    showToast('⚠️ Eroare: ' + e.message, true);
   }
 }
 
