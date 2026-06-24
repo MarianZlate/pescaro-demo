@@ -709,21 +709,22 @@ function showError(msg) {
 
 // ─── PINS ──────────────────────────────────────────────────────────────────
 function pinSVG(nr, active, editing) {
-  var col = active ? '#f59e0b' : editing ? '#7c3aed' : '#e8142a';
-  var dark = active ? '#b45309' : editing ? '#5b21b6' : '#9b0f1e';
   var glow = editing ? 'drop-shadow(0 0 5px rgba(124,58,237,.7))' : 'drop-shadow(0 2px 6px rgba(0,0,0,.9))';
-  var fs = nr > 9 ? '10' : '12';
-  // Forma lacrimă: cerc în vârf, se îngustează spre vârf de ac jos
-  // viewBox 32x44: centrul cercului la (16,15), raza 14, vârful la (16,43)
+  var ballCol = active ? '#f59e0b' : editing ? '#a78bfa' : '#e8142a';
+  var ballStroke = active ? '#92400e' : editing ? '#5b21b6' : '#9b0f1e';
+  var fs = nr > 9 ? '9' : '11';
+  // Pushpin: cerc mare (capul), tijă subțire verticală în jos
   return '<svg width="32" height="44" viewBox="0 0 32 44" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;overflow:visible;">'
-    // umbra
-    +'<path d="M16,42 C16,42 3,26 3,16 A13,13 0 0,1 29,16 C29,26 16,42 16,42 Z" fill="rgba(0,0,0,.25)" transform="translate(1.5,1.5)"/>'
-    // corpul
-    +'<path d="M16,42 C16,42 3,26 3,16 A13,13 0 0,1 29,16 C29,26 16,42 16,42 Z" fill="'+col+'" stroke="'+dark+'" stroke-width="1.5"/>'
+    // umbra cercului
+    +'<circle cx="16" cy="15" r="13" fill="rgba(0,0,0,.3)" transform="translate(1.5,1.5)"/>'
+    // corpul cercului
+    +'<circle cx="16" cy="15" r="13" fill="'+ballCol+'" stroke="'+ballStroke+'" stroke-width="1.5"/>'
     // luciu
-    +'<ellipse cx="11" cy="11" rx="5" ry="3.5" fill="rgba(255,255,255,.30)" transform="rotate(-30,11,11)"/>'
+    +'<ellipse cx="10" cy="9" rx="5" ry="3.5" fill="rgba(255,255,255,.35)" transform="rotate(-30,10,9)"/>'
     // număr
-    +'<text x="16" y="20" text-anchor="middle" font-family="system-ui,sans-serif" font-size="'+fs+'" font-weight="900" fill="#fff">'+nr+'</text>'
+    +'<text x="16" y="20" text-anchor="middle" font-family="system-ui,sans-serif" font-size="'+fs+'" font-weight="900" fill="#fff" stroke="#0005" stroke-width="0.5">'+nr+'</text>'
+    // tija
+    +'<line x1="16" y1="28" x2="16" y2="43" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>'
     +'</svg>';
 }
 
