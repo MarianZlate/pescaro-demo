@@ -894,8 +894,10 @@ async function loadBaltiFromSupabase() {
   renderMapMarkers();
   renderBalti();
   renderHof();
-  // Număr useri înregistrați
-  const { count } = await sb.from('user_profiles').select('id', { count: 'exact', head: true });
+  // Număr useri înregistrați activi (fără conturi marcate ca șterse)
+  const { count } = await sb.from('user_profiles')
+    .select('id', { count: 'exact', head: true })
+    .is('deleted_at', null);
   const statUseri = document.getElementById('stat-useri');
   if (statUseri) statUseri.textContent = count || 0;
 }
