@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Baltis — Admin</title>
+<title>Zoda — Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -328,7 +328,7 @@ th,td{padding:8px 6px;}
 <div id="hdr">
   <div id="hdr-in">
     <a class="logo" href="index.html">
-      <span class="logo-text">Baltis</span>
+      <span class="logo-text">Zoda</span>
     </a>
     <span class="admin-badge">ADMIN</span>
     <div class="hdr-right">
@@ -362,7 +362,7 @@ th,td{padding:8px 6px;}
 <div id="access-denied">
   <div class="denied-icon">🚫</div>
   <div class="denied-title">Acces interzis</div>
-  <div class="denied-sub">Această pagină este rezervată administratorilor Baltis.</div>
+  <div class="denied-sub">Această pagină este rezervată administratorilor Zoda.</div>
   <a href="index.html" style="display:inline-block;background:#1a6b3a;color:#a3e635;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;">← Înapoi la site</a>
 </div>
 
@@ -449,7 +449,7 @@ th,td{padding:8px 6px;}
     <div style="background:#111827;border:1px solid #1e293b;border-radius:14px;padding:24px;max-width:560px;display:flex;flex-direction:column;gap:16px;">
       <div>
         <label style="display:block;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:6px;">📧 EMAIL CONTACT</label>
-        <input type="email" id="set-email" placeholder="ex: contact@baltis.ro" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
+        <input type="email" id="set-email" placeholder="ex: contact@zoda.ro" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
       </div>
       <div>
         <label style="display:block;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:6px;">📞 TELEFON CONTACT</label>
@@ -658,7 +658,7 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    storageKey: 'baltis-auth',
+    storageKey: 'zoda-auth',
   }
 });
 
@@ -1650,7 +1650,7 @@ async function saveEditBalta() {
 // ════════════════════════════════════════════════════════════════════════════════
 
 let abStep = 1, abMap = null, abMarker = null, abCoords = null, abStandCount = 0;
-const DRAFT_KEY = 'baltis_balta_draft';
+const DRAFT_KEY = 'zoda_balta_draft';
 
 const JUDETE_COORDS = {
   'Alba':[46.0667,23.5833],'Arad':[46.1667,21.3167],'Argeș':[44.8500,24.8667],
@@ -1815,7 +1815,7 @@ async function abDoSearch(){
   const res=document.getElementById('ab-search-results');
   res.innerHTML='<div style="padding:12px 14px;color:#64748b;font-size:12px;">🔍 Se caută...</div>';res.style.display='block';
   try{
-    const data=await(await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', Romania')}&format=json&limit=6&countrycodes=ro&accept-language=ro`,{headers:{'Accept-Language':'ro','User-Agent':'Baltis/1.0'}})).json();
+    const data=await(await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', Romania')}&format=json&limit=6&countrycodes=ro&accept-language=ro`,{headers:{'Accept-Language':'ro','User-Agent':'Zoda/1.0'}})).json();
     if(!data.length){res.innerHTML='<div style="padding:12px 14px;color:#4b5563;font-size:12px;">Niciun rezultat.</div>';return;}
     res.innerHTML=data.map(r=>`<div onclick="abSelectLocation(${r.lat},${r.lon},'${r.display_name.replace(/'/g,"\\'")}')" style="padding:10px 14px;border-bottom:1px solid #1e293b;cursor:pointer;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'"><div style="font-size:12px;font-weight:600;color:#f1f5f9;">${r.display_name.split(',').slice(0,2).join(',')}</div><div style="font-size:10px;color:#4b5563;">${r.display_name.split(',').slice(2).join(',').trim()}</div></div>`).join('');
   }catch(e){res.innerHTML='<div style="padding:12px 14px;color:#ef4444;font-size:12px;">Eroare la căutare.</div>';}
