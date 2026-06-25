@@ -929,7 +929,7 @@ async function loadUsers() {
   tbody.innerHTML = profiles.map(u => {
     const rol = roleMap[u.id] || 'user';
     const nameLink = u.zoda_id
-      ? `href="pescar.html?id=${u.zoda_id}" target="_blank"`
+      ? `href="pescar.html?id=${u.zoda_id}"`
       : '';
     const nameHtml = u.username
       ? `<a ${nameLink} style="text-decoration:none;${u.zoda_id?'cursor:pointer;':''}">
