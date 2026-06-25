@@ -183,6 +183,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="text" id="inp-zoda-id" disabled style="font-family:monospace;color:#a3e635;letter-spacing:.05em;"/>
           <button onclick="copyZodaId()" title="Copiază ID" style="flex-shrink:0;background:#1e293b;border:none;color:#94a3b8;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;" onmouseover="this.style.color='#f1f5f9'" onmouseout="this.style.color='#94a3b8'">📋</button>
+          <button onclick="viewPublicProfile()" title="Profil public" style="flex-shrink:0;background:#1e293b;border:none;color:#94a3b8;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#94a3b8'">👁️</button>
         </div>
         <div class="fg-hint">ID-ul tău unic pe platformă. Folosit pentru identificare în clasamente și capturi.</div>
       </div>
@@ -415,6 +416,11 @@ function renderProfile() {
 function copyZodaId() {
   const id = document.getElementById('inp-zoda-id').value;
   navigator.clipboard.writeText(id).then(() => showToast('✓ ID copiat!'));
+}
+
+function viewPublicProfile() {
+  const id = document.getElementById('inp-zoda-id').value;
+  if (id && id !== '—') window.open('pescar.html?id=' + id, '_blank');
 }
 
 // ── AVATAR UPLOAD ─────────────────────────────────────────────────────────────
