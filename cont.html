@@ -181,10 +181,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div class="fg">
         <label>ID UNIC ZODA</label>
         <div style="display:flex;align-items:center;gap:8px;">
-          <input type="text" id="inp-pescaro-id" disabled style="font-family:monospace;color:#a3e635;letter-spacing:.05em;"/>
-          <button onclick="copyPescaroId()" title="Copiază ID" style="flex-shrink:0;background:#1e293b;border:none;color:#94a3b8;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;" onmouseover="this.style.color='#f1f5f9'" onmouseout="this.style.color='#94a3b8'">📋</button>
+          <input type="text" id="inp-zoda-id" disabled style="font-family:monospace;color:#a3e635;letter-spacing:.05em;"/>
+          <button onclick="copyZodaId()" title="Copiază ID" style="flex-shrink:0;background:#1e293b;border:none;color:#94a3b8;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;" onmouseover="this.style.color='#f1f5f9'" onmouseout="this.style.color='#94a3b8'">📋</button>
         </div>
-        <div class="fg-hint">ID-ul tău unic pe platformă. Folosit pentru identificare în clasamente.</div>
+        <div class="fg-hint">ID-ul tău unic pe platformă. Folosit pentru identificare în clasamente și capturi.</div>
       </div>
 
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px;">
@@ -240,8 +240,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
           <div class="rez-info">
             <div class="rez-label">STELE ACUMULATE</div>
             <div class="rez-val" id="stat-stele">—</div>
-            <div class="rez-sub">din clasamente bălți</div>
-            <div class="rez-coming">⏳ În curând</div>
+            <div class="rez-sub" id="stele-breakdown" style="line-height:1.7;margin-top:4px;"></div>
           </div>
         </div>
       </div>
@@ -341,7 +340,7 @@ async function boot() {
   }
 
   renderProfile();
-  await loadCapturi();
+  await Promise.all([loadCapturi(), loadStele()]);
 
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
@@ -384,13 +383,12 @@ async function recoverAccount() {
   setTimeout(() => window.location.href = 'index.html', 1500);
 }
 
-// ── RENDER PROFIL ─────────────────────────────────────────────────────────────
 function renderProfile() {
   const u = currentUser;
   const p = currentProfile;
   const username  = p.username  || '';
   const avatarUrl = p.avatar_url || '';
-  const pescaroId = p.pescaro_id || ('ZODA-' + u.id.replace(/-/g,'').slice(0,8).toUpperCase());
+  const zodaId    = p.zoda_id   || '—';
 
   // Avatar
   const avatarEl = document.getElementById('avatar-display');
@@ -409,13 +407,13 @@ function renderProfile() {
     'Membru din ' + created.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
 
   // Inputs
-  document.getElementById('inp-username').value   = username;
-  document.getElementById('inp-email').value      = u.email;
-  document.getElementById('inp-pescaro-id').value = pescaroId;
+  document.getElementById('inp-username').value = username;
+  document.getElementById('inp-email').value    = u.email;
+  document.getElementById('inp-zoda-id').value  = zodaId;
 }
 
-function copyPescaroId() {
-  const id = document.getElementById('inp-pescaro-id').value;
+function copyZodaId() {
+  const id = document.getElementById('inp-zoda-id').value;
   navigator.clipboard.writeText(id).then(() => showToast('✓ ID copiat!'));
 }
 
@@ -485,13 +483,9 @@ async function saveProfile() {
 
 // ── UPSERT PROFILE (helper) ────────────────────────────────────────────────────
 async function upsertProfile(fields) {
-  // Generăm pescaro_id dacă nu există
-  const pescaro_id = currentProfile.pescaro_id ||
-    ('ZODA-' + currentUser.id.replace(/-/g,'').slice(0,8).toUpperCase());
   const { error } = await sb.from('user_profiles').upsert({
     id: currentUser.id,
     email: currentUser.email,
-    pescaro_id,
     ...currentProfile,
     ...fields,
   }, { onConflict: 'id' });
@@ -533,41 +527,102 @@ async function savePassword() {
   }
 }
 
+// ── STELE ─────────────────────────────────────────────────────────────────────
+async function loadStele() {
+  const zodaId = currentProfile?.zoda_id;
+  if (!zodaId) {
+    document.getElementById('stat-stele').textContent = '0';
+    return;
+  }
+
+  const { data, error } = await sb
+    .from('stele_totale')
+    .select('*')
+    .eq('zoda_id', zodaId)
+    .single();
+
+  const total = data?.total_stele || 0;
+  document.getElementById('stat-stele').textContent = total;
+
+  const breakdown = document.getElementById('stele-breakdown');
+  if (total === 0) {
+    breakdown.innerHTML = '<span style="color:#334155;">Nicio stea câștigată încă</span>';
+  } else {
+    const rs = data?.stele_record_stand || 0;
+    const t10 = data?.stele_top10_lunar || 0;
+    const hof = data?.stele_hall_of_fame || 0;
+    breakdown.innerHTML =
+      (rs  ? `🏅 ${rs} record${rs !== 1 ? 'uri' : ''} stand<br/>` : '') +
+      (t10 ? `📅 ${t10} top 10 lunar<br/>` : '') +
+      (hof ? `🏆 ${hof} Hall of Fame` : '');
+  }
+}
+
 // ── CAPTURI ───────────────────────────────────────────────────────────────────
 async function loadCapturi() {
-  // Căutăm în standuri unde rec_pescar coincide cu username-ul userului
-  // (sistemul de capturi propriu-zis e în backlog — afișăm ce există deja)
-  const username = currentProfile?.username;
-  const listEl = document.getElementById('capturi-list');
+  const zodaId  = currentProfile?.zoda_id;
+  const listEl  = document.getElementById('capturi-list');
 
-  if (!username) {
-    // Fără username nu putem căuta capturi
+  if (!zodaId) {
     document.getElementById('stat-capturi').textContent = '0';
     return;
   }
 
+  // Capturi înregistrate via tabela capturi (cu zoda_id)
   const { data: capturi } = await sb
+    .from('capturi')
+    .select('id, kg, specie, data_captura, foto_url, stand_id, balta_id, standuri(nume), balti(nume, judet)')
+    .eq('pescar_id', zodaId)
+    .eq('status', 'approved')
+    .order('data_captura', { ascending: false });
+
+  // Recorduri de stand pe care pescarul le deține (via rec_pescar_id)
+  const { data: recorduri } = await sb
     .from('standuri')
     .select('id, nume, rec_kg, rec_pescar, rec_data, rec_foto, balta_id, balti(nume, judet)')
-    .ilike('rec_pescar', username);
+    .eq('rec_pescar_id', zodaId);
 
-  const count = (capturi || []).length;
-  document.getElementById('stat-capturi').textContent = count;
+  const nrCapturi = (capturi || []).length;
+  const nrRecorduri = (recorduri || []).length;
+  document.getElementById('stat-capturi').textContent = nrCapturi;
 
-  if (!count) return; // lasă empty state
+  if (!nrCapturi && !nrRecorduri) return;
 
-  listEl.innerHTML = (capturi || []).map(c => `
-    <div class="capture-row">
-      ${c.rec_foto
-        ? `<img class="capture-foto" src="${c.rec_foto}" alt="captură"/>`
-        : `<div class="capture-foto-empty">🐟</div>`}
-      <div class="capture-info">
-        <div class="capture-balta">${c.balti?.nume || '—'}</div>
-        <div class="capture-stand">📍 ${c.nume} · ${c.balti?.judet || ''}</div>
-        <div class="capture-data">${c.rec_data || ''}</div>
-      </div>
-      <div class="capture-kg">${c.rec_kg ? c.rec_kg + ' kg' : '—'}</div>
-    </div>`).join('');
+  let html = '';
+
+  if (nrRecorduri) {
+    html += `<div style="font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:.06em;margin-bottom:8px;">⭐ RECORDURI STAND DEȚINUTE</div>`;
+    html += (recorduri || []).map(c => `
+      <div class="capture-row">
+        ${c.rec_foto
+          ? `<img class="capture-foto" src="${c.rec_foto}" alt="captură"/>`
+          : `<div class="capture-foto-empty">🏅</div>`}
+        <div class="capture-info">
+          <div class="capture-balta">${c.balti?.nume || '—'}</div>
+          <div class="capture-stand">📍 ${c.nume} · ${c.balti?.judet || ''}</div>
+          <div class="capture-data">${c.rec_data || ''}</div>
+        </div>
+        <div class="capture-kg">${c.rec_kg ? c.rec_kg + ' kg' : '—'}</div>
+      </div>`).join('');
+  }
+
+  if (nrCapturi) {
+    html += `<div style="font-size:10px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin:${nrRecorduri ? '16px' : '0'} 0 8px;">CAPTURI APROBATE</div>`;
+    html += (capturi || []).map(c => `
+      <div class="capture-row">
+        ${c.foto_url
+          ? `<img class="capture-foto" src="${c.foto_url}" alt="captură"/>`
+          : `<div class="capture-foto-empty">🐟</div>`}
+        <div class="capture-info">
+          <div class="capture-balta">${c.balti?.nume || '—'}</div>
+          <div class="capture-stand">📍 ${c.standuri?.nume || '—'} · ${c.balti?.judet || ''}</div>
+          <div class="capture-data">${c.data_captura || ''}</div>
+        </div>
+        <div class="capture-kg">${c.kg ? c.kg + ' kg' : '—'}</div>
+      </div>`).join('');
+  }
+
+  listEl.innerHTML = html;
 }
 
 // ── ȘTERGERE CONT ─────────────────────────────────────────────────────────────
