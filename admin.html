@@ -340,7 +340,7 @@ th,td{padding:8px 6px;}
 </div>
 
 <!-- LOADING -->
-<div id="loading" style="display:none;">
+<div id="loading" style="display:block;">
   <div class="spin"></div>
   <div style="color:#4b5563;font-size:13px;">Se verifică accesul...</div>
 </div>
@@ -756,10 +756,7 @@ function showScreen(screen) {
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-async function bootAdmin() {
-  // getUser() face request direct la Supabase — funcționează garantat pe localhost
-  const { data: { user }, error } = await sb.auth.getUser();
-
+async function bootAdmin(user) {
   if(!user) {
     showScreen('login');
     return;
@@ -791,13 +788,25 @@ async function bootAdmin() {
   loadStats();
 }
 
-// Pornire la load
-bootAdmin();
-
-// Logout
-sb.auth.onAuthStateChange((event) => {
-  if(event === 'SIGNED_OUT') showScreen('login');
+// Pornire la load — așteptăm INITIAL_SESSION ca sesiunea să fie restaurată din localStorage
+let _sessionReceived = false;
+sb.auth.onAuthStateChange((event, session) => {
+  if(event === 'INITIAL_SESSION') {
+    _sessionReceived = true;
+    bootAdmin(session?.user || null);
+  } else if(event === 'SIGNED_IN') {
+    bootAdmin(session?.user || null);
+  } else if(event === 'SIGNED_OUT') {
+    showScreen('login');
+  }
 });
+
+// Safety net — dacă INITIAL_SESSION nu vine în 3s, verificăm direct
+setTimeout(async () => {
+  if (_sessionReceived) return;
+  const { data: { user } } = await sb.auth.getUser();
+  bootAdmin(user || null);
+}, 3000);
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
 async function loadStats() {
@@ -1013,11 +1022,10 @@ async function openEditBalta(id) {
       di:         s.distanta   || '',
       la:         s.latime     || '',
       yt:         s.yt         || '',
-      rec_foto:       s.rec_foto       || '',
-      rec_kg:         s.rec_kg         || '',
-      rec_pescar:     s.rec_pescar     || '',
-      rec_pescar_id:  s.rec_pescar_id  || '',
-      rec_data:       s.rec_data       || '',
+      rec_foto:   s.rec_foto   || '',
+      rec_kg:     s.rec_kg     || '',
+      rec_pescar: s.rec_pescar || '',
+      rec_data:   s.rec_data   || '',
       galerie:    (pozeByStand[String(s.id)] || []).map(p => ({ url: p.url, cap: '' })),
     })),
   };
@@ -1184,10 +1192,6 @@ function buildStandEditCard(s) {
         <input type="text" id="se-rec-pescar-${s.id}" value="${escHtml(s.rec_pescar||'')}" placeholder="Numele pescarului"/>
       </div>
       <div class="fg">
-        <label>ZODA-ID PESCAR <span style="font-size:10px;color:#334155;font-weight:400;">(pentru stele — ex: ZODA-1042)</span></label>
-        <input type="text" id="se-rec-pescar-id-${s.id}" value="${escHtml(s.rec_pescar_id||'')}" placeholder="ZODA-1042" style="font-family:monospace;" oninput="this.value=this.value.toUpperCase()"/>
-      </div>
-      <div class="fg">
         <label>DATA CAPTURII</label>
         <input type="date" id="se-rec-data-${s.id}" value="${escHtml(s.rec_data||'')}"/>
       </div>
@@ -1221,7 +1225,7 @@ function addEditStand() {
   const wrap  = document.getElementById('edit-stands-wrap');
   const newId = Date.now();
   const nr    = wrap.querySelectorAll('.se-card').length + 1;
-  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_pescar_id: '', rec_data: '', galerie: [] }));
+  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_data: '', galerie: [] }));
   toggleEditStand(newId);
 }
 
@@ -1438,11 +1442,10 @@ async function saveEditBalta() {
     const di = (_diVal !== '' && _diVal != null) ? (parseInt(_diVal)   || null) : null;
     const la = (_laVal !== '' && _laVal != null) ? (parseInt(_laVal)   || null) : null;
     const yt    = document.getElementById('se-yt-'  + sid)?.value.trim()     || '';
-    const recFoto      = document.getElementById('se-rec-url-'       + sid)?.value.trim() || '';
-    const recKg        = document.getElementById('se-rec-kg-'        + sid)?.value.trim() || '';
-    const recPescar    = document.getElementById('se-rec-pescar-'    + sid)?.value.trim() || '';
-    const recPescarId  = document.getElementById('se-rec-pescar-id-' + sid)?.value.trim() || '';
-    const recData      = document.getElementById('se-rec-data-'      + sid)?.value.trim() || '';
+    const recFoto   = document.getElementById('se-rec-url-'    + sid)?.value.trim() || '';
+    const recKg     = document.getElementById('se-rec-kg-'     + sid)?.value.trim() || '';
+    const recPescar = document.getElementById('se-rec-pescar-' + sid)?.value.trim() || '';
+    const recData   = document.getElementById('se-rec-data-'   + sid)?.value.trim() || '';
 
     let standId;
     if(isNew) {
@@ -1452,23 +1455,13 @@ async function saveEditBalta() {
       standId = newStand?.id;
       if(standId) {
         const recPayload = {};
-        if(recFoto      !== '')  recPayload.rec_foto       = recFoto      || null;
-        if(recKg        !== '')  recPayload.rec_kg         = recKg        || null;
-        if(recPescar    !== '')  recPayload.rec_pescar     = recPescar    || null;
-        if(recPescarId  !== '')  recPayload.rec_pescar_id  = recPescarId  || null;
-        if(recData      !== '')  recPayload.rec_data       = recData      || null;
+        if(recFoto   !== '')  recPayload.rec_foto   = recFoto   || null;
+        if(recKg     !== '')  recPayload.rec_kg     = recKg     || null;
+        if(recPescar !== '')  recPayload.rec_pescar = recPescar || null;
+        if(recData   !== '')  recPayload.rec_data   = recData   || null;
         if(Object.keys(recPayload).length > 0) {
           const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
           if(recErr) console.warn('Coloanele rec_ lipsesc din BD:', recErr.message);
-          // Acordă stea dacă avem ZODA-ID
-          if(!recErr && recPescarId) {
-            await sb.rpc('acorda_stele_record_stand', {
-              p_stand_id:     standId,
-              p_zoda_id_nou:  recPescarId,
-              p_zoda_id_vechi: null,
-              p_balta_id:     editBaltaId
-            });
-          }
         }
       }
     } else {
@@ -1483,30 +1476,15 @@ async function saveEditBalta() {
         saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
         return;
       }
-      // Update câmpuri record
-      // Citim rec_pescar_id vechi din DOM (înainte de save) pentru comparație
-      const standBefore = editBaltaData?.ext?.standuri?.find(s => s.id === standId);
-      const recPescarIdVechi = standBefore?.rec_pescar_id || null;
-      const recPescarIdSchimbat = recPescarId !== '' && recPescarId !== recPescarIdVechi;
-
+      // Update câmpuri record (coloane opționale — ignorăm eroarea dacă nu există în BD)
       const recPayload = {};
-      if(recFoto      !== undefined) recPayload.rec_foto       = recFoto      || null;
-      if(recKg        !== '')        recPayload.rec_kg         = recKg        || null;
-      if(recPescar    !== '')        recPayload.rec_pescar     = recPescar    || null;
-      if(recPescarId  !== '')        recPayload.rec_pescar_id  = recPescarId  || null;
-      if(recData      !== '')        recPayload.rec_data       = recData      || null;
+      if(recFoto   !== undefined) recPayload.rec_foto   = recFoto   || null;
+      if(recKg     !== '')        recPayload.rec_kg     = recKg     || null;
+      if(recPescar !== '')        recPayload.rec_pescar = recPescar || null;
+      if(recData   !== '')        recPayload.rec_data   = recData   || null;
       if(Object.keys(recPayload).length > 0) {
         const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
         if(recErr) console.warn('Coloanele rec_ lipsesc din BD — rulează ALTER TABLE:', recErr.message);
-        // Acordă stea dacă ZODA-ID-ul s-a schimbat sau e nou
-        if(!recErr && recPescarId && recPescarIdSchimbat) {
-          await sb.rpc('acorda_stele_record_stand', {
-            p_stand_id:      standId,
-            p_zoda_id_nou:   recPescarId,
-            p_zoda_id_vechi: recPescarIdVechi,
-            p_balta_id:      editBaltaId
-          });
-        }
       }
     }
 
