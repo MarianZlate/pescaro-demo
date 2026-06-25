@@ -788,25 +788,38 @@ async function bootAdmin(user) {
   loadStats();
 }
 
-// Pornire la load — așteptăm INITIAL_SESSION ca sesiunea să fie restaurată din localStorage
+// Pornire la load — getSession() citește din localStorage instant, fără request la server
+async function initAdmin() {
+  // Pas 1: citim sesiunea din localStorage (instant)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    await bootAdmin(session.user);
+    return;
+  }
+  // Pas 2: dacă nu e sesiune locală, așteptăm INITIAL_SESSION (poate fi OAuth redirect)
+  _sessionReceived = false;
+  setTimeout(async () => {
+    if (_sessionReceived) return;
+    showScreen('login');
+  }, 2000);
+}
+
 let _sessionReceived = false;
 sb.auth.onAuthStateChange((event, session) => {
-  if(event === 'INITIAL_SESSION') {
+  if (event === 'INITIAL_SESSION') {
+    _sessionReceived = true;
+    // Dacă bootAdmin deja a rulat (din getSession), nu mai rulăm
+  } else if (event === 'SIGNED_IN') {
     _sessionReceived = true;
     bootAdmin(session?.user || null);
-  } else if(event === 'SIGNED_IN') {
-    bootAdmin(session?.user || null);
-  } else if(event === 'SIGNED_OUT') {
+  } else if (event === 'TOKEN_REFRESHED') {
+    // Token reînnoit — nu facem nimic, bootAdmin deja rulat
+  } else if (event === 'SIGNED_OUT') {
     showScreen('login');
   }
 });
 
-// Safety net — dacă INITIAL_SESSION nu vine în 3s, verificăm direct
-setTimeout(async () => {
-  if (_sessionReceived) return;
-  const { data: { user } } = await sb.auth.getUser();
-  bootAdmin(user || null);
-}, 3000);
+initAdmin();
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
 async function loadStats() {
