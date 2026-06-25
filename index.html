@@ -790,19 +790,69 @@ document.addEventListener('click', e => {
 
 // ── HALL OF FAME ──────────────────────────────────────────────────────────────
 function hofRowHtml(h, extended) {
+  const steleIcon = h.stele > 0
+    ? `<span style="color:#f59e0b;font-size:11px;font-weight:800;">⭐${h.stele}</span>`
+    : '<span style="color:#334155;font-size:11px;">—</span>';
+  const nameHtml = h.zodaId
+    ? `<a href="pescar.html?id=${h.zodaId}" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</a>`
+    : `<span>${h.pe}</span>`;
   return `<div class="hof-row">
     <div class="hof-loc" style="background:${MEDAL_C[h.loc-1]||'#1e293b'};color:${h.loc<=3?'#000':'#a3e635'};">${h.loc<=3?MEDAL_I[h.loc-1]:h.loc}</div>
     <div style="flex:1;min-width:0;">
-      <div class="hof-name">${h.pe}</div>
-      <div class="hof-detail">${h.rec}${extended?' · '+h.balta:''}</div>
+      <div class="hof-name">${nameHtml}</div>
+      <div class="hof-detail">${h.zodaId}${extended && h.detaliu ? ' · ' + h.detaliu : ''}</div>
     </div>
-    <div class="hof-stars"><span class="hof-count">${h.stele}</span></div>
+    <div class="hof-stars">${steleIcon}</div>
   </div>`;
 }
 
+async function loadHof() {
+  const { data: stele } = await sb
+    .from('stele_totale')
+    .select('zoda_id, total_stele, stele_record_stand, stele_top10_lunar, stele_hall_of_fame')
+    .order('total_stele', { ascending: false })
+    .limit(20);
+
+  if (!stele || !stele.length) {
+    const emptyHtml = '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Niciun pescar cu stele încă</div>';
+    document.getElementById('hof-preview').innerHTML = emptyHtml;
+    document.getElementById('hof-full').innerHTML = emptyHtml;
+    return;
+  }
+
+  const zodaIds = stele.map(s => s.zoda_id);
+  const { data: profiles } = await sb
+    .from('user_profiles')
+    .select('username, zoda_id, avatar_url')
+    .in('zoda_id', zodaIds)
+    .is('deleted_at', null);
+
+  const profileMap = {};
+  (profiles || []).forEach(p => { profileMap[p.zoda_id] = p; });
+
+  HOF.length = 0;
+  stele.forEach((s, i) => {
+    const p = profileMap[s.zoda_id] || {};
+    const parts = [];
+    if (s.stele_record_stand)  parts.push(s.stele_record_stand + ' record' + (s.stele_record_stand !== 1 ? 'uri' : '') + ' stand');
+    if (s.stele_top10_lunar)   parts.push(s.stele_top10_lunar + ' top 10 lunar');
+    if (s.stele_hall_of_fame)  parts.push(s.stele_hall_of_fame + ' Hall of Fame');
+    HOF.push({
+      loc:    i + 1,
+      pe:     p.username || s.zoda_id,
+      zodaId: s.zoda_id,
+      stele:  s.total_stele || 0,
+      detaliu: parts.join(' · '),
+    });
+  });
+
+  renderHof();
+}
+
 function renderHof() {
-  document.getElementById('hof-preview').innerHTML = HOF.slice(0,5).map(h=>hofRowHtml(h,false)).join('');
-  document.getElementById('hof-full').innerHTML = HOF.map(h=>hofRowHtml(h,true)).join('');
+  const empty = '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Niciun pescar cu stele încă</div>';
+  document.getElementById('hof-preview').innerHTML = HOF.slice(0, 5).map(h => hofRowHtml(h, false)).join('') || empty;
+  document.getElementById('hof-full').innerHTML    = HOF.map(h => hofRowHtml(h, true)).join('') || empty;
 }
 
 async function goToAdmin(e) {
@@ -900,7 +950,7 @@ async function loadBaltiFromSupabase() {
   }));
   renderMapMarkers();
   renderBalti();
-  renderHof();
+  loadHof();
   // Număr useri înregistrați activi (fără conturi marcate ca șterse)
   const { count } = await sb.from('user_profiles')
     .select('id', { count: 'exact', head: true })
