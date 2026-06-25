@@ -177,6 +177,16 @@ th,td{padding:8px 6px;}
 .btn-del{background:transparent;border:1px solid #334155;color:#4b5563;font-size:11px;padding:5px 8px;border-radius:6px;cursor:pointer;}
 .btn-del:hover{border-color:#ef4444;color:#ef4444;}
 .empty-state{text-align:center;padding:40px;color:#4b5563;font-size:13px;}
+/* Capturi admin */
+.captura-card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:12px;}
+.captura-card-hdr{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;}
+.captura-card-media{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.captura-foto-thumb{width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #1e293b;transition:border-color .2s;}
+.captura-foto-thumb:hover{border-color:#a3e635;}
+.captura-foto-empty{width:80px;height:80px;border-radius:8px;background:#0d1520;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid #1e293b;}
+.captura-video-btn{background:#1c1028;border:1px solid #7c3aed;color:#c4b5fd;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;}
+.captura-video-btn:hover{background:#2d1b4e;}
+.captura-card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center;}
 
 .role-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
 .role-admin{background:#1c1000;color:#f59e0b;border:1px solid #92400e;}
@@ -393,6 +403,7 @@ th,td{padding:8px 6px;}
   <div class="tabs">
     <button class="tab active" onclick="switchTab('balti')">🎣 Bălți</button>
     <button class="tab" onclick="switchTab('users')">👥 Utilizatori</button>
+    <button class="tab" onclick="switchTab('capturi')">📸 Capturi</button>
     <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
   </div>
 
@@ -420,6 +431,25 @@ th,td{padding:8px 6px;}
           <tr><td colspan="6" class="empty-state">Se încarcă...</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- CAPTURI PANEL -->
+  <div id="panel-capturi" style="display:none;">
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <span>📸 Cereri capturi</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="capturi-filter" onchange="loadCapturi()" style="background:#111827;border:1px solid #1e293b;border-radius:7px;padding:6px 10px;color:#f1f5f9;font-size:12px;outline:none;cursor:pointer;">
+          <option value="pending">⏳ În așteptare</option>
+          <option value="approved">✅ Aprobate</option>
+          <option value="rejected">❌ Respinse</option>
+          <option value="all">Toate</option>
+        </select>
+        <button onclick="loadCapturi()" style="background:#111827;border:1px solid #1e293b;border-radius:7px;padding:6px 12px;color:#94a3b8;font-size:12px;cursor:pointer;">↻ Reîncarcă</button>
+      </div>
+    </div>
+    <div id="capturi-list-admin">
+      <div class="empty-state">Se încarcă...</div>
     </div>
   </div>
 
@@ -520,6 +550,7 @@ th,td{padding:8px 6px;}
         <div class="fg"><label>TELEFON CONTACT *</label><input type="tel" id="ab-tel" placeholder="+40 7xx xxx xxx"/></div>
         <div class="fg"><label>LINK FACEBOOK</label><input type="url" id="ab-fb" placeholder="https://facebook.com/baltadumneavoastra"/></div>
         <div class="fg"><label>NUMĂR WHATSAPP ADMINISTRATOR</label><input type="tel" id="ab-wa" placeholder="+40 7xx xxx xxx"/></div>
+        <div class="fg"><label>ADMINISTRATOR BALTĂ (ZODA-ID)</label><input type="text" id="ab-admin-zoda-id" placeholder="ex: ZODA-1042" style="font-family:monospace;" /><div style="font-size:10px;color:#334155;margin-top:4px;">ZODA-ID-ul utilizatorului care va administra balta (rol balta_admin).</div></div>
         <div class="fg">
           <label>🎬 LINK YOUTUBE — VIDEO DRUM DE ACCES</label>
           <input type="url" id="ab-drum-yt" placeholder="https://youtu.be/..."/>
@@ -688,12 +719,144 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','settings'][i]===tab));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','capturi','settings'][i]===tab));
   const pB = document.getElementById('panel-balti');    if(pB) pB.style.display    = tab==='balti'    ? 'block' : 'none';
   const pU = document.getElementById('panel-users');    if(pU) pU.style.display    = tab==='users'    ? 'block' : 'none';
-  const pS = document.getElementById('panel-settings'); if(pS) pS.style.display   = tab==='settings' ? 'block' : 'none';
+  const pC = document.getElementById('panel-capturi');  if(pC) pC.style.display    = tab==='capturi'  ? 'block' : 'none';
+  const pS = document.getElementById('panel-settings'); if(pS) pS.style.display    = tab==='settings' ? 'block' : 'none';
   if(tab==='users')    loadUsers();
+  if(tab==='capturi')  loadCapturi();
   if(tab==='settings') loadSettings();
+}
+
+async function loadCapturi() {
+  const listEl = document.getElementById('capturi-list-admin');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+
+  const filter = document.getElementById('capturi-filter')?.value || 'pending';
+  let query = sb.from('capturi')
+    .select('*, standuri(nume), balti(nume, judet), user_profiles!submitted_by(username, zoda_id)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (filter !== 'all') query = query.eq('status', filter);
+
+  const { data, error } = await query;
+
+  if (error) { listEl.innerHTML = `<div class="empty-state">Eroare: ${error.message}</div>`; return; }
+  if (!data?.length) {
+    const labels = { pending:'în așteptare', approved:'aprobate', rejected:'respinse', all:'înregistrate' };
+    listEl.innerHTML = `<div class="empty-state">Nicio captură ${labels[filter] || ''} momentan.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = data.map(c => {
+    const statusLabel = { pending:'⏳ Pending', approved:'✅ Aprobat', rejected:'❌ Respins' }[c.status] || c.status;
+    const statusColor = { pending:'#f59e0b', approved:'#a3e635', rejected:'#ef4444' }[c.status] || '#64748b';
+    const submittedBy = c.user_profiles?.username || '—';
+    const submittedZoda = c.user_profiles?.zoda_id || '';
+    return `
+    <div class="captura-card" id="cc-${c.id}">
+      <div class="captura-card-hdr">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:800;color:#f1f5f9;">${escHtml(c.pescar_nume||'—')} — ${c.kg} kg</div>
+          <div style="font-size:11px;color:#4b5563;margin-top:2px;">
+            📍 ${escHtml(c.balti?.nume||'—')} · Stand: ${escHtml(c.standuri?.nume||'—')} · ${c.data_captura||'—'}
+          </div>
+          <div style="font-size:10px;color:#334155;margin-top:2px;">
+            Trimis de: ${escHtml(submittedBy)} ${submittedZoda ? '('+escHtml(submittedZoda)+')' : ''} ·
+            ${new Date(c.created_at).toLocaleDateString('ro-RO')}
+          </div>
+          ${c.pescar_id ? `<div style="font-size:10px;color:#4b5563;">Pescar: <span style="color:#a3e635;font-family:monospace;">${escHtml(c.pescar_id)}</span></div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+          <span style="font-size:11px;font-weight:700;color:${statusColor};">${statusLabel}</span>
+          <div style="font-size:22px;font-weight:900;color:#a3e635;">${c.kg} kg</div>
+        </div>
+      </div>
+      <div class="captura-card-media">
+        ${c.foto_url ? `<img src="${c.foto_url}" class="captura-foto-thumb" alt="captură" onclick="window.open('${c.foto_url}','_blank')" title="Click pentru a mări"/>` : '<div class="captura-foto-empty">📷</div>'}
+        ${c.video_url && !c.video_deleted ? `<div class="captura-video-btn" onclick="openVideoAdmin('${escHtml(c.video_url)}', ${c.id})">▶ Vezi videoclip dovadă</div>` : (c.video_url && c.video_deleted ? '<div style="font-size:11px;color:#334155;padding:8px;">Video șters</div>' : '')}
+      </div>
+      ${c.rejected_reason ? `<div style="background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:8px 12px;font-size:11px;color:#fca5a5;margin-top:8px;">Motiv respingere: ${escHtml(c.rejected_reason)}</div>` : ''}
+      ${c.status === 'pending' ? `
+      <div class="captura-card-actions">
+        <div style="flex:1;">
+          <input type="text" id="motiv-${c.id}" placeholder="Motiv respingere (opțional)..."
+            style="width:100%;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;" />
+        </div>
+        <button onclick="adminAproba(${c.id})" style="background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;">✅ Aprobă</button>
+        <button onclick="adminRespinge(${c.id})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;">❌ Respinge</button>
+      </div>` : ''}
+      ${c.video_url && !c.video_deleted && c.status !== 'pending' ? `
+      <div style="margin-top:8px;">
+        <button onclick="markVideoDeleted(${c.id})" style="background:transparent;border:1px solid #334155;color:#64748b;font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;">🗑️ Marchează video ca șters</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function adminAproba(capturaId) {
+  const btn = document.querySelector(`#cc-${capturaId} button`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+
+  const { data: { user } } = await sb.auth.getUser();
+  const { data, error } = await sb.rpc('aproba_captura', {
+    p_captura_id: capturaId,
+    p_admin_id:   user.id,
+  });
+
+  if (error) { showToast('❌ Eroare: ' + error.message, true); if (btn) { btn.disabled = false; btn.textContent = '✅ Aprobă'; } return; }
+
+  const r = data;
+  if (r.sters) {
+    showToast('ℹ️ Captura nu se încadrează la niciun record — a fost eliminată.');
+  } else {
+    let msg = '✅ Captură aprobată!';
+    if (r.record_nou)    msg += ' 🏆 Record nou!';
+    if (r.top10_alltime) msg += ` 🥇 Top ${r.rank_alltime} All Time!`;
+    if (r.top10_lunar)   msg += ` 📅 Top ${r.rank_lunar} Lunar!`;
+    showToast(msg);
+  }
+  await loadCapturi();
+}
+
+async function adminRespinge(capturaId) {
+  const motiv = document.getElementById(`motiv-${capturaId}`)?.value.trim() || '';
+  const { data: { user } } = await sb.auth.getUser();
+  const { error } = await sb.rpc('respinge_captura', {
+    p_captura_id: capturaId,
+    p_admin_id:   user.id,
+    p_motiv:      motiv,
+  });
+  if (error) { showToast('❌ Eroare: ' + error.message, true); return; }
+  showToast('Captura a fost respinsă.');
+  await loadCapturi();
+}
+
+async function markVideoDeleted(capturaId) {
+  const ok = confirm('Marchezi videoclipul ca șters? Acțiunea este ireversibilă în platformă.');
+  if (!ok) return;
+  await sb.from('capturi').update({ video_deleted: true }).eq('id', capturaId);
+  showToast('Video marcat ca șters.');
+  await loadCapturi();
+}
+
+function openVideoAdmin(url, capturaId) {
+  const existing = document.getElementById('video-overlay-admin');
+  if (existing) existing.remove();
+  const ov = document.createElement('div');
+  ov.id = 'video-overlay-admin';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+  ov.innerHTML = `
+    <video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:12px;"></video>
+    <div style="display:flex;gap:10px;">
+      <button onclick="document.getElementById('video-overlay-admin').remove()" style="background:#111827;border:1px solid #1e293b;color:#f1f5f9;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">✕ Închide</button>
+      <button onclick="markVideoDeleted(${capturaId})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;">🗑️ Șterge video</button>
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
 }
 
 async function loadSettings() {
@@ -1093,6 +1256,7 @@ function buildEditBody(b, ext) {
       <div class="fg"><label>LINK FACEBOOK</label><input type="url" id="e-fb" value="${escHtml(ext.facebook||'')}" placeholder="https://facebook.com/..." /></div>
       <div class="fg"><label>WHATSAPP ADMIN</label><input type="tel" id="e-wa" value="${escHtml(ext.whatsapp||'')}" /></div>
     </div>
+    <div class="fg"><label>ADMINISTRATOR BALTĂ (ZODA-ID)</label><input type="text" id="e-admin-zoda-id" value="${escHtml(b.admin_zoda_id||'')}" placeholder="ex: ZODA-1042" style="font-family:monospace;" /><div style="font-size:10px;color:#4b5563;margin-top:4px;">Setând acest câmp, utilizatorul cu ZODA-ID-ul respectiv primește rolul de administrator al acestei bălți și poate trimite cereri de capturi.</div></div>
   </div>
 
   <!-- MEDIA -->
@@ -1397,15 +1561,29 @@ async function saveEditBalta() {
   saveBtn.disabled = true; saveBtn.textContent = '⏳ Se salvează...';
 
   const updates = {
-    nume:         document.getElementById('e-nume')?.value.trim()    || b.nume,
-    judet:        document.getElementById('e-judet')?.value.trim()   || b.judet,
-    telefon:      document.getElementById('e-tel')?.value.trim()     || '',
-    adresa:       document.getElementById('e-adresa')?.value.trim()  || '',
-    facebook:     document.getElementById('e-fb')?.value.trim()      || '',
-    whatsapp:     document.getElementById('e-wa')?.value.trim()      || '',
-    drum_yt:      document.getElementById('e-drum-yt')?.value.trim() || '',
-    vizibilitate: editVizStatus,
+    nume:           document.getElementById('e-nume')?.value.trim()           || b.nume,
+    judet:          document.getElementById('e-judet')?.value.trim()          || b.judet,
+    telefon:        document.getElementById('e-tel')?.value.trim()            || '',
+    adresa:         document.getElementById('e-adresa')?.value.trim()         || '',
+    facebook:       document.getElementById('e-fb')?.value.trim()             || '',
+    whatsapp:       document.getElementById('e-wa')?.value.trim()             || '',
+    drum_yt:        document.getElementById('e-drum-yt')?.value.trim()        || '',
+    admin_zoda_id:  document.getElementById('e-admin-zoda-id')?.value.trim() || null,
+    vizibilitate:   editVizStatus,
   };
+
+  // Dacă s-a setat un admin_zoda_id nou → acordăm rolul balta_admin
+  const newAdminZodaId = updates.admin_zoda_id;
+  const oldAdminZodaId = b.admin_zoda_id || null;
+  if (newAdminZodaId && newAdminZodaId !== oldAdminZodaId) {
+    const { data: profil } = await sb.from('user_profiles')
+      .select('id').eq('zoda_id', newAdminZodaId).single();
+    if (profil?.id) {
+      await sb.from('user_roles').upsert({ id: profil.id, rol: 'balta_admin' }, { onConflict: 'id' });
+    } else {
+      showToast(`⚠️ ZODA-ID ${newAdminZodaId} nu a fost găsit — rolul nu a fost acordat.`, true);
+    }
+  }
 
   const { error: updErr } = await sb.from('balti').update(updates).eq('id', editBaltaId);
   if(updErr) {
@@ -1764,11 +1942,19 @@ async function abSubmit() {
     facebook:document.getElementById('ab-fb').value.trim(),
     whatsapp:document.getElementById('ab-wa').value.trim(),
     drum_yt:document.getElementById('ab-drum-yt').value.trim()||'',
+    admin_zoda_id:document.getElementById('ab-admin-zoda-id')?.value.trim()||null,
     lat:abCoords?abCoords.lat:null, lng:abCoords?abCoords.lng:null,
     standuri:standuriData.length, rec:'—', vizibilitate:'unlisted',
   }).select().single();
   if(baltaErr){showToast('⚠️ Eroare: '+baltaErr.message,true);submitBtn.disabled=false;submitBtn.textContent='✓ Salvează balta';return;}
   const baltaId=baltaSaved.id;
+
+  // Acordăm rol balta_admin dacă s-a specificat
+  const adminZodaId = document.getElementById('ab-admin-zoda-id')?.value.trim();
+  if (adminZodaId) {
+    const { data: profil } = await sb.from('user_profiles').select('id').eq('zoda_id', adminZodaId).single();
+    if (profil?.id) await sb.from('user_roles').upsert({ id: profil.id, rol: 'balta_admin' }, { onConflict: 'id' });
+  }
   if(standuriData.length>0) await sb.from('standuri').insert(standuriData.map(s=>({balta_id:baltaId,nume:s.nume,adancime:s.adancime||null,distanta:s.distanta||null,latime:s.latime||null,yt:s.yt||''})));
   // Upload hartă
   const hartaUrl=window._hartaUrl, hartaFile=window._hartaFile;
