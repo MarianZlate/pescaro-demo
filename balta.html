@@ -703,6 +703,9 @@ function renderTop10() {
       : '<div class="t10r-foto-empty">🐟</div>';
     var pescarStr = s.r.pe ? s.r.pe : '—';
     var pescarStele = steleHtml(s.r.pid);
+    var pescarLink = s.r.pid
+      ? '<a href="pescar.html?id=' + s.r.pid + '" onclick="event.stopPropagation()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color=\'#a3e635\'" onmouseout="this.style.color=\'#e2e8f0\'">' + pescarStr + '</a>'
+      : pescarStr;
     var dataStr   = s.r.da ? ' · ' + s.r.da : '';
     return '<div class="t10r" onclick="selStand(' + s.id + ')" style="cursor:pointer;">'
       + '<div class="t10r-foto">'
@@ -711,7 +714,7 @@ function renderTop10() {
       + '</div>'
       + '<div class="t10r-info">'
       + '<div class="t10-name">' + s.z + '</div>'
-      + '<div class="t10-meta">👤 ' + pescarStr + pescarStele + dataStr + '</div>'
+      + '<div class="t10-meta">👤 ' + pescarLink + pescarStele + dataStr + '</div>'
       + '</div>'
       + '<div class="t10-kg"><span>' + parseFloat(s.r.kg).toFixed(1) + ' kg</span></div>'
       + '</div>';
@@ -821,7 +824,12 @@ function openOverlay(id) {
 
   document.getElementById('ov-kg').textContent = (s.r.kg !== '' && s.r.kg !== null && s.r.kg !== '-') ? s.r.kg + ' kg' : '—';
   var peEl = document.getElementById('ov-pe');
-  peEl.textContent = (s.r.pe && s.r.pe !== '-') ? s.r.pe : '—';
+  var peName = (s.r.pe && s.r.pe !== '-') ? s.r.pe : '—';
+  if (s.r.pid && s.r.pe) {
+    peEl.innerHTML = '<a href="pescar.html?id=' + s.r.pid + '" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color=\'#a3e635\'" onmouseout="this.style.color=\'#e2e8f0\'">' + peName + '</a>';
+  } else {
+    peEl.textContent = peName;
+  }
   // Adaugă stele dacă pescar are ZODA-ID
   var steleEl = document.getElementById('ov-pe-stele');
   if (steleEl) steleEl.remove();
