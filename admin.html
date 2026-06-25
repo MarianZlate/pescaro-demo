@@ -1045,8 +1045,9 @@ async function openEditBalta(id) {
       yt:         s.yt         || '',
       rec_foto:   s.rec_foto   || '',
       rec_kg:     s.rec_kg     || '',
-      rec_pescar: s.rec_pescar || '',
-      rec_data:   s.rec_data   || '',
+      rec_pescar:     s.rec_pescar     || '',
+      rec_pescar_id:  s.rec_pescar_id  || '',
+      rec_data:       s.rec_data       || '',
       galerie:    (pozeByStand[String(s.id)] || []).map(p => ({ url: p.url, cap: '' })),
     })),
   };
@@ -1213,6 +1214,10 @@ function buildStandEditCard(s) {
         <input type="text" id="se-rec-pescar-${s.id}" value="${escHtml(s.rec_pescar||'')}" placeholder="Numele pescarului"/>
       </div>
       <div class="fg">
+        <label>ZODA-ID PESCAR <span style="font-size:10px;color:#334155;font-weight:400;">(pentru stele — ex: ZODA-1042)</span></label>
+        <input type="text" id="se-rec-pescar-id-${s.id}" value="${escHtml(s.rec_pescar_id||'')}" placeholder="ZODA-1042" style="font-family:monospace;" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="fg">
         <label>DATA CAPTURII</label>
         <input type="date" id="se-rec-data-${s.id}" value="${escHtml(s.rec_data||'')}"/>
       </div>
@@ -1246,7 +1251,7 @@ function addEditStand() {
   const wrap  = document.getElementById('edit-stands-wrap');
   const newId = Date.now();
   const nr    = wrap.querySelectorAll('.se-card').length + 1;
-  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_data: '', galerie: [] }));
+  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_pescar_id: '', rec_data: '', galerie: [] }));
   toggleEditStand(newId);
 }
 
@@ -1463,10 +1468,11 @@ async function saveEditBalta() {
     const di = (_diVal !== '' && _diVal != null) ? (parseInt(_diVal)   || null) : null;
     const la = (_laVal !== '' && _laVal != null) ? (parseInt(_laVal)   || null) : null;
     const yt    = document.getElementById('se-yt-'  + sid)?.value.trim()     || '';
-    const recFoto   = document.getElementById('se-rec-url-'    + sid)?.value.trim() || '';
-    const recKg     = document.getElementById('se-rec-kg-'     + sid)?.value.trim() || '';
-    const recPescar = document.getElementById('se-rec-pescar-' + sid)?.value.trim() || '';
-    const recData   = document.getElementById('se-rec-data-'   + sid)?.value.trim() || '';
+    const recFoto      = document.getElementById('se-rec-url-'       + sid)?.value.trim() || '';
+    const recKg        = document.getElementById('se-rec-kg-'        + sid)?.value.trim() || '';
+    const recPescar    = document.getElementById('se-rec-pescar-'    + sid)?.value.trim() || '';
+    const recPescarId  = document.getElementById('se-rec-pescar-id-' + sid)?.value.trim() || '';
+    const recData      = document.getElementById('se-rec-data-'      + sid)?.value.trim() || '';
 
     let standId;
     if(isNew) {
@@ -1476,13 +1482,20 @@ async function saveEditBalta() {
       standId = newStand?.id;
       if(standId) {
         const recPayload = {};
-        if(recFoto   !== '')  recPayload.rec_foto   = recFoto   || null;
-        if(recKg     !== '')  recPayload.rec_kg     = recKg     || null;
-        if(recPescar !== '')  recPayload.rec_pescar = recPescar || null;
-        if(recData   !== '')  recPayload.rec_data   = recData   || null;
+        if(recFoto     !== '')  recPayload.rec_foto      = recFoto     || null;
+        if(recKg       !== '')  recPayload.rec_kg        = recKg       || null;
+        if(recPescar   !== '')  recPayload.rec_pescar    = recPescar   || null;
+        if(recPescarId !== '')  recPayload.rec_pescar_id = recPescarId || null;
+        if(recData     !== '')  recPayload.rec_data      = recData     || null;
         if(Object.keys(recPayload).length > 0) {
           const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
           if(recErr) console.warn('Coloanele rec_ lipsesc din BD:', recErr.message);
+          if(!recErr && recPescarId) {
+            await sb.rpc('acorda_stele_record_stand', {
+              p_stand_id: standId, p_zoda_id_nou: recPescarId,
+              p_zoda_id_vechi: null, p_balta_id: editBaltaId
+            });
+          }
         }
       }
     } else {
@@ -1497,15 +1510,26 @@ async function saveEditBalta() {
         saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
         return;
       }
-      // Update câmpuri record (coloane opționale — ignorăm eroarea dacă nu există în BD)
+      // Update câmpuri record
+      const standBefore = editBaltaData?.ext?.standuri?.find(s => s.id === standId);
+      const recPescarIdVechi = standBefore?.rec_pescar_id || null;
+      const recPescarIdSchimbat = recPescarId !== '' && recPescarId !== recPescarIdVechi;
+
       const recPayload = {};
-      if(recFoto   !== undefined) recPayload.rec_foto   = recFoto   || null;
-      if(recKg     !== '')        recPayload.rec_kg     = recKg     || null;
-      if(recPescar !== '')        recPayload.rec_pescar = recPescar || null;
-      if(recData   !== '')        recPayload.rec_data   = recData   || null;
+      if(recFoto     !== undefined) recPayload.rec_foto      = recFoto     || null;
+      if(recKg       !== '')        recPayload.rec_kg        = recKg       || null;
+      if(recPescar   !== '')        recPayload.rec_pescar    = recPescar   || null;
+      if(recPescarId !== '')        recPayload.rec_pescar_id = recPescarId || null;
+      if(recData     !== '')        recPayload.rec_data      = recData     || null;
       if(Object.keys(recPayload).length > 0) {
         const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
         if(recErr) console.warn('Coloanele rec_ lipsesc din BD — rulează ALTER TABLE:', recErr.message);
+        if(!recErr && recPescarId && recPescarIdSchimbat) {
+          await sb.rpc('acorda_stele_record_stand', {
+            p_stand_id: standId, p_zoda_id_nou: recPescarId,
+            p_zoda_id_vechi: recPescarIdVechi, p_balta_id: editBaltaId
+          });
+        }
       }
     }
 
@@ -1763,7 +1787,25 @@ async function abSubmit() {
   }).select().single();
   if(baltaErr){showToast('⚠️ Eroare: '+baltaErr.message,true);submitBtn.disabled=false;submitBtn.textContent='✓ Salvează balta';return;}
   const baltaId=baltaSaved.id;
-  if(standuriData.length>0) await sb.from('standuri').insert(standuriData.map(s=>({balta_id:baltaId,nume:s.nume,adancime:s.adancime||null,distanta:s.distanta||null,latime:s.latime||null,yt:s.yt||''})));
+  if(standuriData.length>0) {
+    const insertedStanduri = await sb.from('standuri').insert(standuriData.map(s=>({
+      balta_id:baltaId, nume:s.nume, adancime:s.adancime||null,
+      distanta:s.distanta||null, latime:s.latime||null, yt:s.yt||'',
+      rec_kg:s.rec_kg||null, rec_data:s.rec_data||null,
+      rec_pescar:s.rec_pescar||null, rec_pescar_id:s.rec_pescar_id||null
+    }))).select('id, rec_pescar_id');
+    // Acordă stele pentru pescarii cu ZODA-ID
+    if(insertedStanduri.data) {
+      for(const st of insertedStanduri.data) {
+        if(st.rec_pescar_id) {
+          await sb.rpc('acorda_stele_record_stand', {
+            p_stand_id: st.id, p_zoda_id_nou: st.rec_pescar_id,
+            p_zoda_id_vechi: null, p_balta_id: baltaId
+          });
+        }
+      }
+    }
+  }
   // Upload hartă
   const hartaUrl=window._hartaUrl, hartaFile=window._hartaFile;
   if(hartaUrl){
@@ -1811,7 +1853,13 @@ function resumeDraft(){
       if(d.fb) document.getElementById('ab-fb').value=d.fb;
       if(d.wa) document.getElementById('ab-wa').value=d.wa;
       if(d.lat&&d.lng){abCoords={lat:d.lat,lng:d.lng};document.getElementById('ab-coord-display').textContent='✓ Marcat: '+d.lat.toFixed(5)+'°N, '+d.lng.toFixed(5)+'°E';document.getElementById('ab-coord-display').style.color='#a3e635';document.getElementById('ab-coord-clear').style.display='inline';}
-      if(d.standuri?.length){d.standuri.forEach((s,i)=>{addStand();const idx=i+1;setTimeout(()=>{const nu=document.getElementById('s'+idx+'-nume');if(nu)nu.value=s.nume||('Stand '+idx);},50);});}
+      if(d.standuri?.length){d.standuri.forEach((s,i)=>{addStand();const idx=i+1;setTimeout(()=>{
+        const nu=document.getElementById('s'+idx+'-nume');if(nu)nu.value=s.nume||('Stand '+idx);
+        const rkg=document.getElementById('s'+idx+'-rec-kg');if(rkg)rkg.value=s.rec_kg||'';
+        const rda=document.getElementById('s'+idx+'-rec-data');if(rda)rda.value=s.rec_data||'';
+        const rpe=document.getElementById('s'+idx+'-rec-pescar');if(rpe)rpe.value=s.rec_pescar||'';
+        const rpi=document.getElementById('s'+idx+'-rec-pescar-id');if(rpi)rpi.value=s.rec_pescar_id||'';
+      },50);});}
       if(d.step&&d.step>1){abStep=d.step;updateAbUI();}
     },100);
     document.getElementById('draft-banner').classList.remove('show');
@@ -1904,11 +1952,17 @@ function addStand(){
     <div class="fg"><label>LĂȚIME (m)</label><input type="number" min="0" id="s${nr}-la" placeholder="ex: 8"/></div>
   </div>
   <div class="fg"><label>🎬 LINK YOUTUBE STAND</label><input type="url" id="s${nr}-yt" placeholder="https://youtu.be/..." style="background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;width:100%;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="fg"><label>🏆 GREUTATE RECORD (kg)</label><input type="number" step="0.1" id="s${nr}-rec-kg" placeholder="ex: 12.5" style="background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;width:100%;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/></div>
+    <div class="fg"><label>📅 DATA RECORD</label><input type="date" id="s${nr}-rec-data" style="background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;width:100%;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/></div>
+  </div>
+  <div class="fg"><label>👤 NUME PESCAR RECORD</label><input type="text" id="s${nr}-rec-pescar" placeholder="Numele pescarului" style="background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;width:100%;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/></div>
+  <div class="fg"><label>🆔 ZODA-ID PESCAR <span style="font-size:10px;color:#334155;font-weight:400;">(pentru stele — ex: ZODA-1042)</span></label><input type="text" id="s${nr}-rec-pescar-id" placeholder="ZODA-1042" style="background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;width:100%;font-family:monospace;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'" oninput="this.value=this.value.toUpperCase()"/></div>
   <div class="fg"><label>📸 FOTOGRAFIE STAND</label><div style="display:flex;align-items:flex-start;gap:10px;"><label for="s${nr}-foto" style="flex-shrink:0;cursor:pointer;"><div id="s${nr}-foto-preview" style="width:90px;height:90px;border-radius:8px;background:#0a0f1a;border:1.5px dashed #1e293b;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#4b5563;font-size:10px;overflow:hidden;"><span style="font-size:24px;">📷</span><span>Adaugă poză</span></div></label><input type="file" id="s${nr}-foto" accept="image/*" style="display:none;" onchange="previewStandFoto(${nr},this)"/><div style="flex:1;font-size:10px;color:#4b5563;line-height:1.7;padding-top:4px;">Click pe pătrat pentru a selecta o fotografie.<br/><button id="s${nr}-foto-clear" onclick="clearStandFoto(${nr})" style="display:none;margin-top:6px;background:#1e293b;border:none;color:#94a3b8;font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer;">✕ Elimină</button></div></div></div>`;
   container.appendChild(div);
 }
 function delStand(nr){const el=document.getElementById('stand-'+nr);if(el)el.remove();}
-function getStanduriData(){return Array.from(document.querySelectorAll('.stand-item')).map((item,i)=>{const nr=i+1;const pfx=item.id.replace('stand-','s');const pi=document.querySelector('#'+pfx+'-foto-preview img');return{nr,nume:document.getElementById(pfx+'-nume')?.value||('Stand '+nr),adancime:parseFloat(document.getElementById(pfx+'-ad')?.value)||0,distanta:parseInt(document.getElementById(pfx+'-di')?.value)||0,latime:parseInt(document.getElementById(pfx+'-la')?.value)||0,yt:document.getElementById(pfx+'-yt')?.value||'',foto:pi?pi.src:''};});}
+function getStanduriData(){return Array.from(document.querySelectorAll('.stand-item')).map((item,i)=>{const nr=i+1;const pfx=item.id.replace('stand-','s');const pi=document.querySelector('#'+pfx+'-foto-preview img');return{nr,nume:document.getElementById(pfx+'-nume')?.value||('Stand '+nr),adancime:parseFloat(document.getElementById(pfx+'-ad')?.value)||0,distanta:parseInt(document.getElementById(pfx+'-di')?.value)||0,latime:parseInt(document.getElementById(pfx+'-la')?.value)||0,yt:document.getElementById(pfx+'-yt')?.value||'',rec_kg:document.getElementById(pfx+'-rec-kg')?.value||'',rec_data:document.getElementById(pfx+'-rec-data')?.value||'',rec_pescar:document.getElementById(pfx+'-rec-pescar')?.value||'',rec_pescar_id:(document.getElementById(pfx+'-rec-pescar-id')?.value||'').toUpperCase(),foto:pi?pi.src:''};});}
 
 // ── HARTĂ CANVAS ADD-BALTA ────────────────────────────────────────────────────
 (function(){
