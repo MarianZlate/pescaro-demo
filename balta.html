@@ -131,30 +131,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .ct{font-weight:700;font-size:13px;color:#e2e8f0;margin-bottom:8px;}
 
 /* TOP 10 — mobil: lățime 100% */
-#rc-top10{
-  /* mobil */
-  width:100%;}
-.t10c{background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;}
-.t10tabs{display:flex;border-bottom:1px solid #1e293b;padding:0 14px;overflow-x:auto;}
-.t10t{background:transparent;border:none;color:#64748b;cursor:pointer;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;
-  /* mobil */
-  font-size:11px;padding:8px 10px;}
-.t10t.active{color:#a3e635;border-bottom-color:#a3e635;font-weight:700;}
-.t10ct{display:none;}
-.t10ct.active{display:block;}
-.t10h{display:flex;align-items:center;gap:7px;padding:10px 14px 6px;font-weight:700;font-size:12px;color:#e2e8f0;}
-.lbdg{background:#1a3020;color:#a3e635;font-size:9px;padding:2px 7px;border-radius:8px;font-weight:600;}
-.t10e{padding:14px;color:#4b5563;text-align:center;font-size:12px;}
-.t10r{display:flex;align-items:stretch;border-bottom:1px solid #0f172a;}
-.t10r-foto{width:72px;flex-shrink:0;position:relative;}
-.t10r-foto img{width:72px;height:72px;object-fit:cover;display:block;}
-.t10r-foto-empty{width:72px;height:72px;background:#0a0f1a;display:flex;align-items:center;justify-content:center;color:#334155;font-size:20px;}
-.medal{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
-.t10r-info{flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:3px;}
-.t10-name{font-weight:700;font-size:12px;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.t10-meta{font-size:10px;color:#4b5563;}
-.t10-kg{padding:8px 12px 8px 0;display:flex;align-items:center;flex-shrink:0;}
-.t10-kg span{font-weight:900;color:#a3e635;font-size:14px;}
 .isub{display:flex;gap:5px;padding:8px 14px;flex-wrap:wrap;}
 .ist{background:#0a0f1a;border:1px solid #1e293b;color:#64748b;font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;cursor:pointer;}
 .ist.active{background:#1a3020;border-color:#166534;color:#a3e635;font-weight:700;}
@@ -225,10 +201,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #pill-all{padding:4px 14px;}
 
   /* TOP 10 — desktop: lățime fixă */
-  #rc-top10{width:280px;flex-shrink:0;}
 
   /* TABS */
-  .t10t{font-size:11px;padding:10px 8px;}
 }
 </style>
 </head>
@@ -384,17 +358,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   </div><!-- /#map-sidebar -->
 
   <!-- Top10 — desktop: coloana 3; mobil: sub map-sidebar (adica sub YT) -->
-  <div id="rc-top10">
-    <div class="t10c" id="top10-card" style="display:none;">
-      <div class="t10tabs">
-        <button class="t10t active" onclick="switchT10('top')" id="tab-top">🏆 Top capturi</button>
-      </div>
-      <div class="t10ct active" id="t10-top">
-        <div class="t10h">Top capturi — cei mai mari pești prinși <span class="lbdg">RECORD</span></div>
-        <div id="t10-list"></div>
-      </div>
-    </div>
-  </div><!-- /#rc-top10 -->
 
   </div><!-- /#main-area -->
 
@@ -622,13 +585,9 @@ function renderPage(hartaUrl) {
   }
 
   // Clasamente (momentan goale — viitor: tabela captures)
-  var elTat  = document.getElementById('t-at');  if(elTat)  elTat.innerHTML  = '<div class="t10e">Nicio captură înregistrată încă</div>';
-  var elTlu  = document.getElementById('t-lu');  if(elTlu)  elTlu.innerHTML  = '<div class="t10e">Nicio captură în luna curentă</div>';
   var elIsub = document.getElementById('isub');  if(elIsub) elIsub.innerHTML = '';
-  var elIsc  = document.getElementById('isc');   if(elIsc)  elIsc.innerHTML  = '<div class="t10e">Niciun istoric disponibil</div>';
 
   // Top10 capturi din datele standurilor
-  renderTop10();
 
   // Afișează pagina
   document.getElementById('loading-screen').style.display = 'none';
@@ -674,65 +633,6 @@ function steleHtml(zodaId) {
   var n = STELE_CACHE[zodaId];
   if (!n) return '';
   return ' <span title="' + n + ' stele" style="color:#f59e0b;font-size:11px;font-weight:800;">⭐' + n + '</span>';
-}
-
-function renderTop10() {
-  // Ia standurile care au record (rec_kg nenul)
-  var withRec = ST.filter(function(s) { return s.r.kg && parseFloat(s.r.kg) > 0; });
-  // Sorteaza descrescator dupa kg
-  withRec.sort(function(a, b) { return parseFloat(b.r.kg) - parseFloat(a.r.kg); });
-
-  var card = document.getElementById('top10-card');
-  var list = document.getElementById('t10-list');
-  if(!card || !list) return;
-
-  if(withRec.length === 0) {
-    card.style.display = 'none';
-    return;
-  }
-  card.style.display = 'block';
-
-  var medals = ['🥇','🥈','🥉'];
-  var medalColors = ['#f59e0b','#94a3b8','#cd7f32'];
-
-  list.innerHTML = withRec.map(function(s, i) {
-    var medal = i < 3 ? medals[i] : (i + 1);
-    var medalBg = i < 3 ? medalColors[i] : '#1e293b';
-    var fotoHtml = s.r.foto
-      ? '<img src="' + s.r.foto + '" loading="lazy" id="rec-img-' + s.id + '" style="cursor:zoom-in;width:72px;height:72px;object-fit:cover;display:block;"/>'
-      : '<div class="t10r-foto-empty">🐟</div>';
-    var pescarStr = s.r.pe ? s.r.pe : '—';
-    var pescarStele = steleHtml(s.r.pid);
-    var pescarLink = s.r.pid
-      ? '<a href="pescar.html?id=' + s.r.pid + '" onclick="event.stopPropagation()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color=\'#a3e635\'" onmouseout="this.style.color=\'#e2e8f0\'">' + pescarStr + '</a>'
-      : pescarStr;
-    var dataStr   = s.r.da ? ' · ' + s.r.da : '';
-    return '<div class="t10r" onclick="selStand(' + s.id + ')" style="cursor:pointer;">'
-      + '<div class="t10r-foto">'
-      + fotoHtml
-      + '<div class="medal" style="background:' + medalBg + ';color:#fff;">' + medal + '</div>'
-      + '</div>'
-      + '<div class="t10r-info">'
-      + '<div class="t10-name">' + s.z + '</div>'
-      + '<div class="t10-meta">👤 ' + pescarLink + pescarStele + dataStr + '</div>'
-      + '</div>'
-      + '<div class="t10-kg"><span>' + parseFloat(s.r.kg).toFixed(1) + ' kg</span></div>'
-      + '</div>';
-  }).join('');
-
-  // Click pe poza record — zoom fullscreen
-  withRec.forEach(function(s) {
-    if(!s.r.foto) return;
-    var img = document.getElementById('rec-img-' + s.id);
-    if(img) img.addEventListener('click', function(e) { e.stopPropagation(); openFS(s.r.foto); });
-  });
-}
-
-function switchT10(tab) {
-  document.querySelectorAll('.t10t').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.t10ct').forEach(function(t) { t.classList.remove('active'); });
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.getElementById('t10-' + tab).classList.add('active');
 }
 
 function showError(msg) {
