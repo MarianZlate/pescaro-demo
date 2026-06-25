@@ -790,19 +790,70 @@ document.addEventListener('click', e => {
 
 // ── HALL OF FAME ──────────────────────────────────────────────────────────────
 function hofRowHtml(h, extended) {
+  const steleIcon = h.stele > 0 ? `<span style="color:#f59e0b;font-size:11px;font-weight:800;">⭐${h.stele}</span>` : '<span style="color:#334155;font-size:11px;">—</span>';
   return `<div class="hof-row">
     <div class="hof-loc" style="background:${MEDAL_C[h.loc-1]||'#1e293b'};color:${h.loc<=3?'#000':'#a3e635'};">${h.loc<=3?MEDAL_I[h.loc-1]:h.loc}</div>
     <div style="flex:1;min-width:0;">
       <div class="hof-name">${h.pe}</div>
-      <div class="hof-detail">${h.rec}${extended?' · '+h.balta:''}</div>
+      <div class="hof-detail">${h.zodaId}${extended && h.detaliu ? ' · ' + h.detaliu : ''}</div>
     </div>
-    <div class="hof-stars"><span class="hof-count">${h.stele}</span></div>
+    <div class="hof-stars">${steleIcon}</div>
   </div>`;
 }
 
+async function loadHof() {
+  // Ia top 20 pescari după stele totale
+  const { data: stele } = await sb
+    .from('stele_totale')
+    .select('zoda_id, total_stele, stele_record_stand, stele_top10_lunar, stele_hall_of_fame')
+    .order('total_stele', { ascending: false })
+    .limit(20);
+
+  if (!stele || !stele.length) {
+    document.getElementById('hof-preview').innerHTML =
+      '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Niciun pescar cu stele încă</div>';
+    document.getElementById('hof-full').innerHTML =
+      '<div style="padding:20px;text-align:center;color:#334155;font-size:12px;">Niciun pescar cu stele încă</div>';
+    return;
+  }
+
+  // Ia profilurile pentru username + avatar
+  const zodaIds = stele.map(s => s.zoda_id);
+  const { data: profiles } = await sb
+    .from('user_profiles')
+    .select('username, zoda_id, avatar_url')
+    .in('zoda_id', zodaIds)
+    .is('deleted_at', null);
+
+  const profileMap = {};
+  (profiles || []).forEach(p => { profileMap[p.zoda_id] = p; });
+
+  HOF.length = 0;
+  stele.forEach((s, i) => {
+    const p = profileMap[s.zoda_id] || {};
+    const parts = [];
+    if (s.stele_record_stand)  parts.push(s.stele_record_stand + ' record' + (s.stele_record_stand !== 1 ? 'uri' : '') + ' stand');
+    if (s.stele_top10_lunar)   parts.push(s.stele_top10_lunar + ' top 10 lunar');
+    if (s.stele_hall_of_fame)  parts.push(s.stele_hall_of_fame + ' Hall of Fame');
+    HOF.push({
+      loc:    i + 1,
+      pe:     p.username || s.zoda_id,
+      zodaId: s.zoda_id,
+      stele:  s.total_stele || 0,
+      detaliu: parts.join(' · '),
+    });
+  });
+
+  renderHof();
+}
+
 function renderHof() {
-  document.getElementById('hof-preview').innerHTML = HOF.slice(0,5).map(h=>hofRowHtml(h,false)).join('');
-  document.getElementById('hof-full').innerHTML = HOF.map(h=>hofRowHtml(h,true)).join('');
+  const previewHtml = HOF.slice(0, 5).map(h => hofRowHtml(h, false)).join('');
+  const fullHtml    = HOF.map(h => hofRowHtml(h, true)).join('');
+  document.getElementById('hof-preview').innerHTML = previewHtml ||
+    '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Niciun pescar cu stele încă</div>';
+  document.getElementById('hof-full').innerHTML = fullHtml ||
+    '<div style="padding:20px;text-align:center;color:#334155;font-size:12px;">Niciun pescar cu stele încă</div>';
 }
 
 function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
@@ -893,7 +944,7 @@ async function loadBaltiFromSupabase() {
   }));
   renderMapMarkers();
   renderBalti();
-  renderHof();
+  loadHof();
   // Număr useri înregistrați activi (fără conturi marcate ca șterse)
   const { count } = await sb.from('user_profiles')
     .select('id', { count: 'exact', head: true })
@@ -2307,9 +2358,8 @@ async function doRegister() {
   if(error) { authShowErr(error.message); return; }
   if(data.user) {
     const uid = data.user.id;
-    const pescaro_id = 'ZODA-' + uid.replace(/-/g,'').slice(0,8).toUpperCase();
     await sb.from('user_roles').insert({ id: uid, rol: 'user' });
-    await sb.from('user_profiles').upsert({ id: uid, email, username, pescaro_id }, { onConflict: 'id' });
+    await sb.from('user_profiles').upsert({ id: uid, email, username }, { onConflict: 'id' });
   }
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
@@ -2385,10 +2435,9 @@ sb.auth.onAuthStateChange(async (event, session) => {
         // User nou prin Google — creăm profil și rol
         const uid = currentUser.id;
         const email = currentUser.email;
-        const pescaro_id = 'ZODA-' + uid.replace(/-/g,'').slice(0,8).toUpperCase();
         const username = email.split('@')[0];
         await sb.from('user_profiles').upsert({
-          id: uid, email, username, pescaro_id,
+          id: uid, email, username,
         }, { onConflict: 'id' });
         await sb.from('user_roles').upsert({ id: uid, rol: 'user' }, { onConflict: 'id' });
       } else if (profile.deleted_at) {
