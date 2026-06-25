@@ -788,32 +788,40 @@ async function bootAdmin(user) {
   loadStats();
 }
 
-// Pornire la load — getSession() citește din localStorage instant, fără request la server
+// Pornire la load — citim token din URL (pasat din index.html) sau din localStorage
 async function initAdmin() {
-  // Pas 1: citim sesiunea din localStorage (instant)
+  const urlToken = new URLSearchParams(location.search).get('token');
+
+  if (urlToken) {
+    // Token pasat din index.html — setăm sesiunea direct, fără așteptare
+    try {
+      const { data, error } = await sb.auth.setSession({
+        access_token: urlToken,
+        refresh_token: urlToken
+      });
+      if (data?.user) {
+        await bootAdmin(data.user);
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Fallback: citim din localStorage (instant, fără request)
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     await bootAdmin(session.user);
     return;
   }
-  // Pas 2: dacă nu e sesiune locală, așteptăm INITIAL_SESSION (poate fi OAuth redirect)
-  _sessionReceived = false;
-  setTimeout(async () => {
-    if (_sessionReceived) return;
-    showScreen('login');
-  }, 2000);
+
+  // Nu e nicio sesiune — afișăm login
+  showScreen('login');
 }
 
 let _sessionReceived = false;
 sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'INITIAL_SESSION') {
-    _sessionReceived = true;
-    // Dacă bootAdmin deja a rulat (din getSession), nu mai rulăm
-  } else if (event === 'SIGNED_IN') {
+  if (event === 'SIGNED_IN') {
     _sessionReceived = true;
     bootAdmin(session?.user || null);
-  } else if (event === 'TOKEN_REFRESHED') {
-    // Token reînnoit — nu facem nimic, bootAdmin deja rulat
   } else if (event === 'SIGNED_OUT') {
     showScreen('login');
   }
