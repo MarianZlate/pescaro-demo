@@ -106,6 +106,64 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .danger-btn{background:transparent;border:1px solid #334155;color:#64748b;font-size:12px;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .2s;}
 .danger-btn:hover{border-color:#ef4444;color:#ef4444;}
 
+/* ── NOTIFICĂRI ── */
+.notif-bell-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.notif-badge-count{display:inline-flex;align-items:center;gap:6px;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:#fca5a5;}
+.notif-item{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #0f172a;cursor:default;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item.unread .notif-msg-text{color:#f1f5f9;}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#a3e635;flex-shrink:0;margin-top:4px;}
+.notif-dot-read{width:8px;height:8px;flex-shrink:0;}
+.notif-msg-text{font-size:12px;color:#94a3b8;line-height:1.6;flex:1;}
+.notif-time-text{font-size:10px;color:#334155;margin-top:3px;}
+.notif-empty-msg{text-align:center;padding:24px;color:#334155;font-size:13px;}
+.mark-all-btn{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;transition:all .2s;}
+.mark-all-btn:hover{border-color:#a3e635;color:#a3e635;}
+
+/* ── BALTA ADMIN SECTION ── */
+.balta-admin-card{background:#0a0f1a;border:1px solid #1e3a2e;border-radius:12px;padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.balta-admin-info{flex:1;min-width:0;}
+.balta-admin-nume{font-size:14px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
+.balta-admin-judet{font-size:11px;color:#4b5563;}
+.btn-add-captura{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer;transition:background .2s;white-space:nowrap;}
+.btn-add-captura:hover{background:#1e7a42;}
+
+/* ── MODAL CAPTURĂ ── */
+#modal-captura{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:8000;display:none;align-items:center;justify-content:center;padding:16px;}
+#modal-captura.open{display:flex;}
+.mc-box{background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.mc-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #1e293b;flex-shrink:0;}
+.mc-title{font-size:15px;font-weight:800;color:#f1f5f9;}
+.mc-close{background:transparent;border:none;color:#4b5563;font-size:20px;cursor:pointer;line-height:1;padding:0;}
+.mc-close:hover{color:#f1f5f9;}
+.mc-body{padding:20px;overflow-y:auto;flex:1;}
+.mc-footer{padding:14px 20px;border-top:1px solid #1e293b;display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;}
+
+/* Upload zone */
+.upload-zone{border:2px dashed #1e293b;border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;background:#0d1014;transition:border-color .2s;margin-bottom:4px;}
+.upload-zone:hover{border-color:#1a6b3a;}
+.upload-zone.has-file{border-color:#1a6b3a;background:#0d1f12;}
+.upload-zone-icon{font-size:28px;margin-bottom:8px;}
+.upload-zone-text{font-size:12px;font-weight:700;color:#64748b;}
+.upload-zone-sub{font-size:10px;color:#334155;margin-top:3px;}
+.upload-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:10px;display:none;}
+
+/* Pescar search dropdown */
+.pescar-search-wrap{position:relative;}
+.pescar-dropdown{position:absolute;top:100%;left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:8px;z-index:100;max-height:200px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.pescar-dropdown.open{display:block;}
+.pescar-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background .15s;border-bottom:1px solid #0f172a;}
+.pescar-opt:last-child{border-bottom:none;}
+.pescar-opt:hover{background:#1e293b;}
+.pescar-opt-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#a3e635;flex-shrink:0;}
+.pescar-opt-name{font-size:12px;font-weight:700;color:#f1f5f9;}
+.pescar-opt-zoda{font-size:10px;color:#4b5563;}
+
+/* Video upload */
+.video-zone{border:2px dashed #1e293b;border-radius:12px;padding:20px 16px;text-align:center;cursor:pointer;background:#0d1014;transition:border-color .2s;}
+.video-zone:hover{border-color:#7c3aed;}
+.video-zone.has-file{border-color:#7c3aed;background:#0d0a1a;}
+
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
 .toast.show{opacity:1;transform:translateY(0);}
@@ -253,7 +311,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
           <div class="capture-empty-icon">🎣</div>
           <div class="capture-empty-title">Nicio captură înregistrată</div>
           <div class="capture-empty-sub">
-            Funcționalitatea de trimitere capturi<br/>va fi disponibilă în curând.
+            Capturile tale aprobate vor apărea aici.
           </div>
         </div>
       </div>
@@ -294,7 +352,153 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div>
 
+  <!-- ── NOTIFICĂRI ── -->
+  <div class="section" id="section-notificari" style="display:none;">
+    <div class="section-hdr">
+      <span class="section-icon">🔔</span>
+      <div style="flex:1;">
+        <div class="section-title">Notificările mele</div>
+        <div class="section-sub">Actualizări despre capturi, recorduri și clasamente</div>
+      </div>
+      <button class="mark-all-btn" onclick="markAllRead()">Marchează toate citite</button>
+    </div>
+    <div class="section-body" style="padding:0 20px;">
+      <div id="notif-list-cont"><div class="notif-empty-msg">Se încarcă...</div></div>
+    </div>
+  </div>
+
+  <!-- ── ADMINISTRATOR BALTĂ ── -->
+  <div class="section" id="section-balta-admin" style="display:none;">
+    <div class="section-hdr">
+      <span class="section-icon">🏕️</span>
+      <div>
+        <div class="section-title">Bălțile mele</div>
+        <div class="section-sub">Bălți pe care le administrezi — adaugă capturi de stand</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="balti-admin-list">
+        <div style="color:#334155;font-size:13px;text-align:center;padding:20px;">Se încarcă...</div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /#page -->
+
+<!-- ── MODAL ADAUGĂ CAPTURĂ ── -->
+<div id="modal-captura">
+  <div class="mc-box">
+    <div class="mc-hdr">
+      <div>
+        <div class="mc-title">📸 Adaugă captură</div>
+        <div style="font-size:11px;color:#4b5563;margin-top:2px;" id="mc-balta-name"></div>
+      </div>
+      <button class="mc-close" onclick="closeCaptura()">✕</button>
+    </div>
+    <div class="mc-body">
+
+      <!-- Stand -->
+      <div class="fg">
+        <label>STAND *</label>
+        <select id="mc-stand" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;">
+          <option value="">Selectează standul...</option>
+        </select>
+      </div>
+
+      <!-- Greutate + Data -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg">
+          <label>GREUTATE (kg) *</label>
+          <input type="number" id="mc-kg" step="0.1" min="0.1" placeholder="ex: 8.5"
+            style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" />
+        </div>
+        <div class="fg">
+          <label>DATA CAPTURII *</label>
+          <input type="date" id="mc-data"
+            style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" />
+        </div>
+      </div>
+
+      <!-- Pescar search -->
+      <div class="fg">
+        <label>PESCARUL *</label>
+        <div class="pescar-search-wrap">
+          <input type="text" id="mc-pescar-search" placeholder="Caută după username sau ZODA-ID..."
+            autocomplete="off"
+            style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;"
+            oninput="onPescarSearch(this.value)" />
+          <div class="pescar-dropdown" id="pescar-dropdown"></div>
+        </div>
+        <!-- Pescar selectat -->
+        <div id="pescar-selectat" style="display:none;margin-top:8px;background:#0d1f12;border:1px solid #1a3020;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
+          <div id="ps-avatar" class="pescar-opt-avatar"></div>
+          <div style="flex:1;">
+            <div id="ps-name" style="font-size:12px;font-weight:700;color:#f1f5f9;"></div>
+            <div id="ps-zoda" style="font-size:10px;color:#4b5563;"></div>
+          </div>
+          <button onclick="clearPescar()" style="background:transparent;border:none;color:#4b5563;cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <input type="hidden" id="mc-pescar-id" />
+        <input type="hidden" id="mc-pescar-nume" />
+        <div style="font-size:10px;color:#334155;margin-top:4px;">Dacă pescarul nu are cont pe Zoda, selectează „Pescar fără cont" și completează manual.</div>
+      </div>
+
+      <!-- Pescar fără cont (fallback) -->
+      <div id="pescar-manual-wrap" style="display:none;">
+        <div class="fg">
+          <label>NUME PESCAR (manual)</label>
+          <input type="text" id="mc-pescar-manual" placeholder="ex: Ion Popescu"
+            style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" />
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#64748b;">
+          <input type="checkbox" id="mc-fara-cont" onchange="toggleFaraCont(this.checked)"
+            style="width:14px;height:14px;accent-color:#1a6b3a;" />
+          Pescarul nu are cont pe Zoda
+        </label>
+      </div>
+
+      <!-- Upload poză -->
+      <div class="fg">
+        <label>FOTOGRAFIE CAPTURĂ *</label>
+        <div class="upload-zone" id="zona-foto" onclick="document.getElementById('mc-foto-input').click()">
+          <div class="upload-zone-icon">📷</div>
+          <div class="upload-zone-text">Click sau trage poza aici</div>
+          <div class="upload-zone-sub">JPG, PNG — max 10 MB</div>
+          <img id="foto-preview" class="upload-preview" alt="preview" />
+        </div>
+        <input type="file" id="mc-foto-input" accept="image/*" style="display:none;" onchange="onFotoSelect(this)" />
+      </div>
+
+      <!-- Upload video dovadă -->
+      <div class="fg">
+        <label>VIDEOCLIP DOVADĂ <span style="color:#334155;font-weight:400;">(opțional, vizibil doar admini)</span></label>
+        <div class="video-zone" id="zona-video" onclick="document.getElementById('mc-video-input').click()">
+          <div style="font-size:24px;margin-bottom:6px;">🎬</div>
+          <div style="font-size:12px;font-weight:700;color:#64748b;" id="video-zone-text">Click sau trage videoclipul aici</div>
+          <div style="font-size:10px;color:#334155;margin-top:3px;">MP4, MOV — max 200 MB — arhivat 15 zile, accesat doar de admini</div>
+        </div>
+        <input type="file" id="mc-video-input" accept="video/*" style="display:none;" onchange="onVideoSelect(this)" />
+      </div>
+
+      <!-- Progress upload -->
+      <div id="mc-progress" style="display:none;margin-bottom:14px;">
+        <div style="font-size:11px;color:#64748b;margin-bottom:6px;" id="mc-progress-text">Se uploadează...</div>
+        <div style="background:#0a0f1a;border-radius:4px;height:6px;overflow:hidden;">
+          <div id="mc-progress-bar" style="height:100%;background:#1a6b3a;width:0%;transition:width .3s;border-radius:4px;"></div>
+        </div>
+      </div>
+
+      <div id="mc-err" style="display:none;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:10px 12px;font-size:12px;color:#fca5a5;margin-bottom:14px;"></div>
+
+    </div>
+    <div class="mc-footer">
+      <button onclick="closeCaptura()" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:13px;padding:9px 20px;border-radius:8px;cursor:pointer;">Anulează</button>
+      <button id="mc-submit-btn" onclick="submitCaptura()" style="background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 24px;border-radius:8px;cursor:pointer;">📤 Trimite cererea</button>
+    </div>
+  </div>
+</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -311,6 +515,13 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
 
 let currentUser = null;
 let currentProfile = null;
+let currentRole = 'user';
+let _baltaAdminId = null; // balta_id curentă pentru modal captură
+let _baltaAdminNume = '';
+let _pescarSelectat = null; // { id, zoda_id, username, avatar_url }
+let _fotoFile = null;
+let _videoFile = null;
+let _pescarSearchTimer = null;
 
 // ── TOAST ────────────────────────────────────────────────────────────────────
 function showToast(msg, isErr = false) {
@@ -324,29 +535,392 @@ function showToast(msg, isErr = false) {
 // ── BOOT ─────────────────────────────────────────────────────────────────────
 async function boot() {
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) {
-    window.location.href = 'index.html';
-    return;
-  }
+  if (!user) { window.location.href = 'index.html'; return; }
   currentUser = user;
 
   const { data: profile } = await sb.from('user_profiles')
     .select('*').eq('id', user.id).single();
   currentProfile = profile || {};
 
-  // Cont marcat ca șters — afișăm ecran de recuperare
-  if (currentProfile.deleted_at) {
-    showDeletedScreen();
-    return;
-  }
+  if (currentProfile.deleted_at) { showDeletedScreen(); return; }
+
+  const { data: roleData } = await sb.from('user_roles').select('rol').eq('id', user.id).single();
+  currentRole = roleData?.rol || 'user';
 
   renderProfile();
-  await Promise.all([loadCapturi(), loadStele()]);
+  await Promise.all([loadCapturi(), loadStele(), loadNotificari()]);
+
+  // Secțiune balta_admin
+  if (currentRole === 'balta_admin' || currentRole === 'admin') {
+    await loadBaltiAdmin();
+    document.getElementById('section-balta-admin').style.display = 'block';
+  }
 
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
   document.getElementById('page').style.display = 'block';
 }
+
+// ── NOTIFICĂRI ────────────────────────────────────────────────────────────────
+async function loadNotificari() {
+  const section = document.getElementById('section-notificari');
+  const listEl  = document.getElementById('notif-list-cont');
+  section.style.display = 'block';
+
+  const { data, error } = await sb.from('notificari')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error || !data?.length) {
+    listEl.innerHTML = '<div class="notif-empty-msg">Nicio notificare momentan.</div>';
+    return;
+  }
+
+  const unread = data.filter(n => !n.citita).length;
+  listEl.innerHTML = data.map(n => `
+    <div class="notif-item ${!n.citita ? 'unread' : ''}" id="notif-${n.id}">
+      ${!n.citita ? '<div class="notif-dot"></div>' : '<div class="notif-dot-read"></div>'}
+      <div style="flex:1;">
+        <div class="notif-msg-text">${escH(n.mesaj)}</div>
+        <div class="notif-time-text">${timeAgo(n.created_at)}</div>
+      </div>
+    </div>`).join('');
+
+  // Badge în header (dacă există)
+  if (unread > 0) {
+    const hdrTitle = document.querySelector('.hdr-title');
+    if (hdrTitle) hdrTitle.innerHTML = `Contul meu <span class="notif-badge-count">🔔 ${unread} noi</span>`;
+  }
+}
+
+async function markAllRead() {
+  if (!currentUser) return;
+  await sb.from('notificari').update({ citita: true })
+    .eq('user_id', currentUser.id).eq('citita', false);
+  document.querySelectorAll('.notif-item.unread').forEach(el => {
+    el.classList.remove('unread');
+    el.querySelector('.notif-dot')?.classList.replace('notif-dot', 'notif-dot-read');
+  });
+  const badge = document.querySelector('.notif-badge-count');
+  if (badge) badge.remove();
+  showToast('✓ Toate notificările au fost marcate citite');
+}
+
+function timeAgo(isoStr) {
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return 'Acum';
+  if (m < 60) return `Acum ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `Acum ${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `Acum ${d} zile`;
+  return new Date(isoStr).toLocaleDateString('ro-RO');
+}
+
+function escH(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── BALTA ADMIN ───────────────────────────────────────────────────────────────
+async function loadBaltiAdmin() {
+  const listEl = document.getElementById('balti-admin-list');
+  const zodaId = currentProfile?.zoda_id;
+  if (!zodaId) { listEl.innerHTML = '<div style="color:#334155;font-size:13px;text-align:center;padding:20px;">Nu ești asociat cu nicio baltă.</div>'; return; }
+
+  const { data: balti, error } = await sb.from('balti')
+    .select('id, nume, judet, vizibilitate')
+    .eq('admin_zoda_id', zodaId)
+    .order('nume');
+
+  if (error || !balti?.length) {
+    listEl.innerHTML = '<div style="color:#334155;font-size:13px;text-align:center;padding:20px;">Nu ești asociat cu nicio baltă momentan.</div>';
+    return;
+  }
+
+  listEl.innerHTML = balti.map(b => `
+    <div class="balta-admin-card">
+      <div class="balta-admin-info">
+        <div class="balta-admin-nume">${escH(b.nume)}</div>
+        <div class="balta-admin-judet">📍 ${escH(b.judet || '—')}${b.vizibilitate === 'unlisted' ? ' · 🔒 Unlisted' : ''}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-add-captura" onclick="openCaptura(${b.id}, '${escH(b.nume).replace(/'/g,"\\'")}')">+ Adaugă captură</button>
+        <a href="balta.html?id=${b.id}" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:border-color .2s;" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">↗ Vezi balta</a>
+      </div>
+    </div>`).join('');
+}
+
+// ── MODAL CAPTURĂ ─────────────────────────────────────────────────────────────
+async function openCaptura(baltaId, baltaNume) {
+  _baltaAdminId   = baltaId;
+  _baltaAdminNume = baltaNume;
+  _pescarSelectat = null;
+  _fotoFile = null;
+  _videoFile = null;
+
+  // Reset form
+  document.getElementById('mc-stand').innerHTML = '<option value="">Selectează standul...</option>';
+  document.getElementById('mc-kg').value = '';
+  document.getElementById('mc-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('mc-pescar-search').value = '';
+  document.getElementById('mc-pescar-id').value = '';
+  document.getElementById('mc-pescar-nume').value = '';
+  document.getElementById('mc-pescar-manual').value = '';
+  document.getElementById('mc-fara-cont').checked = false;
+  document.getElementById('pescar-manual-wrap').style.display = 'none';
+  document.getElementById('pescar-selectat').style.display = 'none';
+  document.getElementById('pescar-dropdown').classList.remove('open');
+  document.getElementById('zona-foto').classList.remove('has-file');
+  document.getElementById('zona-video').classList.remove('has-file');
+  document.getElementById('foto-preview').style.display = 'none';
+  document.getElementById('video-zone-text').textContent = 'Click sau trage videoclipul aici';
+  document.getElementById('mc-err').style.display = 'none';
+  document.getElementById('mc-progress').style.display = 'none';
+  document.getElementById('mc-balta-name').textContent = baltaNume;
+  document.getElementById('mc-foto-input').value = '';
+  document.getElementById('mc-video-input').value = '';
+
+  document.getElementById('modal-captura').classList.add('open');
+
+  // Încărcăm standurile baltii
+  const { data: standuri } = await sb.from('standuri')
+    .select('id, nume').eq('balta_id', baltaId).order('nume');
+  const sel = document.getElementById('mc-stand');
+  (standuri || []).forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.nume;
+    sel.appendChild(o);
+  });
+}
+
+function closeCaptura() {
+  document.getElementById('modal-captura').classList.remove('open');
+}
+
+// Click în afara modalului → închide
+document.getElementById('modal-captura').addEventListener('click', function(e) {
+  if (e.target === this) closeCaptura();
+});
+
+function toggleFaraCont(checked) {
+  document.getElementById('pescar-manual-wrap').style.display = checked ? 'block' : 'none';
+  if (checked) {
+    clearPescar();
+    document.getElementById('mc-pescar-search').value = '';
+    document.getElementById('mc-pescar-search').disabled = true;
+  } else {
+    document.getElementById('mc-pescar-search').disabled = false;
+  }
+}
+
+function clearPescar() {
+  _pescarSelectat = null;
+  document.getElementById('mc-pescar-id').value = '';
+  document.getElementById('mc-pescar-nume').value = '';
+  document.getElementById('pescar-selectat').style.display = 'none';
+  document.getElementById('mc-pescar-search').value = '';
+  document.getElementById('mc-pescar-search').style.display = 'block';
+}
+
+// Search pescar cu debounce
+function onPescarSearch(val) {
+  clearTimeout(_pescarSearchTimer);
+  const dd = document.getElementById('pescar-dropdown');
+  if (!val || val.length < 2) { dd.classList.remove('open'); return; }
+  _pescarSearchTimer = setTimeout(() => searchPescari(val), 300);
+}
+
+async function searchPescari(q) {
+  const dd = document.getElementById('pescar-dropdown');
+  dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:#4b5563;">Se caută...</div>';
+  dd.classList.add('open');
+
+  const { data } = await sb.from('user_profiles')
+    .select('id, username, zoda_id, avatar_url')
+    .or(`username.ilike.%${q}%,zoda_id.ilike.%${q}%`)
+    .is('deleted_at', null)
+    .limit(6);
+
+  if (!data?.length) {
+    dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:#4b5563;">Niciun utilizator găsit.<br/><span style="color:#334155;">Bifează „fără cont" pentru pescar extern.</span></div>';
+    return;
+  }
+
+  dd.innerHTML = data.map(u => {
+    const initials = (u.username || '?').slice(0, 2).toUpperCase();
+    const avatarHtml = u.avatar_url
+      ? `<img class="pescar-opt-avatar" src="${u.avatar_url}" alt="av"/>`
+      : `<div class="pescar-opt-avatar">${initials}</div>`;
+    return `
+      <div class="pescar-opt" onclick="selectPescar(${JSON.stringify(u).replace(/"/g,'&quot;')})">
+        ${avatarHtml}
+        <div>
+          <div class="pescar-opt-name">${escH(u.username || '—')}</div>
+          <div class="pescar-opt-zoda">${escH(u.zoda_id || '')}</div>
+        </div>
+      </div>`;
+  }).join('') + '<div style="padding:8px 12px;font-size:10px;color:#334155;border-top:1px solid #0f172a;">Pescarul nu apare? Bifează „fără cont".</div>';
+}
+
+function selectPescar(u) {
+  _pescarSelectat = u;
+  document.getElementById('mc-pescar-id').value   = u.zoda_id || '';
+  document.getElementById('mc-pescar-nume').value = u.username || '';
+  document.getElementById('pescar-dropdown').classList.remove('open');
+  document.getElementById('mc-pescar-search').style.display = 'none';
+
+  const initials = (u.username || '?').slice(0, 2).toUpperCase();
+  const psAvatar = document.getElementById('ps-avatar');
+  if (u.avatar_url) {
+    psAvatar.innerHTML = `<img src="${u.avatar_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" alt="av"/>`;
+  } else {
+    psAvatar.textContent = initials;
+  }
+  document.getElementById('ps-name').textContent = u.username || '—';
+  document.getElementById('ps-zoda').textContent = u.zoda_id || '';
+  document.getElementById('pescar-selectat').style.display = 'flex';
+}
+
+// Foto select
+function onFotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  _fotoFile = file;
+  const zona = document.getElementById('zona-foto');
+  zona.classList.add('has-file');
+  const preview = document.getElementById('foto-preview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+}
+
+// Video select
+function onVideoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 200 * 1024 * 1024) {
+    showErr('Videoclipul depășește 200 MB.'); return;
+  }
+  _videoFile = file;
+  document.getElementById('zona-video').classList.add('has-file');
+  document.getElementById('video-zone-text').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+}
+
+function showErr(msg) {
+  const el = document.getElementById('mc-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function setProgress(pct, text) {
+  document.getElementById('mc-progress').style.display = 'block';
+  document.getElementById('mc-progress-bar').style.width = pct + '%';
+  document.getElementById('mc-progress-text').textContent = text;
+}
+
+// Upload Cloudinary helper
+async function uploadToCloudinary(file, resourceType, onProgress) {
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    fd.append('tags', resourceType === 'video' ? 'captura_video_zoda' : 'captura_foto_zoda');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (data.secure_url) resolve(data.secure_url);
+        else reject(new Error(data.error?.message || 'Eroare upload'));
+      } catch(e) { reject(e); }
+    };
+    xhr.onerror = () => reject(new Error('Eroare rețea'));
+    xhr.send(fd);
+  });
+}
+
+async function submitCaptura() {
+  document.getElementById('mc-err').style.display = 'none';
+  const btn = document.getElementById('mc-submit-btn');
+
+  // Validare
+  const standId  = document.getElementById('mc-stand').value;
+  const kg       = parseFloat(document.getElementById('mc-kg').value);
+  const data     = document.getElementById('mc-data').value;
+  const faraCont = document.getElementById('mc-fara-cont').checked;
+  const pescarId = document.getElementById('mc-pescar-id').value;
+  const pescarManual = document.getElementById('mc-pescar-manual').value.trim();
+
+  if (!standId)         { showErr('Selectează un stand.'); return; }
+  if (!kg || kg <= 0)   { showErr('Introdu greutatea corectă.'); return; }
+  if (!data)            { showErr('Selectează data capturii.'); return; }
+  if (!faraCont && !pescarId)  { showErr('Selectează pescarul sau bifează „fără cont".'); return; }
+  if (faraCont && !pescarManual) { showErr('Introdu numele pescarului.'); return; }
+  if (!_fotoFile)       { showErr('Adaugă o fotografie a capturii.'); return; }
+
+  const pescarNume = faraCont ? pescarManual : (_pescarSelectat?.username || '');
+  const pescarZoda = faraCont ? null : pescarId;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Se trimite...';
+
+  try {
+    // 1. Upload foto
+    setProgress(5, 'Se uploadează fotografia...');
+    const fotoUrl = await uploadToCloudinary(_fotoFile, 'image', pct => setProgress(5 + pct * 0.6, `Foto: ${pct}%`));
+
+    // 2. Upload video (dacă există)
+    let videoUrl = null;
+    if (_videoFile) {
+      setProgress(65, 'Se uploadează videoclipul dovadă...');
+      videoUrl = await uploadToCloudinary(_videoFile, 'video', pct => setProgress(65 + pct * 0.3, `Video: ${pct}%`));
+    }
+
+    setProgress(96, 'Se salvează cererea...');
+
+    // 3. Insert în capturi
+    const { error } = await sb.from('capturi').insert({
+      balta_id:     _baltaAdminId,
+      stand_id:     parseInt(standId),
+      pescar_nume:  pescarNume,
+      pescar_id:    pescarZoda,
+      kg:           kg,
+      data_captura: data,
+      foto_url:     fotoUrl,
+      video_url:    videoUrl,
+      status:       'pending',
+      submitted_by: currentUser.id,
+    });
+
+    if (error) throw new Error(error.message);
+
+    setProgress(100, 'Trimis!');
+    setTimeout(() => {
+      closeCaptura();
+      showToast('✅ Cererea a fost trimisă! Adminul o va verifica în curând.');
+    }, 600);
+
+  } catch(e) {
+    showErr('⚠️ ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '📤 Trimite cererea';
+    document.getElementById('mc-progress').style.display = 'none';
+  }
+}
+
+// Închide dropdown la click în afară
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('pescar-dropdown');
+  const wrap = document.getElementById('mc-pescar-search');
+  if (dd && !dd.contains(e.target) && wrap && !wrap.contains(e.target)) {
+    dd.classList.remove('open');
+  }
+});
+
 
 function showDeletedScreen() {
   const deletedAt = new Date(currentProfile.deleted_at);
