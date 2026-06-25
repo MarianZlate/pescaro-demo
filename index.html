@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Baltis — Bălți de pescuit din România</title>
+<title>Zoda — Bălți de pescuit din România</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -289,7 +289,7 @@ nav{display:flex;align-items:center;gap:6px;}
   <div id="hdr-in">
     <a class="logo" href="#">
       <span class="logo-icon">🎣</span>
-      <span class="logo-text">Baltis</span>
+      <span class="logo-text">Zoda</span>
       <span class="logo-badge">Beta</span>
     </a>
     <nav>
@@ -670,7 +670,7 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    storageKey: 'baltis-auth',
+    storageKey: 'zoda-auth',
   }
 });
 
@@ -948,7 +948,7 @@ window.addEventListener('load', () => {
 // ════════════════════════════════════════════════════════════════════════════════
 // DRAFT SYSTEM — salveaza progresul wizard-ului in localStorage
 // ════════════════════════════════════════════════════════════════════════════════
-const DRAFT_KEY = 'baltis_balta_draft';
+const DRAFT_KEY = 'zoda_balta_draft';
 
 function collectWizardData() {
   return {
@@ -1512,7 +1512,7 @@ async function openRegModal() {
   var email = s.contact_email || '';
   var phone = s.contact_phone || '';
   var wa    = s.contact_whatsapp || '';
-  var waMsg = encodeURIComponent('Bună ziua! Doresc să înregistrez balta mea pe Baltis.');
+  var waMsg = encodeURIComponent('Bună ziua! Doresc să înregistrez balta mea pe Zoda.');
 
   var eEl = document.getElementById('reg-email-link');
   eEl.textContent = email || 'Indisponibil';
@@ -1834,7 +1834,7 @@ async function abDoSearch(isAuto=false) {
   try {
     // Nominatim — geocoder OpenStreetMap, gratuit
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Romania')}&format=json&limit=6&countrycodes=ro&accept-language=ro`;
-    const resp = await fetch(url, { headers:{ 'Accept-Language':'ro', 'User-Agent':'Baltis/1.0' } });
+    const resp = await fetch(url, { headers:{ 'Accept-Language':'ro', 'User-Agent':'Zoda/1.0' } });
     const data = await resp.json();
     if(!data.length) {
       res.innerHTML = `<div style="padding:12px 14px;color:#4b5563;font-size:12px;">
@@ -2189,7 +2189,7 @@ function getStanduriData() {
   <div class="auth-inner">
     <button class="auth-close" onclick="closeAuthModal()">✕</button>
     <div class="auth-logo">🎣</div>
-    <div class="auth-title">Baltis</div>
+    <div class="auth-title">Zoda</div>
     <div class="auth-sub">Intră în cont sau creează unul nou</div>
 
     <div class="auth-tabs">
@@ -2292,8 +2292,8 @@ async function doLogin() {
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Intră în cont';
   if(error) { authShowErr('Email sau parolă incorectă.'); return; }
-  if(!rememberMe) sessionStorage.setItem('baltis-session-only', '1');
-  else            sessionStorage.removeItem('baltis-session-only');
+  if(!rememberMe) sessionStorage.setItem('zoda-session-only', '1');
+  else            sessionStorage.removeItem('zoda-session-only');
   // closeAuthModal() va fi chemat de onAuthStateChange SIGNED_IN
 }
 
@@ -2314,9 +2314,8 @@ async function doRegister() {
   if(error) { authShowErr(error.message); return; }
   if(data.user) {
     const uid = data.user.id;
-    const pescaro_id = 'BALTIS-' + uid.replace(/-/g,'').slice(0,8).toUpperCase();
     await sb.from('user_roles').insert({ id: uid, rol: 'user' });
-    await sb.from('user_profiles').upsert({ id: uid, email, username, pescaro_id }, { onConflict: 'id' });
+    await sb.from('user_profiles').upsert({ id: uid, email, username }, { onConflict: 'id' });
   }
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
@@ -2379,7 +2378,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
   if(event === 'INITIAL_SESSION') {
     currentUser = session?.user || null;
     await updateNavForUser(currentUser);
-    if(currentUser && sessionStorage.getItem('baltis-session-only') === '1') {
+    if(currentUser && sessionStorage.getItem('zoda-session-only') === '1') {
       window.addEventListener('beforeunload', () => { sb.auth.signOut(); });
     }
   } else if(event === 'SIGNED_IN') {
@@ -2392,10 +2391,9 @@ sb.auth.onAuthStateChange(async (event, session) => {
         // User nou prin Google — creăm profil și rol
         const uid = currentUser.id;
         const email = currentUser.email;
-        const pescaro_id = 'BALTIS-' + uid.replace(/-/g,'').slice(0,8).toUpperCase();
         const username = email.split('@')[0];
         await sb.from('user_profiles').upsert({
-          id: uid, email, username, pescaro_id,
+          id: uid, email, username,
         }, { onConflict: 'id' });
         await sb.from('user_roles').upsert({ id: uid, rol: 'user' }, { onConflict: 'id' });
       } else if (profile.deleted_at) {
