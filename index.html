@@ -39,6 +39,25 @@ nav{display:flex;align-items:center;gap:6px;}
 .nav-logout{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:12px;padding:5px 10px;border-radius:7px;cursor:pointer;}
 .nav-logout:hover{border-color:#ef4444;color:#ef4444;}
 .nav-admin-badge{font-size:10px;background:#f59e0b;color:#000;padding:2px 7px;border-radius:4px;font-weight:800;}
+.nav-bell{position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#111827;border:1px solid #1e293b;border-radius:8px;cursor:pointer;color:#94a3b8;font-size:16px;transition:border-color .2s,color .2s;flex-shrink:0;}
+.nav-bell:hover{border-color:#a3e635;color:#a3e635;}
+.nav-bell-badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;background:#ef4444;border-radius:9px;font-size:10px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid #0a0f1a;line-height:1;pointer-events:none;}
+/* Panel notificări */
+#notif-panel{position:fixed;top:56px;right:12px;width:340px;max-height:480px;background:#111827;border:1px solid #1e293b;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:2000;display:none;flex-direction:column;overflow:hidden;}
+#notif-panel.open{display:flex;}
+.notif-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1e293b;flex-shrink:0;}
+.notif-hdr-title{font-size:13px;font-weight:800;color:#f1f5f9;}
+.notif-mark-all{font-size:11px;color:#4b5563;cursor:pointer;transition:color .2s;}
+.notif-mark-all:hover{color:#a3e635;}
+.notif-list{overflow-y:auto;flex:1;}
+.notif-item{padding:12px 16px;border-bottom:1px solid #0f172a;cursor:pointer;transition:background .15s;}
+.notif-item:hover{background:#0f172a;}
+.notif-item.unread{background:#0d1f12;}
+.notif-item.unread:hover{background:#122918;}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:#a3e635;flex-shrink:0;margin-top:4px;}
+.notif-msg{font-size:12px;color:#cbd5e1;line-height:1.5;flex:1;}
+.notif-time{font-size:10px;color:#4b5563;margin-top:3px;}
+.notif-empty{padding:32px 16px;text-align:center;color:#4b5563;font-size:13px;}
 #hero{max-width:1400px;margin:0 auto;text-align:center;padding:28px 14px 20px;}
 .hero-title{font-weight:900;line-height:1.15;color:#f8fafc;margin-bottom:14px;font-size:26px;}
 .hero-accent{color:#a3e635;}
@@ -285,6 +304,17 @@ nav{display:flex;align-items:center;gap:6px;}
 <body>
 
 <!-- HEADER -->
+<!-- Panel notificări -->
+<div id="notif-panel">
+  <div class="notif-hdr">
+    <span class="notif-hdr-title">🔔 Notificări</span>
+    <span class="notif-mark-all" onclick="markAllNotifRead()">Marchează toate citite</span>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty">Se încarcă...</div>
+  </div>
+</div>
+
 <div id="hdr">
   <div id="hdr-in">
     <a class="logo" href="#">
@@ -2410,9 +2440,25 @@ async function updateNavForUser(user) {
     : `<div class="nav-avatar" style="cursor:default;">${initials}</div>`;
 
   const isAdmin = currentRole === 'admin';
+
+  // Citim numărul de notificări necitite
+  let unreadCount = 0;
+  try {
+    const { count } = await sb.from('notificari')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id).eq('citita', false);
+    unreadCount = count || 0;
+  } catch(e) {}
+
+  const bellBadge = unreadCount > 0
+    ? `<span class="nav-bell-badge">${unreadCount > 99 ? '99+' : unreadCount}</span>` : '';
+
   area.innerHTML = `
     <div class="nav-user">
       ${isAdmin ? '<a href="#" onclick="goToAdmin(event)" class="nav-admin-badge" style="text-decoration:none;cursor:pointer;" title="Panou de administrare">⚙️ Admin</a>' : ''}
+      <div class="nav-bell" onclick="toggleNotifPanel()" title="Notificări" id="nav-bell-btn">
+        🔔${bellBadge}
+      </div>
       <a href="cont.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;background:#111827;border:1px solid #1e293b;border-radius:8px;padding:5px 10px;transition:border-color .2s;" title="Contul meu" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">
         ${avatarHtml}
         <span class="nav-user-name">${username}</span>
@@ -2422,6 +2468,134 @@ async function updateNavForUser(user) {
   if (BALTI.length) { renderMapMarkers(); renderBalti(); }
 }
 
+
+// ── NOTIFICĂRI ────────────────────────────────────────────────────────────────
+let _notifPanelOpen = false;
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  _notifPanelOpen = !_notifPanelOpen;
+  if (_notifPanelOpen) {
+    panel.classList.add('open');
+    loadNotifPanel();
+  } else {
+    panel.classList.remove('open');
+  }
+}
+
+// Închide panelul la click în afară
+document.addEventListener('click', function(e) {
+  if (!_notifPanelOpen) return;
+  const panel = document.getElementById('notif-panel');
+  const bell  = document.getElementById('nav-bell-btn');
+  if (panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) {
+    panel.classList.remove('open');
+    _notifPanelOpen = false;
+  }
+});
+
+async function loadNotifPanel() {
+  if (!currentUser) return;
+  const list = document.getElementById('notif-list');
+  list.innerHTML = '<div class="notif-empty">Se încarcă...</div>';
+
+  const { data, error } = await sb.from('notificari')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error || !data?.length) {
+    list.innerHTML = '<div class="notif-empty">Nicio notificare momentan.</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(n => {
+    const unread = !n.citita;
+    const time   = timeAgo(n.created_at);
+    return `
+      <div class="notif-item ${unread ? 'unread' : ''}" onclick="markNotifRead('${n.id}', this)">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          ${unread ? '<div class="notif-dot"></div>' : '<div style="width:7px;flex-shrink:0;"></div>'}
+          <div style="flex:1;">
+            <div class="notif-msg">${escHtmlNotif(n.mesaj)}</div>
+            <div class="notif-time">${time}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Marcăm automat ca citite după 3 secunde de panel deschis
+  setTimeout(() => autoMarkVisible(data), 3000);
+}
+
+async function markNotifRead(id, el) {
+  if (!el.classList.contains('unread')) return;
+  el.classList.remove('unread');
+  el.querySelector('.notif-dot')?.remove();
+  await sb.from('notificari').update({ citita: true }).eq('id', id);
+  refreshBellBadge();
+}
+
+async function markAllNotifRead() {
+  if (!currentUser) return;
+  await sb.from('notificari')
+    .update({ citita: true })
+    .eq('user_id', currentUser.id)
+    .eq('citita', false);
+  document.querySelectorAll('.notif-item.unread').forEach(el => {
+    el.classList.remove('unread');
+    el.querySelector('.notif-dot')?.remove();
+  });
+  refreshBellBadge();
+}
+
+async function autoMarkVisible(data) {
+  if (!_notifPanelOpen || !currentUser) return;
+  const unreadIds = data.filter(n => !n.citita).map(n => n.id);
+  if (!unreadIds.length) return;
+  await sb.from('notificari').update({ citita: true })
+    .in('id', unreadIds).eq('user_id', currentUser.id);
+  refreshBellBadge();
+}
+
+async function refreshBellBadge() {
+  if (!currentUser) return;
+  const { count } = await sb.from('notificari')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', currentUser.id).eq('citita', false);
+  const badge = document.querySelector('.nav-bell-badge');
+  const n = count || 0;
+  if (badge) {
+    if (n > 0) { badge.textContent = n > 99 ? '99+' : n; }
+    else { badge.remove(); }
+  } else if (n > 0) {
+    const bell = document.getElementById('nav-bell-btn');
+    if (bell) {
+      const b = document.createElement('span');
+      b.className = 'nav-bell-badge';
+      b.textContent = n > 99 ? '99+' : n;
+      bell.appendChild(b);
+    }
+  }
+}
+
+function timeAgo(isoStr) {
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return 'Acum';
+  if (m < 60) return `Acum ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `Acum ${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `Acum ${d} zile`;
+  return new Date(isoStr).toLocaleDateString('ro-RO');
+}
+
+function escHtmlNotif(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// ──────────────────────────────────────────────────────────────────────────────
 
 // La load: INITIAL_SESSION e garantat cu starea reală din localStorage
 sb.auth.onAuthStateChange(async (event, session) => {
