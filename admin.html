@@ -77,7 +77,7 @@ th,td{padding:8px 6px;}
 
 /* Edit modal — full screen pe mobil */
 #edit-modal{padding:0;align-items:flex-end;}
-.edit-inner{max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;max-height:92vh;}
+.edit-inner{max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;max-height:95vh;}
 .edit-hdr{border-radius:16px 16px 0 0;padding:14px 16px;}
 .edit-title{font-size:14px;}
 .edit-save-btn{padding:7px 12px;font-size:12px;}
@@ -214,15 +214,15 @@ th,td{padding:8px 6px;}
 /* MODAL EDIT BALTA */
 #edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:24px 20px 40px;overflow-y:auto;}
 #edit-modal.open{display:flex;}
-.edit-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column;max-height:calc(100vh - 64px);}
-.edit-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;border-radius:20px 20px 0 0;flex-shrink:0;}
+.edit-inner{background:#0a0f1a;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:760px;margin:0 auto;}
+.edit-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;position:sticky;top:0;background:#0a0f1a;border-radius:20px 20px 0 0;z-index:10;}
 .edit-title{font-size:17px;font-weight:800;color:#f1f5f9;}
 .edit-hdr-btns{display:flex;gap:8px;align-items:center;}
 .edit-save-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:13px;padding:8px 20px;border-radius:8px;cursor:pointer;}
 .edit-save-btn:hover{background:#1e7a42;}
 .edit-save-btn:disabled{opacity:.5;cursor:not-allowed;}
 .edit-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;}
-.edit-body{padding:24px;overflow-y:auto;flex:1;}
+.edit-body{padding:24px;}
 .edit-loading{padding:40px;text-align:center;color:#4b5563;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:12px;}
 .edit-section{margin-bottom:28px;}
 .edit-section-title{font-size:11px;font-weight:800;color:#4b5563;letter-spacing:.08em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px;}
@@ -910,7 +910,7 @@ async function loadUsers() {
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Se încarcă...</td></tr>';
 
-  const { data: profiles, error: profErr } = await sb.from('user_profiles').select('id, email, created_at, username').order('created_at', { ascending: false });
+  const { data: profiles, error: profErr } = await sb.from('user_profiles').select('id, email, created_at, username, zoda_id').order('created_at', { ascending: false });
   const { data: roles, error: roleErr } = await sb.from('user_roles').select('id, rol');
 
   // Debug — afișăm în consolă câte rânduri am primit
@@ -928,8 +928,14 @@ async function loadUsers() {
 
   tbody.innerHTML = profiles.map(u => {
     const rol = roleMap[u.id] || 'user';
+    const nameLink = u.zoda_id
+      ? `href="pescar.html?id=${u.zoda_id}" target="_blank"`
+      : '';
     const nameHtml = u.username
-      ? `<div class="user-name">${u.username}</div><div class="user-email">${u.email || ''}</div>`
+      ? `<a ${nameLink} style="text-decoration:none;${u.zoda_id?'cursor:pointer;':''}">
+           <div class="user-name" style="${u.zoda_id?'color:#a3e635;':''}">${u.username}</div>
+           <div class="user-email">${u.email || ''}</div>
+         </a>`
       : `<div class="user-name">${u.email || '—'}</div>`;
     const createdAt = u.created_at
       ? new Date(u.created_at).toLocaleDateString('ro-RO')
@@ -1045,8 +1051,7 @@ async function openEditBalta(id) {
       yt:         s.yt         || '',
       rec_foto:   s.rec_foto   || '',
       rec_kg:     s.rec_kg     || '',
-      rec_pescar:    s.rec_pescar    || '',
-      rec_pescar_id: s.rec_pescar_id || '',
+      rec_pescar: s.rec_pescar || '',
       rec_data:   s.rec_data   || '',
       galerie:    (pozeByStand[String(s.id)] || []).map(p => ({ url: p.url, cap: '' })),
     })),
@@ -1214,10 +1219,6 @@ function buildStandEditCard(s) {
         <input type="text" id="se-rec-pescar-${s.id}" value="${escHtml(s.rec_pescar||'')}" placeholder="Numele pescarului"/>
       </div>
       <div class="fg">
-        <label>ZODA-ID PESCAR <span style="font-size:10px;color:#334155;font-weight:400;">(pentru stele — ex: ZODA-1042)</span></label>
-        <input type="text" id="se-rec-pescar-id-${s.id}" value="${escHtml(s.rec_pescar_id||'')}" placeholder="ZODA-1042" style="font-family:monospace;" oninput="this.value=this.value.toUpperCase()"/>
-      </div>
-      <div class="fg">
         <label>DATA CAPTURII</label>
         <input type="date" id="se-rec-data-${s.id}" value="${escHtml(s.rec_data||'')}"/>
       </div>
@@ -1251,7 +1252,7 @@ function addEditStand() {
   const wrap  = document.getElementById('edit-stands-wrap');
   const newId = Date.now();
   const nr    = wrap.querySelectorAll('.se-card').length + 1;
-  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_pescar_id: '', rec_data: '', galerie: [] }));
+  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_data: '', galerie: [] }));
   toggleEditStand(newId);
 }
 
@@ -1468,11 +1469,10 @@ async function saveEditBalta() {
     const di = (_diVal !== '' && _diVal != null) ? (parseInt(_diVal)   || null) : null;
     const la = (_laVal !== '' && _laVal != null) ? (parseInt(_laVal)   || null) : null;
     const yt    = document.getElementById('se-yt-'  + sid)?.value.trim()     || '';
-    const recFoto      = document.getElementById('se-rec-url-'       + sid)?.value.trim() || '';
-    const recKg        = document.getElementById('se-rec-kg-'        + sid)?.value.trim() || '';
-    const recPescar    = document.getElementById('se-rec-pescar-'    + sid)?.value.trim() || '';
-    const recPescarId  = document.getElementById('se-rec-pescar-id-' + sid)?.value.trim() || '';
-    const recData      = document.getElementById('se-rec-data-'      + sid)?.value.trim() || '';
+    const recFoto   = document.getElementById('se-rec-url-'    + sid)?.value.trim() || '';
+    const recKg     = document.getElementById('se-rec-kg-'     + sid)?.value.trim() || '';
+    const recPescar = document.getElementById('se-rec-pescar-' + sid)?.value.trim() || '';
+    const recData   = document.getElementById('se-rec-data-'   + sid)?.value.trim() || '';
 
     let standId;
     if(isNew) {
@@ -1482,50 +1482,36 @@ async function saveEditBalta() {
       standId = newStand?.id;
       if(standId) {
         const recPayload = {};
-        if(recFoto     !== '')  recPayload.rec_foto      = recFoto     || null;
-        if(recKg       !== '')  recPayload.rec_kg        = recKg       || null;
-        if(recPescar   !== '')  recPayload.rec_pescar    = recPescar   || null;
-        if(recPescarId !== '')  recPayload.rec_pescar_id = recPescarId || null;
-        if(recData     !== '')  recPayload.rec_data      = recData     || null;
+        if(recFoto   !== '')  recPayload.rec_foto   = recFoto   || null;
+        if(recKg     !== '')  recPayload.rec_kg     = recKg     || null;
+        if(recPescar !== '')  recPayload.rec_pescar = recPescar || null;
+        if(recData   !== '')  recPayload.rec_data   = recData   || null;
         if(Object.keys(recPayload).length > 0) {
           const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
           if(recErr) console.warn('Coloanele rec_ lipsesc din BD:', recErr.message);
-          if(!recErr && recPescarId) {
-            await sb.rpc('acorda_stele_record_stand', {
-              p_stand_id: standId, p_zoda_id_nou: recPescarId,
-              p_zoda_id_vechi: null, p_balta_id: editBaltaId
-            });
-          }
         }
       }
     } else {
       standId = parseInt(sid);
+      // Update câmpuri de bază
       const { error: stErr } = await sb.from('standuri').update({
         nume: zona, adancime: ad, distanta: di, latime: la, yt
       }).eq('id', standId);
       if(stErr) {
         showToast('❌ Eroare stand ' + standId + ': ' + stErr.message, true);
+        console.error('Stand update error:', stErr);
         saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
         return;
       }
-      const standBefore = editBaltaData?.ext?.standuri?.find(s => s.id === standId);
-      const recPescarIdVechi = standBefore?.rec_pescar_id || null;
-      const recPescarIdSchimbat = recPescarId !== '' && recPescarId !== recPescarIdVechi;
+      // Update câmpuri record (coloane opționale — ignorăm eroarea dacă nu există în BD)
       const recPayload = {};
-      if(recFoto     !== undefined) recPayload.rec_foto      = recFoto     || null;
-      if(recKg       !== '')        recPayload.rec_kg        = recKg       || null;
-      if(recPescar   !== '')        recPayload.rec_pescar    = recPescar   || null;
-      if(recPescarId !== '')        recPayload.rec_pescar_id = recPescarId || null;
-      if(recData     !== '')        recPayload.rec_data      = recData     || null;
+      if(recFoto   !== undefined) recPayload.rec_foto   = recFoto   || null;
+      if(recKg     !== '')        recPayload.rec_kg     = recKg     || null;
+      if(recPescar !== '')        recPayload.rec_pescar = recPescar || null;
+      if(recData   !== '')        recPayload.rec_data   = recData   || null;
       if(Object.keys(recPayload).length > 0) {
         const { error: recErr } = await sb.from('standuri').update(recPayload).eq('id', standId);
         if(recErr) console.warn('Coloanele rec_ lipsesc din BD — rulează ALTER TABLE:', recErr.message);
-        if(!recErr && recPescarId && recPescarIdSchimbat) {
-          await sb.rpc('acorda_stele_record_stand', {
-            p_stand_id: standId, p_zoda_id_nou: recPescarId,
-            p_zoda_id_vechi: recPescarIdVechi, p_balta_id: editBaltaId
-          });
-        }
       }
     }
 
