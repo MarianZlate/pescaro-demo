@@ -52,6 +52,7 @@ export default async function handler(req, res) {
   }
 
   const filePath = videoFile.filepath || videoFile.path;
+  const titluVideo = fields?.title?.[0] || fields?.title || `Zoda Dovada Captura ${new Date().toISOString().split('T')[0]}`;
 
   try {
     // Autentificare OAuth2 cu credențialele platformei
@@ -71,10 +72,10 @@ export default async function handler(req, res) {
       part: ['snippet', 'status'],
       requestBody: {
         snippet: {
-          title: `Zoda Dovada Captura ${timestamp}`,
+          title: titluVideo,
           description: 'Videoclip dovadă captură — Zoda Platform. Accesat doar de administratori.',
           tags: ['zoda', 'captura', 'dovada'],
-          categoryId: '17', // Sports
+          categoryId: '17',
         },
         status: {
           privacyStatus: 'unlisted',
