@@ -196,11 +196,6 @@ th,td{padding:8px 6px;}
 .btn-make-admin:hover{background:#2a1800;}
 .btn-remove-admin{background:#0d1f12;border:1px solid #1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-remove-admin:hover{background:#1a3020;}
-.role-balta-admin{background:#0c1a2e;color:#60a5fa;border:1px solid #1e40af;}
-.btn-make-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
-.btn-make-balta-admin:hover{background:#1a2e4a;}
-.btn-revoke-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
-.btn-revoke-balta-admin:hover{background:#1a2e4a;}
 .btn-make-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-make-balta-admin:hover{background:#1a2e4a;}
 .btn-revoke-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
@@ -354,7 +349,7 @@ th,td{padding:8px 6px;}
     <div class="hdr-right">
       <a class="back-btn" href="index.html">← Hartă</a>
       <button class="logout-btn" onclick="doLogout()">Ieși</button>
-      <a href="cont.html" title="Contul meu" style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#a3e635;cursor:pointer;flex-shrink:0;overflow:hidden;text-decoration:none;" id="hdr-avatar"></a>
+      <div id="hdr-avatar" style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#a3e635;cursor:default;flex-shrink:0;overflow:hidden;"></div>
     </div>
   </div>
 </div>
@@ -658,37 +653,6 @@ th,td{padding:8px 6px;}
 </div>
 
 <!-- CONFIRM MODAL -->
-<!-- MODAL EDIT CAPTURĂ -->
-<div id="edit-captura-modal" onclick="if(event.target===this)closeEditCaptura()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:700;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:24px 20px 40px;overflow-y:auto;">
-  <div style="background:#0d1117;border:1px solid #1e293b;border-radius:16px;width:100%;max-width:560px;overflow:hidden;margin:auto;">
-    <div style="background:#111827;padding:18px 20px;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
-      <div><div style="font-size:15px;font-weight:800;color:#f1f5f9;">✏️ Editează cererea</div><div style="font-size:11px;color:#4b5563;margin-top:2px;" id="ec-subtitle"></div></div>
-      <button onclick="closeEditCaptura()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>
-    </div>
-    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
-      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">STAND *</label><select id="ec-stand" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;"></select></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">GREUTATE (kg) *</label><input type="number" id="ec-kg" step="0.1" min="0.1" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
-        <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">DATA CAPTURII *</label><input type="date" id="ec-data" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
-      </div>
-      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">ZODA-ID PESCAR</label><input type="text" id="ec-pescar-id" placeholder="ex: ZODA-1042" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#a3e635;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;" /><div style="font-size:10px;color:#334155;margin-top:4px;">Lasă gol dacă pescarul nu are cont pe Zoda.</div></div>
-      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">NUME PESCAR *</label><input type="text" id="ec-pescar-nume" placeholder="ex: Ion Popescu" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
-      <div>
-        <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">FOTOGRAFIE CAPTURĂ</label>
-        <div id="ec-foto-preview-wrap" style="margin-bottom:8px;display:none;"><img id="ec-foto-preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;border:1px solid #1e293b;" /><div style="font-size:10px;color:#4b5563;margin-top:4px;">Foto curentă — încarcă una nouă pentru a o înlocui.</div></div>
-        <div onclick="document.getElementById('ec-foto-input').click()" style="border:1.5px dashed #1e293b;border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:#0a0f1a;" onmouseover="this.style.borderColor='#334155'" onmouseout="this.style.borderColor='#1e293b'"><div style="font-size:20px;">📷</div><div style="font-size:12px;color:#64748b;margin-top:4px;" id="ec-foto-text">Click pentru a înlocui fotografia</div></div>
-        <input type="file" id="ec-foto-input" accept="image/*" style="display:none;" onchange="onEcFotoSelect(this)" />
-      </div>
-      <div id="ec-err" style="display:none;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:10px 12px;font-size:12px;color:#fca5a5;"></div>
-      <div id="ec-progress" style="display:none;"><div style="font-size:11px;color:#64748b;margin-bottom:6px;" id="ec-progress-text">Se uploadează...</div><div style="background:#0a0f1a;border-radius:4px;height:6px;overflow:hidden;"><div id="ec-progress-bar" style="height:100%;background:#1a6b3a;width:0%;transition:width .3s;border-radius:4px;"></div></div></div>
-    </div>
-    <div style="padding:14px 20px;border-top:1px solid #1e293b;display:flex;justify-content:flex-end;gap:10px;background:#111827;position:sticky;bottom:0;">
-      <button onclick="closeEditCaptura()" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:13px;padding:9px 20px;border-radius:8px;cursor:pointer;">Anulează</button>
-      <button id="ec-save-btn" onclick="saveEditCaptura()" style="background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 24px;border-radius:8px;cursor:pointer;">💾 Salvează</button>
-    </div>
-  </div>
-</div>
-
 <div id="confirm-modal">
   <div class="confirm-inner">
     <div class="confirm-title" id="confirm-title">Ești sigur?</div>
@@ -777,7 +741,7 @@ async function loadCapturi() {
 
   const filter = document.getElementById('capturi-filter')?.value || 'pending';
   let query = sb.from('capturi')
-    .select('*, standuri(nume), balti(nume, judet)')
+    .select('*, standuri(nume), balti(nume, judet), user_profiles!submitted_by(username, zoda_id)')
     .order('created_at', { ascending: false })
     .limit(100);
 
@@ -792,21 +756,11 @@ async function loadCapturi() {
     return;
   }
 
-  // Fetch profiluri pentru submitted_by separat
-  const userIds = [...new Set(data.filter(c => c.submitted_by).map(c => c.submitted_by))];
-  let profileMap = {};
-  if (userIds.length) {
-    const { data: profiles } = await sb.from('user_profiles')
-      .select('id, username, zoda_id').in('id', userIds);
-    if (profiles) profiles.forEach(p => profileMap[p.id] = p);
-  }
-
   listEl.innerHTML = data.map(c => {
     const statusLabel = { pending:'⏳ Pending', approved:'✅ Aprobat', rejected:'❌ Respins' }[c.status] || c.status;
     const statusColor = { pending:'#f59e0b', approved:'#a3e635', rejected:'#ef4444' }[c.status] || '#64748b';
-    const profile = profileMap[c.submitted_by] || {};
-    const submittedBy = profile.username || '—';
-    const submittedZoda = profile.zoda_id || '';
+    const submittedBy = c.user_profiles?.username || '—';
+    const submittedZoda = c.user_profiles?.zoda_id || '';
     return `
     <div class="captura-card" id="cc-${c.id}">
       <div class="captura-card-hdr">
@@ -837,7 +791,6 @@ async function loadCapturi() {
           <input type="text" id="motiv-${c.id}" placeholder="Motiv respingere (opțional)..."
             style="width:100%;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;" />
         </div>
-        <button onclick="openEditCaptura(${c.id})" style="background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;">✏️ Editează</button>
         <button onclick="adminAproba(${c.id})" style="background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;">✅ Aprobă</button>
         <button onclick="adminRespinge(${c.id})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;">❌ Respinge</button>
       </div>` : ''}
@@ -896,23 +849,39 @@ async function markVideoDeleted(capturaId) {
 }
 
 function openVideoAdmin(url, capturaId) {
-  // Dacă e link YouTube — deschidem direct în tab nou
-  if (url.includes('youtu.be') || url.includes('youtube.com')) {
-    window.open(url, '_blank');
-    return;
-  }
-  // Altfel (Cloudinary etc.) — player inline
   const existing = document.getElementById('video-overlay-admin');
   if (existing) existing.remove();
+
+  // Extrage VIDEO_ID din youtu.be/ID sau youtube.com/watch?v=ID
+  let embedSrc = null;
+  const ytMatch = url.match(/youtu\.be\/([^?&]+)/) || url.match(/youtube\.com\/watch\?v=([^&]+)/);
+  if (ytMatch) {
+    embedSrc = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`;
+  }
+
   const ov = document.createElement('div');
   ov.id = 'video-overlay-admin';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
-  ov.innerHTML = `
-    <video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:12px;"></video>
-    <div style="display:flex;gap:10px;">
-      <button onclick="document.getElementById('video-overlay-admin').remove()" style="background:#111827;border:1px solid #1e293b;color:#f1f5f9;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">✕ Închide</button>
-      <button onclick="markVideoDeleted(${capturaId})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;">🗑️ Șterge video</button>
-    </div>`;
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+
+  if (embedSrc) {
+    ov.innerHTML = `
+      <div style="width:min(90vw,900px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;">
+        <iframe src="${embedSrc}" style="width:100%;height:100%;border:none;" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('video-overlay-admin').remove()" style="background:#111827;border:1px solid #1e293b;color:#f1f5f9;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">✕ Închide</button>
+        <button onclick="markVideoDeleted(${capturaId})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;">🗑️ Șterge video</button>
+      </div>`;
+  } else {
+    // Fallback Cloudinary — video tag normal
+    ov.innerHTML = `
+      <video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:12px;"></video>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('video-overlay-admin').remove()" style="background:#111827;border:1px solid #1e293b;color:#f1f5f9;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">✕ Închide</button>
+        <button onclick="markVideoDeleted(${capturaId})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;">🗑️ Șterge video</button>
+      </div>`;
+  }
+
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
   document.body.appendChild(ov);
 }
@@ -965,7 +934,7 @@ function showLoginErr(msg) {
 
 async function doLogout() {
   await sb.auth.signOut();
-  window.location.href = 'index.html';
+  showScreen('login');
 }
 
 // ── SCREENS ───────────────────────────────────────────────────────────────────
@@ -1009,13 +978,32 @@ async function bootAdmin(user) {
   loadStats();
 }
 
-// Pornire la load — citim din localStorage
+// Pornire la load — citim token din URL (pasat din index.html) sau din localStorage
 async function initAdmin() {
+  const urlToken = new URLSearchParams(location.search).get('token');
+
+  if (urlToken) {
+    // Token pasat din index.html — setăm sesiunea direct, fără așteptare
+    try {
+      const { data, error } = await sb.auth.setSession({
+        access_token: urlToken,
+        refresh_token: urlToken
+      });
+      if (data?.user) {
+        await bootAdmin(data.user);
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Fallback: citim din localStorage (instant, fără request)
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     await bootAdmin(session.user);
     return;
   }
+
+  // Nu e nicio sesiune — afișăm login
   showScreen('login');
 }
 
