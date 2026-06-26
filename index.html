@@ -889,7 +889,9 @@ function renderHof() {
 async function goToAdmin(e) {
   e.preventDefault();
   saveIndexState();
-  window.location.href = 'admin.html';
+  const { data: { session } } = await sb.auth.getSession();
+  const token = session?.access_token || '';
+  window.location.href = 'admin.html' + (token ? '?token=' + token : '');
 }
 
 function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
@@ -2402,12 +2404,16 @@ async function doRegister() {
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
 
-async function doGoogleLogin() {
-  const { error } = await sb.auth.signInWithOAuth({
+function doGoogleLogin() {
+  sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin + '/index.html' }
+    options: {
+      redirectTo: window.location.origin + '/index.html',
+      queryParams: { prompt: 'select_account' }
+    }
+  }).then(({ error }) => {
+    if(error) authShowErr('Eroare Google login: ' + error.message);
   });
-  if(error) authShowErr('Eroare Google login: ' + error.message);
 }
 
 async function doLogout() {
