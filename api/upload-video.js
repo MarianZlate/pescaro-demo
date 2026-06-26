@@ -77,7 +77,9 @@ export default async function handler(req, res) {
           categoryId: '17', // Sports
         },
         status: {
-          privacyStatus: 'unlisted', // Nevizibil public, doar cu link direct
+          privacyStatus: 'unlisted',
+          embeddable: true,
+          selfDeclaredMadeForKids: false,
         },
       },
       media: {
