@@ -193,7 +193,7 @@ function realizareRow(opts) {
       ${date ? `<div class="rez-date">📅 ${date}</div>` : ''}
     </div>
     ${star ? `<div class="rez-star">⭐ +1</div>` : ''}`;
-  if (link) return `<a href="${link}" class="${cls}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #0f172a;transition:background .15s;">${inner}</a>`;
+  if (link) return `<a href="${link}" onclick="savePescarState()" class="${cls}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #0f172a;transition:background .15s;">${inner}</a>`;
   return `<div class="${cls}">${inner}</div>`;
 }
 
@@ -246,6 +246,7 @@ async function boot() {
   document.getElementById('page').style.display = 'block';
   document.title = 'Zoda — ' + (profile.username || zodaId);
   document.getElementById('hdr-subtitle').textContent = profile.username || zodaId;
+  restorePescarState();
 }
 
 function renderHero(profile, steleData) {
@@ -379,6 +380,34 @@ function showError(msg) {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('error-msg').textContent = msg;
   document.getElementById('error-screen').style.display = 'flex';
+}
+
+function savePescarState() {
+  try {
+    var zodaId = new URLSearchParams(location.search).get('id');
+    sessionStorage.setItem('zoda_pescar_state', JSON.stringify({
+      zodaId:  zodaId,
+      scrollY: window.scrollY,
+      tab:     document.getElementById('tab-active').classList.contains('active') ? 'active' : 'trecute',
+    }));
+  } catch(e) {}
+}
+
+function restorePescarState() {
+  try {
+    var raw = sessionStorage.getItem('zoda_pescar_state');
+    if (!raw) return;
+    sessionStorage.removeItem('zoda_pescar_state');
+    var state = JSON.parse(raw);
+    var zodaId = new URLSearchParams(location.search).get('id');
+    if (state.zodaId !== zodaId) return;
+    if (state.tab) switchTab(state.tab);
+    if (state.scrollY) {
+      requestAnimationFrame(function() {
+        window.scrollTo({ top: state.scrollY, behavior: 'instant' });
+      });
+    }
+  } catch(e) {}
 }
 
 boot();
