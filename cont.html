@@ -1335,6 +1335,30 @@ function restoreContState() {
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
+// Detectează dacă userul vine din link de reset parolă
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    // Ascunde loading, afișează pagina
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('hdr').style.display = 'block';
+    document.getElementById('page').style.display = 'block';
+    // Scroll la secțiunea de schimbare parolă și o afișăm
+    setTimeout(() => {
+      const pwdSection = document.getElementById('pwd-section');
+      if (pwdSection) {
+        pwdSection.style.display = 'block';
+        pwdSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Mesaj informativ
+        const msgEl = document.getElementById('save-pwd-msg');
+        if (msgEl) {
+          msgEl.textContent = '👆 Setează o parolă nouă pentru contul tău.';
+          msgEl.className = 'save-msg ok';
+        }
+      }
+    }, 500);
+  }
+});
+
 boot();
 </script>
 </body>
