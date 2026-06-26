@@ -1109,13 +1109,11 @@ async function loadUsers() {
       ? new Date(u.created_at).toLocaleDateString('ro-RO')
       : '—';
 
-    // Badge rol
     let rolBadge;
     if (rol === 'admin')            rolBadge = '<span class="role-badge role-admin">⭐ Admin</span>';
     else if (rol === 'balta_admin') rolBadge = '<span class="role-badge role-balta-admin">🏊 Baltă Admin</span>';
     else                            rolBadge = '<span class="role-badge role-user">User</span>';
 
-    // Butoane acțiuni
     let actiuni;
     if (rol === 'admin') {
       actiuni = u.id === SUPREME_ADMIN_UID
@@ -1593,16 +1591,36 @@ async function saveEditBalta() {
     vizibilitate:   editVizStatus,
   };
 
-  // Dacă s-a setat un admin_zoda_id nou → acordăm rolul balta_admin
+  // Acordăm/confirmăm rolul balta_admin ori de câte ori admin_zoda_id e setat
   const newAdminZodaId = updates.admin_zoda_id;
   const oldAdminZodaId = b.admin_zoda_id || null;
-  if (newAdminZodaId && newAdminZodaId !== oldAdminZodaId) {
+
+  // Dacă s-a șters admin_zoda_id → revocăm rolul fostului admin (dacă nu e admin complet)
+  if (!newAdminZodaId && oldAdminZodaId) {
+    const { data: fostProfil } = await sb.from('user_profiles')
+      .select('id').eq('zoda_id', oldAdminZodaId).single();
+    if (fostProfil?.id) {
+      const { data: rolData } = await sb.from('user_roles').select('rol').eq('id', fostProfil.id).single();
+      if (rolData?.rol === 'balta_admin') {
+        await sb.from('user_roles').upsert({ id: fostProfil.id, rol: 'user' }, { onConflict: 'id' });
+        showToast(`ℹ️ Rolul balta_admin a fost revocat pentru ${oldAdminZodaId}.`);
+      }
+    }
+  }
+
+  // Dacă e setat un ZODA-ID → găsim userul și îi acordăm/confirmăm rolul
+  if (newAdminZodaId) {
     const { data: profil } = await sb.from('user_profiles')
-      .select('id').eq('zoda_id', newAdminZodaId).single();
+      .select('id, username').eq('zoda_id', newAdminZodaId).single();
     if (profil?.id) {
       await sb.from('user_roles').upsert({ id: profil.id, rol: 'balta_admin' }, { onConflict: 'id' });
+      // Notăm în toast că asocierea s-a făcut (util și când e același ZODA-ID)
+      showToast(`✅ ${profil.username || newAdminZodaId} asociat ca administrator al băltii.`);
     } else {
-      showToast(`⚠️ ZODA-ID ${newAdminZodaId} nu a fost găsit — rolul nu a fost acordat.`, true);
+      showToast(`⚠️ ZODA-ID "${newAdminZodaId}" nu a fost găsit în platformă — rolul nu a fost acordat.`, true);
+      // Blocăm salvarea dacă ZODA-ID-ul e invalid
+      saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
+      return;
     }
   }
 
