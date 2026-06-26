@@ -871,7 +871,7 @@ async function submitCaptura() {
     setProgress(5, 'Se uploadează fotografia...');
     const fotoUrl = await uploadToCloudinary(_fotoFile, 'image', pct => setProgress(5 + pct * 0.6, `Foto: ${pct}%`));
 
-    // 2. Upload video pe YouTube (dacă există)
+    // 2. Upload video direct la YouTube din browser (dacă există)
     let videoUrl = null;
     if (_videoFile) {
       const standSel = document.getElementById('mc-stand');
@@ -879,44 +879,79 @@ async function submitCaptura() {
       const dataFmt = data ? new Date(data).toLocaleDateString('ro-RO') : '';
       const titluVideo = `Zoda - ${_baltaAdminNume || 'Balta'} - ${standNume} - ${dataFmt}`;
 
-      const uploadVideoWithRetry = async (maxRetries = 3) => {
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-          try {
-            setProgress(65, attempt > 1 ? `Video: reîncerc (${attempt}/${maxRetries})...` : 'Se uploadează videoclipul...');
-            const fd = new FormData();
-            fd.append('video', _videoFile);
-            fd.append('title', titluVideo);
-            const result = await new Promise((resolve, reject) => {
-              const xhr = new XMLHttpRequest();
-              xhr.open('POST', '/api/upload-video');
-              xhr.timeout = 280000; // 280 secunde timeout
-              xhr.upload.onprogress = e => {
-                if (e.lengthComputable) {
-                  const pct = Math.round(e.loaded / e.total * 100);
-                  setProgress(65 + pct * 0.3, `Video: ${pct}%`);
-                }
-              };
-              xhr.onload = () => {
-                try {
-                  const d = JSON.parse(xhr.responseText);
-                  if (d.url) resolve(d.url);
-                  else reject(new Error(d.error || 'Eroare upload video'));
-                } catch(e) { reject(new Error('Răspuns invalid de la server')); }
-              };
-              xhr.onerror = () => reject(new Error('Eroare rețea'));
-              xhr.ontimeout = () => reject(new Error('Timeout'));
-              xhr.send(fd);
-            });
-            return result;
-          } catch(e) {
-            if (attempt === maxRetries) throw e;
-            // Așteaptă 2 secunde înainte de retry
-            await new Promise(r => setTimeout(r, 2000));
-          }
-        }
-      };
+      setProgress(60, 'Se pregătește upload-ul...');
 
-      videoUrl = await uploadVideoWithRetry();
+      // Pasul 1: obține access token de la Vercel (request mic ~1KB)
+      const tokenRes = await fetch('/api/get-youtube-token', { method: 'POST' });
+      const tokenData = await tokenRes.json();
+      if (!tokenData.access_token) throw new Error(tokenData.error || 'Nu s-a putut obține token YouTube.');
+
+      const accessToken = tokenData.access_token;
+
+      // Pasul 2: inițializează resumable upload la YouTube
+      setProgress(62, 'Se inițializează upload-ul YouTube...');
+      const initRes = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Upload-Content-Type': _videoFile.type || 'video/mp4',
+          'X-Upload-Content-Length': _videoFile.size,
+        },
+        body: JSON.stringify({
+          snippet: {
+            title: titluVideo,
+            description: 'Videoclip dovadă captură — Zoda Platform. Accesat doar de administratori.',
+            tags: ['zoda', 'captura', 'dovada'],
+            categoryId: '17',
+          },
+          status: {
+            privacyStatus: 'unlisted',
+            embeddable: true,
+            selfDeclaredMadeForKids: false,
+          },
+        }),
+      });
+
+      if (!initRes.ok) {
+        const errText = await initRes.text();
+        throw new Error('Eroare inițializare YouTube: ' + errText);
+      }
+
+      // YouTube returnează URL-ul de upload în header-ul Location
+      const uploadUrl = initRes.headers.get('Location');
+      if (!uploadUrl) throw new Error('Nu s-a primit URL de upload de la YouTube.');
+
+      // Pasul 3: upload direct browser → YouTube (fără să treacă prin Vercel)
+      videoUrl = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+        xhr.setRequestHeader('Content-Type', _videoFile.type || 'video/mp4');
+        xhr.timeout = 600000; // 10 minute timeout
+
+        xhr.upload.onprogress = e => {
+          if (e.lengthComputable) {
+            const pct = Math.round(e.loaded / e.total * 100);
+            setProgress(65 + pct * 0.3, `Video: ${pct}%`);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status === 200 || xhr.status === 201) {
+            try {
+              const d = JSON.parse(xhr.responseText);
+              if (d.id) resolve(`https://youtu.be/${d.id}`);
+              else reject(new Error('Nu s-a primit ID video de la YouTube.'));
+            } catch(e) { reject(new Error('Răspuns invalid YouTube.')); }
+          } else {
+            reject(new Error(`Eroare YouTube: ${xhr.status} ${xhr.statusText}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Eroare rețea la upload video.'));
+        xhr.ontimeout = () => reject(new Error('Timeout la upload video.'));
+        xhr.send(_videoFile);
+      });
     }
 
     setProgress(96, 'Se salvează cererea...');
