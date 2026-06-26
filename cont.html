@@ -212,7 +212,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <div class="section-body">
 
       <!-- Avatar + info -->
-      <div class="avatar-row">
+      <div class="avatar-row" style="position:relative;">
         <div class="avatar-wrap">
           <div id="avatar-display"></div>
           <label for="avatar-input" class="avatar-edit-btn" title="Schimbă poza de profil">📷</label>
@@ -223,6 +223,11 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
           <div class="avatar-email" id="display-email">—</div>
           <div class="avatar-member" id="display-member"></div>
         </div>
+        <!-- Buton share profil -->
+        <button onclick="shareProfile()" id="share-profile-btn" title="Distribuie profilul" style="position:absolute;top:0;right:0;background:#111827;border:1px solid #1e293b;color:#94a3b8;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color .2s,color .2s;" onmouseover="this.style.borderColor='#a3e635';this.style.color='#a3e635'" onmouseout="this.style.borderColor='#1e293b';this.style.color='#94a3b8'">
+          🔗 <span style="font-size:12px;font-weight:600;">Distribuie</span>
+        </button>
+        <div id="share-toast" style="display:none;position:absolute;top:0;right:0;background:#1a6b3a;border:1px solid #a3e635;color:#a3e635;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;">✓ Link copiat!</div>
       </div>
 
       <!-- Formular -->
@@ -1064,6 +1069,38 @@ function renderProfile() {
 function copyZodaId() {
   const id = document.getElementById('inp-zoda-id').value;
   navigator.clipboard.writeText(id).then(() => showToast('✓ ID copiat!'));
+}
+
+function shareProfile() {
+  const zodaId = document.getElementById('inp-zoda-id')?.value;
+  if (!zodaId || zodaId === '—') return;
+  const url = window.location.origin + '/pescar.html?id=' + zodaId;
+  const username = document.getElementById('display-name')?.textContent || 'Pescar Zoda';
+  const text = `Profilul meu pe Zoda — ${username} (${zodaId})`;
+
+  // Web Share API — pe mobil deschide meniul nativ (WhatsApp, Facebook, etc.)
+  if (navigator.share) {
+    navigator.share({ title: 'Zoda — ' + username, text, url })
+      .catch(() => {}); // userul a anulat
+    return;
+  }
+
+  // Fallback desktop — copiază linkul
+  navigator.clipboard.writeText(url).then(() => {
+    const toast = document.getElementById('share-toast');
+    const btn = document.getElementById('share-profile-btn');
+    if (toast && btn) {
+      btn.style.display = 'none';
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+        btn.style.display = 'flex';
+      }, 2000);
+    }
+  }).catch(() => {
+    // Fallback final — prompt cu linkul
+    prompt('Copiază linkul profilului tău:', url);
+  });
 }
 
 function viewPublicProfile() {
