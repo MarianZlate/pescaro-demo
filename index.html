@@ -733,6 +733,7 @@ function initMap() {
   });
 
   window.__goToBalta = id => {
+    saveIndexState();
     window.location.href = 'balta.html?id=' + id;
   };
 
@@ -824,7 +825,7 @@ function hofRowHtml(h, extended) {
     ? `<span style="color:#f59e0b;font-size:11px;font-weight:800;">⭐${h.stele}</span>`
     : '<span style="color:#334155;font-size:11px;">—</span>';
   const nameHtml = h.zodaId
-    ? `<a href="pescar.html?id=${h.zodaId}" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</a>`
+    ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</a>`
     : `<span>${h.pe}</span>`;
   return `<div class="hof-row">
     <div class="hof-loc" style="background:${MEDAL_C[h.loc-1]||'#1e293b'};color:${h.loc<=3?'#000':'#a3e635'};">${h.loc<=3?MEDAL_I[h.loc-1]:h.loc}</div>
@@ -887,6 +888,7 @@ function renderHof() {
 
 async function goToAdmin(e) {
   e.preventDefault();
+  saveIndexState();
   const { data: { session } } = await sb.auth.getSession();
   const token = session?.access_token || '';
   window.location.href = 'admin.html' + (token ? '?token=' + token : '');
@@ -987,6 +989,8 @@ async function loadBaltiFromSupabase() {
     .is('deleted_at', null);
   const statUseri = document.getElementById('stat-useri');
   if (statUseri) statUseri.textContent = count || 0;
+  // Restaurează starea paginii dacă userul vine din altă pagină
+  restoreIndexState();
 }
 
 // Adaugă/actualizează markerii pe hartă în funcție de rol.
@@ -2400,13 +2404,12 @@ async function doRegister() {
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
 
-function doGoogleLogin() {
-  sb.auth.signInWithOAuth({
+async function doGoogleLogin() {
+  const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin + '/index.html' }
-  }).then(({ error }) => {
-    if(error) authShowErr('Eroare Google login: ' + error.message);
   });
+  if(error) authShowErr('Eroare Google login: ' + error.message);
 }
 
 async function doLogout() {
@@ -2460,7 +2463,7 @@ async function updateNavForUser(user) {
       <div class="nav-bell" onclick="toggleNotifPanel()" title="Notificări" id="nav-bell-btn">
         🔔${bellBadge}
       </div>
-      <a href="cont.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;background:#111827;border:1px solid #1e293b;border-radius:8px;padding:5px 10px;transition:border-color .2s;" title="Contul meu" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">
+      <a href="cont.html" onclick="saveIndexState()" style="display:flex;align-items:center;gap:7px;text-decoration:none;background:#111827;border:1px solid #1e293b;border-radius:8px;padding:5px 10px;transition:border-color .2s;" title="Contul meu" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">
         ${avatarHtml}
         <span class="nav-user-name">${username}</span>
       </a>
@@ -2595,6 +2598,38 @@ function timeAgo(isoStr) {
 
 function escHtmlNotif(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
+// ── SALVARE/RESTAURARE STARE PAGINĂ ──────────────────────────────────────────
+function saveIndexState() {
+  try {
+    const state = {
+      scrollY: window.scrollY,
+      // Starea panoului de bălți (dacă e deschis un dropdown etc.)
+      // Starea hărții - centru și zoom
+      mapCenter: map ? [map.getCenter().lat, map.getCenter().lng] : null,
+      mapZoom:   map ? map.getZoom() : null,
+    };
+    sessionStorage.setItem('zoda_index_state', JSON.stringify(state));
+  } catch(e) {}
+}
+
+function restoreIndexState() {
+  try {
+    const raw = sessionStorage.getItem('zoda_index_state');
+    if (!raw) return;
+    sessionStorage.removeItem('zoda_index_state');
+    const state = JSON.parse(raw);
+    // Restaurăm scroll
+    if (state.scrollY) {
+      requestAnimationFrame(() => window.scrollTo({ top: state.scrollY, behavior: 'instant' }));
+    }
+    // Restaurăm harta
+    if (state.mapCenter && state.mapZoom && map) {
+      map.setView(state.mapCenter, state.mapZoom, { animate: false });
+    }
+  } catch(e) {}
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
