@@ -874,37 +874,49 @@ async function submitCaptura() {
     // 2. Upload video pe YouTube (dacă există)
     let videoUrl = null;
     if (_videoFile) {
-      setProgress(65, 'Se uploadează videoclipul pe YouTube...');
-
-      // Construiește titlul: "Zoda - Balta X - Stand Y - ZZ.MM.YYYY"
       const standSel = document.getElementById('mc-stand');
       const standNume = standSel.options[standSel.selectedIndex]?.text || 'Stand';
       const dataFmt = data ? new Date(data).toLocaleDateString('ro-RO') : '';
       const titluVideo = `Zoda - ${_baltaAdminNume || 'Balta'} - ${standNume} - ${dataFmt}`;
 
-      const fd = new FormData();
-      fd.append('video', _videoFile);
-      fd.append('title', titluVideo);
-
-      const xhr = new XMLHttpRequest();
-      videoUrl = await new Promise((resolve, reject) => {
-        xhr.open('POST', '/api/upload-video');
-        xhr.upload.onprogress = e => {
-          if (e.lengthComputable) {
-            const pct = Math.round(e.loaded / e.total * 100);
-            setProgress(65 + pct * 0.3, `Video: ${pct}%`);
-          }
-        };
-        xhr.onload = () => {
+      const uploadVideoWithRetry = async (maxRetries = 3) => {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
-            const d = JSON.parse(xhr.responseText);
-            if (d.url) resolve(d.url);
-            else reject(new Error(d.error || 'Eroare upload video'));
-          } catch(e) { reject(new Error('Răspuns invalid de la server')); }
-        };
-        xhr.onerror = () => reject(new Error('Eroare rețea la upload video'));
-        xhr.send(fd);
-      });
+            setProgress(65, attempt > 1 ? `Video: reîncerc (${attempt}/${maxRetries})...` : 'Se uploadează videoclipul...');
+            const fd = new FormData();
+            fd.append('video', _videoFile);
+            fd.append('title', titluVideo);
+            const result = await new Promise((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              xhr.open('POST', '/api/upload-video');
+              xhr.timeout = 280000; // 280 secunde timeout
+              xhr.upload.onprogress = e => {
+                if (e.lengthComputable) {
+                  const pct = Math.round(e.loaded / e.total * 100);
+                  setProgress(65 + pct * 0.3, `Video: ${pct}%`);
+                }
+              };
+              xhr.onload = () => {
+                try {
+                  const d = JSON.parse(xhr.responseText);
+                  if (d.url) resolve(d.url);
+                  else reject(new Error(d.error || 'Eroare upload video'));
+                } catch(e) { reject(new Error('Răspuns invalid de la server')); }
+              };
+              xhr.onerror = () => reject(new Error('Eroare rețea'));
+              xhr.ontimeout = () => reject(new Error('Timeout'));
+              xhr.send(fd);
+            });
+            return result;
+          } catch(e) {
+            if (attempt === maxRetries) throw e;
+            // Așteaptă 2 secunde înainte de retry
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
+      };
+
+      videoUrl = await uploadVideoWithRetry();
     }
 
     setProgress(96, 'Se salvează cererea...');
