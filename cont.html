@@ -875,8 +875,16 @@ async function submitCaptura() {
     let videoUrl = null;
     if (_videoFile) {
       setProgress(65, 'Se uploadează videoclipul pe YouTube...');
+
+      // Construiește titlul: "Zoda - Balta X - Stand Y - ZZ.MM.YYYY"
+      const standSel = document.getElementById('mc-stand');
+      const standNume = standSel.options[standSel.selectedIndex]?.text || 'Stand';
+      const dataFmt = data ? new Date(data).toLocaleDateString('ro-RO') : '';
+      const titluVideo = `Zoda - ${_baltaAdminNume || 'Balta'} - ${standNume} - ${dataFmt}`;
+
       const fd = new FormData();
       fd.append('video', _videoFile);
+      fd.append('title', titluVideo);
 
       const xhr = new XMLHttpRequest();
       videoUrl = await new Promise((resolve, reject) => {
@@ -889,9 +897,9 @@ async function submitCaptura() {
         };
         xhr.onload = () => {
           try {
-            const data = JSON.parse(xhr.responseText);
-            if (data.url) resolve(data.url);
-            else reject(new Error(data.error || 'Eroare upload video'));
+            const d = JSON.parse(xhr.responseText);
+            if (d.url) resolve(d.url);
+            else reject(new Error(d.error || 'Eroare upload video'));
           } catch(e) { reject(new Error('Răspuns invalid de la server')); }
         };
         xhr.onerror = () => reject(new Error('Eroare rețea la upload video'));
