@@ -196,6 +196,11 @@ th,td{padding:8px 6px;}
 .btn-make-admin:hover{background:#2a1800;}
 .btn-remove-admin{background:#0d1f12;border:1px solid #1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-remove-admin:hover{background:#1a3020;}
+.role-balta-admin{background:#0c1a2e;color:#60a5fa;border:1px solid #1e40af;}
+.btn-make-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
+.btn-make-balta-admin:hover{background:#1a2e4a;}
+.btn-revoke-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
+.btn-revoke-balta-admin:hover{background:#1a2e4a;}
 .btn-make-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-make-balta-admin:hover{background:#1a2e4a;}
 .btn-revoke-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
@@ -666,7 +671,7 @@ th,td{padding:8px 6px;}
         <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">GREUTATE (kg) *</label><input type="number" id="ec-kg" step="0.1" min="0.1" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
         <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">DATA CAPTURII *</label><input type="date" id="ec-data" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
       </div>
-      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">ZODA-ID PESCAR</label><input type="text" id="ec-pescar-id" placeholder="ex: ZODA-1042" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#a3e635;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;" /><div style="font-size:10px;color:#334155;margin-top:4px;">Lasă gol dacă pescarul nu are cont pe Zoda.</div></div>
+      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">ZODA-ID PESCAR</label><input type="text" id="ec-pescar-id" placeholder="ex: ZODA-1042" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#a3e635;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;" /></div>
       <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">NUME PESCAR *</label><input type="text" id="ec-pescar-nume" placeholder="ex: Ion Popescu" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
       <div>
         <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">FOTOGRAFIE CAPTURĂ</label>
@@ -683,7 +688,6 @@ th,td{padding:8px 6px;}
     </div>
   </div>
 </div>
-
 <div id="confirm-modal">
   <div class="confirm-inner">
     <div class="confirm-title" id="confirm-title">Ești sigur?</div>
@@ -787,13 +791,6 @@ async function loadCapturi() {
     return;
   }
 
-  const userIds = [...new Set(data.filter(c => c.submitted_by).map(c => c.submitted_by))];
-  let profileMap = {};
-  if (userIds.length) {
-    const { data: profiles } = await sb.from('user_profiles').select('id, username, zoda_id').in('id', userIds);
-    if (profiles) profiles.forEach(p => profileMap[p.id] = p);
-  }
-
   listEl.innerHTML = data.map(c => {
     const statusLabel = { pending:'⏳ Pending', approved:'✅ Aprobat', rejected:'❌ Respins' }[c.status] || c.status;
     const statusColor = { pending:'#f59e0b', approved:'#a3e635', rejected:'#ef4444' }[c.status] || '#64748b';
@@ -846,10 +843,11 @@ async function adminAproba(capturaId) {
   const btn = document.querySelector(`#cc-${capturaId} button`);
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
 
-  const { data: { user } } = await sb.auth.getUser();
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session?.user) { showToast('❌ Sesiunea a expirat. Reîncarcă pagina.', true); if (btn) { btn.disabled = false; btn.textContent = '✅ Aprobă'; } return; }
   const { data, error } = await sb.rpc('aproba_captura', {
     p_captura_id: capturaId,
-    p_admin_id:   user.id,
+    p_admin_id:   session.user.id,
   });
 
   if (error) { showToast('❌ Eroare: ' + error.message, true); if (btn) { btn.disabled = false; btn.textContent = '✅ Aprobă'; } return; }
@@ -869,10 +867,11 @@ async function adminAproba(capturaId) {
 
 async function adminRespinge(capturaId) {
   const motiv = document.getElementById(`motiv-${capturaId}`)?.value.trim() || '';
-  const { data: { user } } = await sb.auth.getUser();
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session?.user) { showToast('❌ Sesiunea a expirat. Reîncarcă pagina.', true); return; }
   const { error } = await sb.rpc('respinge_captura', {
     p_captura_id: capturaId,
-    p_admin_id:   user.id,
+    p_admin_id:   session.user.id,
     p_motiv:      motiv,
   });
   if (error) { showToast('❌ Eroare: ' + error.message, true); return; }
@@ -891,31 +890,21 @@ async function markVideoDeleted(capturaId) {
 function openVideoAdmin(url, capturaId) {
   const existing = document.getElementById('video-overlay-admin');
   if (existing) existing.remove();
-
   const ov = document.createElement('div');
   ov.id = 'video-overlay-admin';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;';
-
-  // Extrage VIDEO_ID din youtu.be/ID sau youtube.com/watch?v=ID
   const ytMatch = url.match(/youtu\.be\/([^?&]+)/) || url.match(/youtube\.com\/watch\?v=([^&]+)/);
-
   if (ytMatch) {
     const videoId = ytMatch[1];
     ov.innerHTML = `
-      <div style="width:min(90vw,900px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;" id="yt-player-wrap">
-        <iframe
-          src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1"
-          style="width:100%;height:100%;border:none;"
-          allow="autoplay; fullscreen; encrypted-media"
-          allowfullscreen>
-        </iframe>
+      <div style="width:min(90vw,900px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;">
+        <iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1" style="width:100%;height:100%;border:none;" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
       </div>
       <div style="display:flex;gap:10px;">
         <button onclick="document.getElementById('video-overlay-admin').remove()" style="background:#111827;border:1px solid #1e293b;color:#f1f5f9;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">✕ Închide</button>
         <button onclick="markVideoDeleted(${capturaId})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;">🗑️ Șterge video</button>
       </div>`;
   } else {
-    // Fallback Cloudinary
     ov.innerHTML = `
       <video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:12px;"></video>
       <div style="display:flex;gap:10px;">
@@ -923,7 +912,6 @@ function openVideoAdmin(url, capturaId) {
         <button onclick="markVideoDeleted(${capturaId})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;">🗑️ Șterge video</button>
       </div>`;
   }
-
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
   document.body.appendChild(ov);
 }
@@ -1029,17 +1017,6 @@ async function initAdmin() {
   }
   showScreen('login');
 }
-
-let _sessionReceived = false;
-sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN') {
-    _sessionReceived = true;
-    bootAdmin(session?.user || null);
-  } else if (event === 'SIGNED_OUT') {
-    showScreen('login');
-  }
-});
-
 initAdmin();
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
