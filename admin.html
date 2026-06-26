@@ -741,7 +741,7 @@ async function loadCapturi() {
 
   const filter = document.getElementById('capturi-filter')?.value || 'pending';
   let query = sb.from('capturi')
-    .select('*, standuri(nume), balti(nume, judet), user_profiles!submitted_by(username, zoda_id)')
+    .select('*, standuri(nume), balti(nume, judet)')
     .order('created_at', { ascending: false })
     .limit(100);
 
@@ -756,11 +756,22 @@ async function loadCapturi() {
     return;
   }
 
+  // Fetch profiluri pentru submitted_by separat
+  const userIds = [...new Set(data.filter(c => c.submitted_by).map(c => c.submitted_by))];
+  let profileMap = {};
+  if (userIds.length) {
+    const { data: profiles } = await sb.from('user_profiles')
+      .select('id, username, zoda_id')
+      .in('id', userIds);
+    if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+  }
+
   listEl.innerHTML = data.map(c => {
     const statusLabel = { pending:'⏳ Pending', approved:'✅ Aprobat', rejected:'❌ Respins' }[c.status] || c.status;
     const statusColor = { pending:'#f59e0b', approved:'#a3e635', rejected:'#ef4444' }[c.status] || '#64748b';
-    const submittedBy = c.user_profiles?.username || '—';
-    const submittedZoda = c.user_profiles?.zoda_id || '';
+    const profile = profileMap[c.submitted_by] || {};
+    const submittedBy = profile.username || '—';
+    const submittedZoda = profile.zoda_id || '';
     return `
     <div class="captura-card" id="cc-${c.id}">
       <div class="captura-card-hdr">
