@@ -2400,12 +2400,13 @@ async function doRegister() {
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
 
-async function doGoogleLogin() {
-  const { error } = await sb.auth.signInWithOAuth({
+function doGoogleLogin() {
+  sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin + '/index.html' }
+  }).then(({ error }) => {
+    if(error) authShowErr('Eroare Google login: ' + error.message);
   });
-  if(error) authShowErr('Eroare Google login: ' + error.message);
 }
 
 async function doLogout() {
