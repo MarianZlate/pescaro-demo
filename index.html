@@ -889,9 +889,7 @@ function renderHof() {
 async function goToAdmin(e) {
   e.preventDefault();
   saveIndexState();
-  const { data: { session } } = await sb.auth.getSession();
-  const token = session?.access_token || '';
-  window.location.href = 'admin.html' + (token ? '?token=' + token : '');
+  window.location.href = 'admin.html';
 }
 
 function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
