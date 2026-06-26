@@ -352,7 +352,7 @@ th,td{padding:8px 6px;}
     </a>
     <span class="admin-badge">ADMIN</span>
     <div class="hdr-right">
-      <a class="back-btn" href="index.html" onclick="event.preventDefault(); window.location.href='index.html';">← Hartă</a>
+      <a class="back-btn" href="index.html">← Hartă</a>
       <button class="logout-btn" onclick="doLogout()">Ieși</button>
       <a href="cont.html" title="Contul meu" style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#a3e635;cursor:pointer;flex-shrink:0;overflow:hidden;text-decoration:none;" id="hdr-avatar"></a>
     </div>
@@ -662,55 +662,25 @@ th,td{padding:8px 6px;}
 <div id="edit-captura-modal" onclick="if(event.target===this)closeEditCaptura()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:700;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:24px 20px 40px;overflow-y:auto;">
   <div style="background:#0d1117;border:1px solid #1e293b;border-radius:16px;width:100%;max-width:560px;overflow:hidden;margin:auto;">
     <div style="background:#111827;padding:18px 20px;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
-      <div>
-        <div style="font-size:15px;font-weight:800;color:#f1f5f9;">✏️ Editează cererea</div>
-        <div style="font-size:11px;color:#4b5563;margin-top:2px;" id="ec-subtitle"></div>
-      </div>
+      <div><div style="font-size:15px;font-weight:800;color:#f1f5f9;">✏️ Editează cererea</div><div style="font-size:11px;color:#4b5563;margin-top:2px;" id="ec-subtitle"></div></div>
       <button onclick="closeEditCaptura()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>
     </div>
     <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
-      <div>
-        <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">STAND *</label>
-        <select id="ec-stand" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;"></select>
-      </div>
+      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">STAND *</label><select id="ec-stand" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;"></select></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">GREUTATE (kg) *</label>
-          <input type="number" id="ec-kg" step="0.1" min="0.1" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" />
-        </div>
-        <div>
-          <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">DATA CAPTURII *</label>
-          <input type="date" id="ec-data" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" />
-        </div>
+        <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">GREUTATE (kg) *</label><input type="number" id="ec-kg" step="0.1" min="0.1" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
+        <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">DATA CAPTURII *</label><input type="date" id="ec-data" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
       </div>
-      <div>
-        <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">ZODA-ID PESCAR</label>
-        <input type="text" id="ec-pescar-id" placeholder="ex: ZODA-1042" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#a3e635;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;" />
-        <div style="font-size:10px;color:#334155;margin-top:4px;">Lasă gol dacă pescarul nu are cont pe Zoda.</div>
-      </div>
-      <div>
-        <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">NUME PESCAR *</label>
-        <input type="text" id="ec-pescar-nume" placeholder="ex: Ion Popescu" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" />
-      </div>
+      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">ZODA-ID PESCAR</label><input type="text" id="ec-pescar-id" placeholder="ex: ZODA-1042" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#a3e635;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;" /><div style="font-size:10px;color:#334155;margin-top:4px;">Lasă gol dacă pescarul nu are cont pe Zoda.</div></div>
+      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">NUME PESCAR *</label><input type="text" id="ec-pescar-nume" placeholder="ex: Ion Popescu" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
       <div>
         <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">FOTOGRAFIE CAPTURĂ</label>
-        <div id="ec-foto-preview-wrap" style="margin-bottom:8px;display:none;">
-          <img id="ec-foto-preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;border:1px solid #1e293b;" />
-          <div style="font-size:10px;color:#4b5563;margin-top:4px;">Foto curentă — încarcă una nouă pentru a o înlocui.</div>
-        </div>
-        <div onclick="document.getElementById('ec-foto-input').click()" style="border:1.5px dashed #1e293b;border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:#0a0f1a;" onmouseover="this.style.borderColor='#334155'" onmouseout="this.style.borderColor='#1e293b'">
-          <div style="font-size:20px;">📷</div>
-          <div style="font-size:12px;color:#64748b;margin-top:4px;" id="ec-foto-text">Click pentru a înlocui fotografia</div>
-        </div>
+        <div id="ec-foto-preview-wrap" style="margin-bottom:8px;display:none;"><img id="ec-foto-preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;border:1px solid #1e293b;" /><div style="font-size:10px;color:#4b5563;margin-top:4px;">Foto curentă — încarcă una nouă pentru a o înlocui.</div></div>
+        <div onclick="document.getElementById('ec-foto-input').click()" style="border:1.5px dashed #1e293b;border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:#0a0f1a;" onmouseover="this.style.borderColor='#334155'" onmouseout="this.style.borderColor='#1e293b'"><div style="font-size:20px;">📷</div><div style="font-size:12px;color:#64748b;margin-top:4px;" id="ec-foto-text">Click pentru a înlocui fotografia</div></div>
         <input type="file" id="ec-foto-input" accept="image/*" style="display:none;" onchange="onEcFotoSelect(this)" />
       </div>
       <div id="ec-err" style="display:none;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:10px 12px;font-size:12px;color:#fca5a5;"></div>
-      <div id="ec-progress" style="display:none;">
-        <div style="font-size:11px;color:#64748b;margin-bottom:6px;" id="ec-progress-text">Se uploadează...</div>
-        <div style="background:#0a0f1a;border-radius:4px;height:6px;overflow:hidden;">
-          <div id="ec-progress-bar" style="height:100%;background:#1a6b3a;width:0%;transition:width .3s;border-radius:4px;"></div>
-        </div>
-      </div>
+      <div id="ec-progress" style="display:none;"><div style="font-size:11px;color:#64748b;margin-bottom:6px;" id="ec-progress-text">Se uploadează...</div><div style="background:#0a0f1a;border-radius:4px;height:6px;overflow:hidden;"><div id="ec-progress-bar" style="height:100%;background:#1a6b3a;width:0%;transition:width .3s;border-radius:4px;"></div></div></div>
     </div>
     <div style="padding:14px 20px;border-top:1px solid #1e293b;display:flex;justify-content:flex-end;gap:10px;background:#111827;position:sticky;bottom:0;">
       <button onclick="closeEditCaptura()" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:13px;padding:9px 20px;border-radius:8px;cursor:pointer;">Anulează</button>
@@ -879,108 +849,6 @@ async function loadCapturi() {
   }).join('');
 }
 
-// ── EDIT CAPTURĂ ─────────────────────────────────────────────────────────────
-let _ecCapturaId = null;
-let _ecFotoFile  = null;
-let _ecFotoUrl   = null;
-
-async function openEditCaptura(capturaId) {
-  _ecCapturaId = capturaId;
-  _ecFotoFile  = null;
-  const modal = document.getElementById('edit-captura-modal');
-  modal.style.display = 'flex';
-  document.getElementById('ec-err').style.display = 'none';
-  document.getElementById('ec-progress').style.display = 'none';
-  document.getElementById('ec-save-btn').disabled = false;
-  document.getElementById('ec-save-btn').textContent = '💾 Salvează';
-  document.getElementById('ec-subtitle').textContent = 'Se încarcă...';
-
-  const { data: c, error } = await sb.from('capturi')
-    .select('*, standuri(id,nume), balti(id,nume)')
-    .eq('id', capturaId).single();
-  if (error || !c) { document.getElementById('ec-err').textContent = 'Eroare la încărcare.'; document.getElementById('ec-err').style.display = 'block'; return; }
-
-  _ecFotoUrl = c.foto_url;
-  document.getElementById('ec-subtitle').textContent = `${c.balti?.nume || '—'} · ${c.pescar_nume || '—'} · ${c.kg} kg`;
-
-  const standSel = document.getElementById('ec-stand');
-  standSel.innerHTML = '<option value="">Se încarcă...</option>';
-  const { data: standuri } = await sb.from('standuri').select('id, nume').eq('balta_id', c.balta_id).order('nume');
-  standSel.innerHTML = (standuri || []).map(s => `<option value="${s.id}" ${s.id === c.stand_id ? 'selected' : ''}>${escHtml(s.nume)}</option>`).join('');
-
-  document.getElementById('ec-kg').value         = c.kg || '';
-  document.getElementById('ec-data').value        = c.data_captura || '';
-  document.getElementById('ec-pescar-id').value   = c.pescar_id || '';
-  document.getElementById('ec-pescar-nume').value = c.pescar_nume || '';
-  document.getElementById('ec-foto-text').textContent = 'Click pentru a înlocui fotografia';
-
-  const prevWrap = document.getElementById('ec-foto-preview-wrap');
-  const prevImg  = document.getElementById('ec-foto-preview');
-  if (c.foto_url) { prevImg.src = c.foto_url; prevWrap.style.display = 'block'; }
-  else { prevWrap.style.display = 'none'; }
-}
-
-function closeEditCaptura() {
-  document.getElementById('edit-captura-modal').style.display = 'none';
-  _ecCapturaId = null; _ecFotoFile = null;
-}
-
-function onEcFotoSelect(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { document.getElementById('ec-err').textContent = 'Poza depășește 10 MB.'; document.getElementById('ec-err').style.display = 'block'; return; }
-  _ecFotoFile = file;
-  document.getElementById('ec-foto-text').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
-  const prevImg = document.getElementById('ec-foto-preview');
-  const prevWrap = document.getElementById('ec-foto-preview-wrap');
-  prevImg.src = URL.createObjectURL(file);
-  prevWrap.style.display = 'block';
-}
-
-async function saveEditCaptura() {
-  const errEl = document.getElementById('ec-err');
-  errEl.style.display = 'none';
-  const standId    = document.getElementById('ec-stand').value;
-  const kg         = parseFloat(document.getElementById('ec-kg').value);
-  const data       = document.getElementById('ec-data').value;
-  const pescarId   = document.getElementById('ec-pescar-id').value.trim();
-  const pescarNume = document.getElementById('ec-pescar-nume').value.trim();
-  if (!standId)       { errEl.textContent = 'Selectează un stand.'; errEl.style.display='block'; return; }
-  if (!kg || kg <= 0) { errEl.textContent = 'Greutate invalidă.';   errEl.style.display='block'; return; }
-  if (!data)          { errEl.textContent = 'Selectează data.';      errEl.style.display='block'; return; }
-  if (!pescarNume)    { errEl.textContent = 'Introdu numele pescarului.'; errEl.style.display='block'; return; }
-  const btn = document.getElementById('ec-save-btn');
-  btn.disabled = true; btn.textContent = '⏳ Se salvează...';
-  try {
-    let fotoUrl = _ecFotoUrl;
-    if (_ecFotoFile) {
-      document.getElementById('ec-progress').style.display = 'block';
-      fotoUrl = await new Promise((resolve, reject) => {
-        const fd = new FormData();
-        fd.append('file', _ecFotoFile);
-        fd.append('upload_preset', CLOUDINARY_PRESET);
-        fd.append('tags', 'captura_foto_zoda');
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
-        xhr.upload.onprogress = e => { if (e.lengthComputable) { document.getElementById('ec-progress-bar').style.width = Math.round(e.loaded/e.total*100) + '%'; } };
-        xhr.onload = () => { try { const d = JSON.parse(xhr.responseText); if (d.secure_url) resolve(d.secure_url); else reject(new Error(d.error?.message || 'Eroare upload')); } catch(e) { reject(e); } };
-        xhr.onerror = () => reject(new Error('Eroare rețea'));
-        xhr.send(fd);
-      });
-    }
-    const { error } = await sb.from('capturi').update({ stand_id: parseInt(standId), kg, data_captura: data, pescar_id: pescarId || null, pescar_nume: pescarNume, foto_url: fotoUrl }).eq('id', _ecCapturaId);
-    if (error) throw new Error(error.message);
-    showToast('✅ Cererea a fost actualizată!');
-    closeEditCaptura();
-    loadCapturi();
-  } catch(e) {
-    errEl.textContent = '⚠️ ' + e.message; errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = '💾 Salvează';
-    document.getElementById('ec-progress').style.display = 'none';
-  }
-}
-// ──────────────────────────────────────────────────────────────────────────────
-
 async function adminAproba(capturaId) {
   const btn = document.querySelector(`#cc-${capturaId} button`);
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
@@ -1028,6 +896,12 @@ async function markVideoDeleted(capturaId) {
 }
 
 function openVideoAdmin(url, capturaId) {
+  // Dacă e link YouTube — deschidem direct în tab nou
+  if (url.includes('youtu.be') || url.includes('youtube.com')) {
+    window.open(url, '_blank');
+    return;
+  }
+  // Altfel (Cloudinary etc.) — player inline
   const existing = document.getElementById('video-overlay-admin');
   if (existing) existing.remove();
   const ov = document.createElement('div');
