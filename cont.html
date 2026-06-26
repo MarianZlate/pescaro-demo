@@ -194,7 +194,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   <div id="hdr-in">
     <a href="index.html" class="logo">Zoda<span class="badge">BETA</span></a>
     <span class="hdr-title">Contul meu</span>
-    <a href="index.html" class="back-btn">← Înapoi</a>
+    <a href="index.html" onclick="event.preventDefault(); history.back();" class="back-btn">← Înapoi</a>
   </div>
 </div>
 
@@ -559,6 +559,7 @@ async function boot() {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
   document.getElementById('page').style.display = 'block';
+  restoreContState();
 }
 
 // ── NOTIFICĂRI ────────────────────────────────────────────────────────────────
@@ -1239,6 +1240,28 @@ async function doLogout() {
 }
 
 // ── START ────────────────────────────────────────────────────────────────────
+// ── SALVARE/RESTAURARE STARE PAGINĂ ──────────────────────────────────────────
+function saveContState() {
+  try {
+    sessionStorage.setItem('zoda_cont_state', JSON.stringify({
+      scrollY: window.scrollY,
+    }));
+  } catch(e) {}
+}
+
+function restoreContState() {
+  try {
+    const raw = sessionStorage.getItem('zoda_cont_state');
+    if (!raw) return;
+    sessionStorage.removeItem('zoda_cont_state');
+    const state = JSON.parse(raw);
+    if (state.scrollY) {
+      requestAnimationFrame(() => window.scrollTo({ top: state.scrollY, behavior: 'instant' }));
+    }
+  } catch(e) {}
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 boot();
 </script>
 </body>
