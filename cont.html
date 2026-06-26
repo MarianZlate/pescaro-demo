@@ -477,7 +477,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div class="video-zone" id="zona-video" onclick="document.getElementById('mc-video-input').click()">
           <div style="font-size:24px;margin-bottom:6px;">🎬</div>
           <div style="font-size:12px;font-weight:700;color:#64748b;" id="video-zone-text">Click sau trage videoclipul aici</div>
-          <div style="font-size:10px;color:#334155;margin-top:3px;">MP4, MOV — max 200 MB — arhivat 15 zile, accesat doar de admini</div>
+          <div style="font-size:10px;color:#334155;margin-top:3px;">MP4, MOV — fără limită de dimensiune — arhivat 15 zile, accesat doar de admini</div>
         </div>
         <input type="file" id="mc-video-input" accept="video/*" style="display:none;" onchange="onVideoSelect(this)" />
       </div>
@@ -801,9 +801,6 @@ function onFotoSelect(input) {
 function onVideoSelect(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 200 * 1024 * 1024) {
-    showErr('Videoclipul depășește 200 MB.'); return;
-  }
   _videoFile = file;
   document.getElementById('zona-video').classList.add('has-file');
   document.getElementById('video-zone-text').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
@@ -874,11 +871,32 @@ async function submitCaptura() {
     setProgress(5, 'Se uploadează fotografia...');
     const fotoUrl = await uploadToCloudinary(_fotoFile, 'image', pct => setProgress(5 + pct * 0.6, `Foto: ${pct}%`));
 
-    // 2. Upload video (dacă există)
+    // 2. Upload video pe YouTube (dacă există)
     let videoUrl = null;
     if (_videoFile) {
-      setProgress(65, 'Se uploadează videoclipul dovadă...');
-      videoUrl = await uploadToCloudinary(_videoFile, 'video', pct => setProgress(65 + pct * 0.3, `Video: ${pct}%`));
+      setProgress(65, 'Se uploadează videoclipul pe YouTube...');
+      const fd = new FormData();
+      fd.append('video', _videoFile);
+
+      const xhr = new XMLHttpRequest();
+      videoUrl = await new Promise((resolve, reject) => {
+        xhr.open('POST', '/api/upload-video');
+        xhr.upload.onprogress = e => {
+          if (e.lengthComputable) {
+            const pct = Math.round(e.loaded / e.total * 100);
+            setProgress(65 + pct * 0.3, `Video: ${pct}%`);
+          }
+        };
+        xhr.onload = () => {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.url) resolve(data.url);
+            else reject(new Error(data.error || 'Eroare upload video'));
+          } catch(e) { reject(new Error('Răspuns invalid de la server')); }
+        };
+        xhr.onerror = () => reject(new Error('Eroare rețea la upload video'));
+        xhr.send(fd);
+      });
     }
 
     setProgress(96, 'Se salvează cererea...');
