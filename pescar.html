@@ -231,6 +231,29 @@ async function boot() {
     .select('id, nume, rec_kg, rec_data, balta_id, balti(nume, judet)')
     .eq('rec_pescar_id', zodaId);
 
+  // 4b. Standuri pentru recordurile trecute (din stele_log tip record_stand)
+  const { data: steleLogRaw } = await sb
+    .from('stele_log')
+    .select('id, tip, referinta, balta_id, created_at, balti(nume)')
+    .eq('zoda_id', zodaId)
+    .order('created_at', { ascending: false });
+
+  // Fetch nume standuri pentru recorduri trecute
+  const activeStandIdsTemp = new Set((recorduriActive || []).map(s => String(s.id)));
+  const trecuteStandIds = (steleLogRaw || [])
+    .filter(l => l.tip === 'record_stand' && !activeStandIdsTemp.has(l.referinta))
+    .map(l => parseInt(l.referinta))
+    .filter(Boolean);
+
+  let standuriTrecuteMap = {};
+  if (trecuteStandIds.length) {
+    const { data: standuriTrecute } = await sb
+      .from('standuri')
+      .select('id, nume')
+      .in('id', trecuteStandIds);
+    (standuriTrecute || []).forEach(s => { standuriTrecuteMap[s.id] = s.nume; });
+  }
+
   // 5. Top 10 lunar istoric
   const { data: top10Istoric } = await sb
     .from('top10_lunar_istoric')
@@ -239,7 +262,7 @@ async function boot() {
     .order('luna', { ascending: false });
 
   renderHero(profile, steleData);
-  renderRealizari(steleLog || [], recorduriActive || [], top10Istoric || []);
+  renderRealizari(steleLogRaw || [], recorduriActive || [], top10Istoric || [], standuriTrecuteMap);
 
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
@@ -278,7 +301,7 @@ function renderHero(profile, steleData) {
     '<span style="color:#1e293b;">Nicio stea câștigată încă</span>';
 }
 
-function renderRealizari(steleLog, recorduriActive, top10Istoric) {
+function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecuteMap) {
   const activeList   = document.getElementById('active-list');
   const trecuteList  = document.getElementById('trecute-list');
 
@@ -314,8 +337,8 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric) {
   top10Istoric
     .filter(t => luniRecenteSet.has(t.luna))
     .forEach(t => {
-      const [an, luna] = t.luna.split('-');
-      const lunaFmt = new Date(parseInt(an), parseInt(luna) - 1).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
+      const _p1 = t.luna.split('-');
+      const lunaFmt = new Date(parseInt(_p1[1]), parseInt(_p1[0]) - 1).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
       const baltaNume = t.balti?.nume || '—';
       activeHtml += realizareRow({
         iconWrapClass: 'green',
@@ -337,16 +360,18 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric) {
   steleLog
     .filter(l => l.tip === 'record_stand' && !activeStandIds.has(l.referinta))
     .forEach(l => {
-      const baltaNume = l.balti?.nume || '—';
+      const baltaNume  = l.balti?.nume || '—';
+      const standNume  = standuriTrecuteMap[parseInt(l.referinta)] || '';
+      const titleStr   = standNume ? `Record Stand — ${standNume}` : 'Record Stand — deținut anterior';
       trecuteHtml += realizareRow({
         iconWrapClass: 'gray',
         icon: '🏆',
-        title: `Record Stand — deținut anterior`,
-        meta: `${baltaNume}`,
+        title: titleStr,
+        meta: baltaNume,
         star: false,
         date: 'Câștigat la ' + fmtDate(l.created_at),
         trecut: true,
-        link: null,
+        link: l.balta_id ? `balta.html?id=${l.balta_id}` : null,
       });
     });
 
@@ -354,8 +379,8 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric) {
   top10Istoric
     .filter(t => !luniRecenteSet.has(t.luna))
     .forEach(t => {
-      const [an, luna] = t.luna.split('-');
-      const lunaFmt = new Date(parseInt(an), parseInt(luna) - 1).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
+      const _p2 = t.luna.split('-');
+      const lunaFmt = new Date(parseInt(_p2[1]), parseInt(_p2[0]) - 1).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
       const baltaNume = t.balti?.nume || '—';
       trecuteHtml += realizareRow({
         iconWrapClass: 'gray',
