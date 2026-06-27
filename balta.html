@@ -279,7 +279,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <span id="hdr-balta-name">—</span>
       <span id="hdr-balta-loc"></span>
     </div>
-    <a href="index.html" class="back-btn" onclick="event.preventDefault(); saveBaltaState(); history.back();">← Înapoi</a>
+    <a href="index.html" class="back-btn" onclick="event.preventDefault(); saveBaltaState(); if(history.length > 1) { history.back(); } else { window.location.href='index.html'; }">← Înapoi</a>
   </div>
 </div>
 
