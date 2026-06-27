@@ -254,15 +254,22 @@ async function boot() {
     (standuriTrecute || []).forEach(s => { standuriTrecuteMap[s.id] = s.nume; });
   }
 
-  // 5. Top 10 lunar istoric
+  // 5. Top 10 lunar istoric — ordonăm după pozitie, apoi sortăm în JS după dată
   const { data: top10Istoric } = await sb
     .from('top10_lunar_istoric')
     .select('luna, pozitie, kg_total, balta_id, balti(nume)')
     .eq('zoda_id', zodaId)
-    .order('luna', { ascending: false });
+    .order('pozitie', { ascending: true });
+
+  // Sortăm în JS: MM-YYYY → dată reală, descrescător (cea mai recentă prima)
+  const top10Sortat = (top10Istoric || []).sort((a, b) => {
+    const [ma, ya] = a.luna.split('-').map(Number);
+    const [mb, yb] = b.luna.split('-').map(Number);
+    return (yb - ya) || (mb - ma);
+  });
 
   renderHero(profile, steleData);
-  renderRealizari(steleLogRaw || [], recorduriActive || [], top10Istoric || [], standuriTrecuteMap);
+  renderRealizari(steleLogRaw || [], recorduriActive || [], top10Sortat, standuriTrecuteMap);
 
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
