@@ -556,7 +556,7 @@ async function boot() {
   await Promise.all([loadCapturi(), loadStele(), loadNotificari()]);
 
   // Secțiune balta_admin
-  if (currentRole === 'balta_admin' || currentRole === 'admin') {
+  if (currentRole === 'balta_admin' || currentRole === 'zoda_admin') {
     await loadBaltiAdmin();
     document.getElementById('section-balta-admin').style.display = 'block';
   }
@@ -729,6 +729,7 @@ function toggleFaraCont(checked) {
   } else {
     document.getElementById('mc-pescar-search').disabled = false;
   }
+  checkFormValid();
 }
 
 function clearPescar() {
@@ -854,12 +855,6 @@ function checkFormValid() {
     btn.style.color      = '#4b5563';
     btn.style.cursor     = 'not-allowed';
     btn.title            = 'Completează toate câmpurile, adaugă fotografie și videoclip';
-  }
-} else {
-    btn.style.background = '#1e293b';
-    btn.style.color      = '#4b5563';
-    btn.style.cursor     = 'not-allowed';
-    btn.title            = 'Completează toate câmpurile și adaugă o fotografie';
   }
 }
 
