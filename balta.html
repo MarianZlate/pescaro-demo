@@ -623,7 +623,7 @@ function renderPage(hartaUrl) {
   // Pills standuri
   if (ST.length > 0) {
     document.getElementById('pills').innerHTML = ST.map(function(s){
-      return '<button class="pill" data-id="'+s.id+'" onclick="selStand('+s.id+')">'+s.nr+'</button>';
+      return '<button class="pill" data-id="'+s.id+'" onclick="selStand('+s.id+')">'+escH(s.z)+'</button>';
     }).join('');
     document.getElementById('spr-count').textContent = ST.length + ' standuri disponibile';
     document.getElementById('pill-drum').style.display = DRUM_ACCES_YT ? 'inline-block' : 'none';
