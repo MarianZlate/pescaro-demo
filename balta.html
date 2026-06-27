@@ -551,24 +551,10 @@ async function loadBalta(id) {
   // Arată edit bar DOAR dacă pagina e deschisă cu ?edit=1 din admin
   var editParam = new URLSearchParams(location.search).get('edit') === '1';
   if (editParam) {
-    var urlToken = new URLSearchParams(location.search).get('token');
-
     async function checkAdminAndShowBar() {
-      var user = null;
-
-      // Dacă avem token în URL, setăm sesiunea manual
-      if (urlToken) {
-        try {
-          var setRes = await sb.auth.setSession({ access_token: urlToken, refresh_token: urlToken });
-          user = setRes.data && setRes.data.user;
-        } catch(e) {}
-      }
-
-      // Fallback: getUser() direct
-      if (!user) {
-        var guRes = await sb.auth.getUser(urlToken || undefined);
-        user = guRes.data && guRes.data.user;
-      }
+      // Citim sesiunea din localStorage (zoda-auth) — fără token în URL
+      var { data: { session } } = await sb.auth.getSession();
+      var user = session?.user;
 
       if (!user) return;
 
@@ -1398,7 +1384,7 @@ function refreshLegendList() {
 
 function toggleEdit() {
   // Salvează pozițiile originale și ordinea pentru cancel
-  _origPositions = ST.map(function(s) { return { id: s.id, x: s.x, y: s.y }; });
+  _origPositions = ST.map(function(s) { return { id: s.id, x: s.x, y: s.y, sort_order: s.sort_order }; });
 
   editMode = true;
   closeOverlay();
@@ -1426,10 +1412,10 @@ function toggleEdit() {
 }
 
 function cancelEdit() {
-  // Restaurează pozițiile originale
+  // Restaurează pozițiile și sort_order originale
   _origPositions.forEach(function(orig) {
     var s = ST.find(function(x) { return x.id === orig.id; });
-    if (s) { s.x = orig.x; s.y = orig.y; }
+    if (s) { s.x = orig.x; s.y = orig.y; s.sort_order = orig.sort_order; }
   });
   // Restaurează ordinea originală a ST
   ST.sort(function(a, b) {
@@ -1438,6 +1424,8 @@ function cancelEdit() {
     return oa - ob;
   });
   ST.forEach(function(s, i) { s.nr = i + 1; });
+  // Re-renderizează lista drag&drop cu ordinea originală
+  renderSortList();
   exitEditMode();
   renderPins();
 }
