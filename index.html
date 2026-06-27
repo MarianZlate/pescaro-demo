@@ -897,9 +897,7 @@ function renderHof() {
 async function goToAdmin(e) {
   e.preventDefault();
   saveIndexState();
-  const { data: { session } } = await sb.auth.getSession();
-  const token = session?.access_token || '';
-  window.location.href = 'admin.html' + (token ? '?token=' + token : '');
+  window.location.href = 'admin.html';
 }
 
 function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
@@ -1791,7 +1789,7 @@ async function abSubmit() {
     } catch(e) { console.warn('Eroare upload poza stand', e); }
   }
 
-  // 4. Upload harta baltii pe Cloudinary (dacă există)
+  // 4. Upload harta baltii pe R2 (dacă există)
   const hartaUrl  = window._hartaUrl;   // pre-uploadat la selectarea fișierului
   const hartaFile = window._hartaFile;  // fișier neuploadat încă (fallback)
 
@@ -2400,17 +2398,18 @@ async function doRegister() {
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
 
-async function doGoogleLogin() {
-  const { data, error } = await sb.auth.signInWithOAuth({
+function doGoogleLogin() {
+  sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: window.location.origin + '/index.html',
       queryParams: { prompt: 'select_account' },
       skipBrowserRedirect: true,
     }
+  }).then(({ data, error }) => {
+    if (error) { authShowErr('Eroare Google login: ' + error.message); return; }
+    if (data?.url) window.location.href = data.url;
   });
-  if (error) { authShowErr('Eroare Google login: ' + error.message); return; }
-  if (data?.url) window.location.href = data.url;
 }
 
 async function doLogout() {
