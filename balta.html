@@ -176,6 +176,14 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .li.sortable .li-drag-handle{display:flex;align-items:center;}
 .li.drag-over{border-color:#a3e635;background:#0d1f12;}
 .li.dragging-item{opacity:.4;}
+/* Sort list in edit mode */
+.sort-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #0f172a;cursor:grab;touch-action:none;transition:background .15s;}
+.sort-row:last-child{border-bottom:none;}
+.sort-row:hover{background:#1e293b;}
+.sort-row.drag-over{background:#0d1f12;border-color:#a3e635;}
+.sort-row.dragging-item{opacity:.4;}
+.sort-row-handle{color:#334155;font-size:20px;flex-shrink:0;}
+.sort-row-name{font-size:13px;font-weight:700;color:#f1f5f9;flex:1;}
 .lnr{width:22px;height:22px;border-radius:50%;background:#e8142a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#fff;flex-shrink:0;}
 .lz{font-size:11px;color:#94a3b8;}
 .ls{font-size:9px;color:#4b5563;margin-top:1px;}
@@ -366,6 +374,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
       <div id="pills"></div>
     </div><!-- /#pw -->
+
+    <!-- Lista reordonare standuri — vizibila doar in edit mode -->
+    <div id="sort-list" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;">
+      <div style="padding:10px 14px;border-bottom:1px solid #1e293b;font-size:11px;font-weight:700;color:#f59e0b;">⠿ Trage pentru a reordona standurile</div>
+      <div id="sort-list-items"></div>
+    </div>
 
     <!-- Placeholder când niciun stand nu e selectat -->
     <div id="spr" style="background:#111827;border:1px dashed #1e293b;border-radius:12px;padding:20px;text-align:center;">
@@ -1171,13 +1185,107 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { clo
 var _origPositions = []; // backup pentru Anulează
 
 function liClick(e, standId) {
-  // În edit mode click-ul nu selectează standul (doar drag handle)
   if (editMode) return;
   selStand(standId);
 }
 
-// ── SORTARE LISTĂ STANDURI ────────────────────────────────────────────────────
-var _dragSrcId = null;
+// ── SORT LIST (reordonare standuri în edit mode) ───────────────────────────────
+var _sortDragSrcIdx = null;
+
+function renderSortList() {
+  var container = document.getElementById('sort-list-items');
+  if (!container) return;
+  container.innerHTML = ST.map(function(s, i) {
+    return '<div class="sort-row" data-idx="' + i + '" data-id="' + s.id + '">'
+      + '<span class="sort-row-handle">⠿</span>'
+      + '<span class="sort-row-name">' + escH(s.z) + '</span>'
+      + '</div>';
+  }).join('');
+  initSortListDrag();
+}
+
+function initSortListDrag() {
+  var container = document.getElementById('sort-list-items');
+  if (!container) return;
+  var rows = container.querySelectorAll('.sort-row');
+
+  rows.forEach(function(row) {
+    // Mouse
+    row.setAttribute('draggable', 'true');
+    row.addEventListener('dragstart', function(e) {
+      _sortDragSrcIdx = parseInt(row.dataset.idx);
+      row.classList.add('dragging-item');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', function() {
+      row.classList.remove('dragging-item');
+      container.querySelectorAll('.sort-row').forEach(function(r) { r.classList.remove('drag-over'); });
+    });
+    row.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      container.querySelectorAll('.sort-row').forEach(function(r) { r.classList.remove('drag-over'); });
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var dstIdx = parseInt(row.dataset.idx);
+      if (_sortDragSrcIdx === null || _sortDragSrcIdx === dstIdx) return;
+      var moved = ST.splice(_sortDragSrcIdx, 1)[0];
+      ST.splice(dstIdx, 0, moved);
+      ST.forEach(function(s, i) { s.nr = i + 1; });
+      renderSortList();
+      updatePills();
+    });
+
+    // Touch
+    var touchStartY = 0, touchClone = null;
+    row.addEventListener('touchstart', function(e) {
+      _sortDragSrcIdx = parseInt(row.dataset.idx);
+      touchStartY = e.touches[0].clientY;
+      row.classList.add('dragging-item');
+      touchClone = row.cloneNode(true);
+      touchClone.style.cssText = 'position:fixed;opacity:.85;pointer-events:none;z-index:9999;width:' + row.offsetWidth + 'px;background:#1e293b;border-radius:8px;left:' + row.getBoundingClientRect().left + 'px;';
+      document.body.appendChild(touchClone);
+      e.preventDefault();
+    }, { passive: false });
+
+    row.addEventListener('touchmove', function(e) {
+      if (!touchClone) return;
+      var t = e.touches[0];
+      touchClone.style.top = (t.clientY - 24) + 'px';
+      touchClone.style.display = 'none';
+      var el = document.elementFromPoint(t.clientX, t.clientY);
+      touchClone.style.display = '';
+      container.querySelectorAll('.sort-row').forEach(function(r) { r.classList.remove('drag-over'); });
+      var target = el ? el.closest('.sort-row') : null;
+      if (target && target !== row) target.classList.add('drag-over');
+      e.preventDefault();
+    }, { passive: false });
+
+    row.addEventListener('touchend', function(e) {
+      if (!touchClone) return;
+      var t = e.changedTouches[0];
+      touchClone.style.display = 'none';
+      var el = document.elementFromPoint(t.clientX, t.clientY);
+      touchClone.style.display = '';
+      document.body.removeChild(touchClone);
+      touchClone = null;
+      row.classList.remove('dragging-item');
+      container.querySelectorAll('.sort-row').forEach(function(r) { r.classList.remove('drag-over'); });
+      var target = el ? el.closest('.sort-row') : null;
+      if (target && target !== row) {
+        var dstIdx = parseInt(target.dataset.idx);
+        if (_sortDragSrcIdx !== null && _sortDragSrcIdx !== dstIdx) {
+          var moved = ST.splice(_sortDragSrcIdx, 1)[0];
+          ST.splice(dstIdx, 0, moved);
+          ST.forEach(function(s, i) { s.nr = i + 1; });
+          renderSortList();
+          updatePills();
+        }
+      }
+    });
+  });
+}
 
 function initSortableList() {
   var list = document.getElementById('legend-list');
@@ -1308,8 +1416,13 @@ function toggleEdit() {
 
   document.getElementById('map-wrap').style.userSelect = 'none';
   renderPins();
-  // Afișează automat lista standurilor pentru reordonare
-  showAll();
+  // Afișează lista de reordonare, ascunde pills normale
+  document.getElementById('pw').style.display = 'none';
+  document.getElementById('sort-list').style.display = 'block';
+  document.getElementById('spr').style.display = 'none';
+  document.getElementById('legend-card').style.display = 'none';
+  document.getElementById('stand-overlay').style.display = 'none';
+  renderSortList();
 }
 
 function cancelEdit() {
@@ -1338,7 +1451,11 @@ function exitEditMode() {
   document.getElementById('edit-status-icon').textContent  = '🔒';
   document.getElementById('edit-status-title').style.color = '#e2e8f0';
   document.getElementById('map-wrap').style.userSelect = '';
-  // Dezactivează drag & drop în lista de standuri
+  // Ascunde sort-list, redă pills
+  document.getElementById('sort-list').style.display = 'none';
+  document.getElementById('pw').style.display = 'flex';
+  document.getElementById('spr').style.display = 'block';
+  // Dezactivează drag & drop în legend-list
   document.querySelectorAll('#legend-list .li').forEach(function(item) {
     item.classList.remove('sortable', 'dragging-item', 'drag-over');
     item.removeAttribute('draggable');
