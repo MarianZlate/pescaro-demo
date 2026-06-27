@@ -695,8 +695,15 @@ nav{display:flex;align-items:center;gap:6px;}
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
 const SUPA_URL = 'https://emnesflrzptqfttlzusw.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbmVzZmxyenB0cWZ0dGx6dXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NTc5NDUsImV4cCI6MjA5NzUzMzk0NX0.LoR6peujcdm1SLZ8SUSdtSH8wDa_ptCUEYT3qtAPZXk';
-const CLOUDINARY_CLOUD = 'dlafkx65j';
-const CLOUDINARY_PRESET = 'ml_default';
+// ── Cloudinary eliminat — upload via Cloudflare R2 ──────────────────────────
+async function uploadToR2(file, folder) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const resp = await fetch(`/api/r2-upload?folder=${folder}`, { method: 'POST', body: fd });
+  const data = await resp.json();
+  if (!resp.ok || !data.url) throw new Error(data.error || 'Eroare upload R2');
+  return data.url;
+}
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: {
     persistSession: true,
@@ -1460,25 +1467,13 @@ async function saveEditBalta() {
     window._editHartaUrl = null;
   } else if(editHartaFile) {
     try {
-      const fd = new FormData();
-      fd.append('file', editHartaFile);
-      fd.append('upload_preset', CLOUDINARY_PRESET);
-      fd.append('tags', 'harta_balta');
-      const upResp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
-      const upData = await upResp.json();
-      if(upData.secure_url) {
-        // Șterge harta veche din poze (dacă există) și inserează noua
-        await sb.from('poze').delete().eq('balta_id', editBaltaId).is('stand_id', null);
-        await sb.from('poze').insert({ balta_id: editBaltaId, url: upData.secure_url, stand_id: null });
-        console.log('✅ Hartă baltă uploadată la salvare:', upData.secure_url);
-      } else {
-        console.error('❌ Cloudinary error (hartă baltă):', upData);
-        showToast('⚠️ Harta nu s-a uploadat: ' + (upData.error?.message || 'eroare Cloudinary'));
-        if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
-        return;
-      }
+      const upUrl = await uploadToR2(editHartaFile, 'harti');
+      // Șterge harta veche din poze (dacă există) și inserează noua
+      await sb.from('poze').delete().eq('balta_id', editBaltaId).is('stand_id', null);
+      await sb.from('poze').insert({ balta_id: editBaltaId, url: upUrl, stand_id: null });
+      console.log('✅ Hartă baltă uploadată la salvare:', upUrl);
     } catch(e) {
-      console.error('❌ Fetch error (hartă baltă):', e);
+      console.error('❌ R2 error (hartă baltă):', e);
       showToast('⚠️ Harta nu s-a uploadat: ' + e.message);
       if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează'; }
       return;
@@ -1791,14 +1786,8 @@ async function abSubmit() {
     try {
       const fotoResp = await fetch(s.foto);
       const blob = await fotoResp.blob();
-      const fd = new FormData();
-      fd.append('file', blob);
-      fd.append('upload_preset', CLOUDINARY_PRESET);
-      const upResp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
-      const upData = await upResp.json();
-      if(upData.secure_url) {
-        await sb.from('poze').insert({ balta_id: baltaId, url: upData.secure_url });
-      }
+      const upUrl = await uploadToR2(blob, 'standuri');
+      await sb.from('poze').insert({ balta_id: baltaId, url: upUrl });
     } catch(e) { console.warn('Eroare upload poza stand', e); }
   }
 
@@ -1814,21 +1803,11 @@ async function abSubmit() {
   } else if(hartaFile) {
     // Upload acum (dacă pre-upload-ul a eșuat sau nu s-a terminat)
     try {
-      const fd = new FormData();
-      fd.append('file', hartaFile);
-      fd.append('upload_preset', CLOUDINARY_PRESET);
-      fd.append('tags', 'harta_balta');
-      const upResp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
-      const upData = await upResp.json();
-      if(upData.secure_url) {
-        await sb.from('poze').insert({ balta_id: baltaId, url: upData.secure_url, stand_id: null });
-        console.log('✅ Hartă baltă uploadată la submit:', upData.secure_url);
-      } else {
-        console.error('❌ Cloudinary error (hartă baltă):', upData);
-        showAbError('Balta a fost salvată, dar harta nu s-a uploadat: ' + (upData.error?.message || 'eroare necunoscută Cloudinary'));
-      }
+      const upUrl = await uploadToR2(hartaFile, 'harti');
+      await sb.from('poze').insert({ balta_id: baltaId, url: upUrl, stand_id: null });
+      console.log('✅ Hartă baltă uploadată la submit:', upUrl);
     } catch(e) {
-      console.error('❌ Fetch error (hartă baltă):', e);
+      console.error('❌ R2 error (hartă baltă):', e);
       showAbError('Balta a fost salvată, dar harta nu s-a uploadat: ' + e.message);
     }
     window._hartaFile = null;
@@ -2759,30 +2738,18 @@ sb.auth.onAuthStateChange(async (event, session) => {
         setTimeout(fitToView, 50);
         attachEvents();
 
-        // Test upload Cloudinary imediat — să vedem dacă preset-ul funcționează
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('upload_preset', CLOUDINARY_PRESET);
-        fd.append('tags', 'harta_balta');
-        fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd })
-          .then(r => r.json())
-          .then(data => {
-            if(data.secure_url) {
-              // Succes — stocăm URL-ul direct, nu mai re-uploadăm la submit
-              window._hartaUrl = data.secure_url;
-              window._hartaFile = null; // nu mai e nevoie de fișier
-              if(statusEl) { statusEl.textContent = '✅ Imaginea a fost uploadată cu succes'; statusEl.style.color = '#a3e635'; }
-              console.log('✅ Hartă pre-uploadată:', data.secure_url);
-            } else {
-              window._hartaFile = file; // păstrăm fișierul pentru retry la submit
-              if(statusEl) { statusEl.textContent = '⚠️ ' + (data.error?.message || 'Eroare Cloudinary — verifică setările preset-ului'); statusEl.style.color = '#f59e0b'; }
-              console.error('❌ Cloudinary pre-upload error:', data);
-            }
+        // Pre-upload R2 imediat — să fie gata la submit
+        uploadToR2(file, 'harti')
+          .then(url => {
+            window._hartaUrl = url;
+            window._hartaFile = null;
+            if(statusEl) { statusEl.textContent = '✅ Imaginea a fost uploadată cu succes'; statusEl.style.color = '#a3e635'; }
+            console.log('✅ Hartă pre-uploadată:', url);
           })
           .catch(err => {
             window._hartaFile = file;
-            if(statusEl) { statusEl.textContent = '⚠️ Eroare rețea: ' + err.message; statusEl.style.color = '#ef4444'; }
-            console.error('❌ Fetch error pre-upload:', err);
+            if(statusEl) { statusEl.textContent = '⚠️ Eroare upload: ' + err.message; statusEl.style.color = '#ef4444'; }
+            console.error('❌ R2 pre-upload error:', err);
           });
       };
       img.src = e.target.result;
@@ -2971,29 +2938,19 @@ sb.auth.onAuthStateChange(async (event, session) => {
         setTimeout(fitToView, 50);
         attachEvents();
 
-        // Pre-upload imediat pe Cloudinary
+        // Pre-upload imediat pe R2
         const zoomLbl = document.getElementById('edit-harta-zoom-label');
         if(zoomLbl) { zoomLbl.textContent = '⏳ Se uploadează...'; zoomLbl.style.color = '#64748b'; }
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('upload_preset', CLOUDINARY_PRESET);
-        fd.append('tags', 'harta_balta');
-        fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: fd })
-          .then(r => r.json())
-          .then(data => {
-            if(data.secure_url) {
-              window._editHartaUrl  = data.secure_url;
-              window._editHartaFile = null;
-              if(zoomLbl) { zoomLbl.textContent = '✅ Uploadat'; zoomLbl.style.color = '#a3e635'; }
-              console.log('✅ Hartă edit pre-uploadată:', data.secure_url);
-            } else {
-              if(zoomLbl) { zoomLbl.textContent = '⚠️ ' + (data.error?.message || 'Eroare Cloudinary'); zoomLbl.style.color = '#f59e0b'; }
-              console.error('❌ Cloudinary edit pre-upload error:', data);
-            }
+        uploadToR2(file, 'harti')
+          .then(url => {
+            window._editHartaUrl  = url;
+            window._editHartaFile = null;
+            if(zoomLbl) { zoomLbl.textContent = '✅ Uploadat'; zoomLbl.style.color = '#a3e635'; }
+            console.log('✅ Hartă edit pre-uploadată:', url);
           })
           .catch(err => {
-            if(zoomLbl) { zoomLbl.textContent = '⚠️ Eroare rețea: ' + err.message; zoomLbl.style.color = '#ef4444'; }
-            console.error('❌ Fetch error edit pre-upload:', err);
+            if(zoomLbl) { zoomLbl.textContent = '⚠️ Eroare upload: ' + err.message; zoomLbl.style.color = '#ef4444'; }
+            console.error('❌ R2 edit pre-upload error:', err);
           });
       };
       img.src = e.target.result;
