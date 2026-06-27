@@ -996,7 +996,7 @@ async function bootAdmin(user) {
   const { data: roleData } = await sb.from('user_roles')
     .select('rol').eq('id', user.id).single();
 
-  if(roleData?.rol !== 'admin') {
+  if(roleData?.rol !== 'zoda_admin') {
     showScreen('denied');
     return;
   }
@@ -1141,22 +1141,22 @@ async function loadUsers() {
       : '—';
 
     let rolBadge;
-    if (rol === 'admin')            rolBadge = '<span class="role-badge role-admin">⭐ Admin</span>';
+    if (rol === 'zoda_admin')            rolBadge = '<span class="role-badge role-admin">⭐ Zoda Admin</span>';
     else if (rol === 'balta_admin') rolBadge = '<span class="role-badge role-balta-admin">🏊 Baltă Admin</span>';
     else                            rolBadge = '<span class="role-badge role-user">User</span>';
 
     let actiuni;
-    if (rol === 'admin') {
+    if (rol === 'zoda_admin') {
       actiuni = u.id === SUPREME_ADMIN_UID
         ? '<span style="font-size:11px;color:#4b5563;font-style:italic;">Suprem</span>'
         : `<button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">Revocă admin</button>`;
     } else if (rol === 'balta_admin') {
       actiuni = `
-        <button class="btn-make-admin" onclick="setUserRole('${u.id}','admin')">Fă admin</button>
+        <button class="btn-make-admin" onclick="setUserRole('${u.id}','zoda_admin')">Fă Zoda Admin</button>
         <button class="btn-revoke-balta-admin" onclick="setUserRole('${u.id}','user')" style="margin-left:4px;">Revocă baltă</button>`;
     } else {
       actiuni = `
-        <button class="btn-make-admin" onclick="setUserRole('${u.id}','admin')">Fă admin</button>
+        <button class="btn-make-admin" onclick="setUserRole('${u.id}','zoda_admin')">Fă Zoda Admin</button>
         <button class="btn-make-balta-admin" onclick="setUserRole('${u.id}','balta_admin')" style="margin-left:4px;">🏊 Baltă Admin</button>`;
     }
 
@@ -1177,7 +1177,7 @@ async function setUserRole(userId, rol) {
   }
   const { error } = await sb.from('user_roles').upsert({ id: userId, rol }, { onConflict: 'id' });
   if(error) { showToast('Eroare: ' + error.message, true); return; }
-  const msg = rol === 'admin'       ? '⭐ Admin acordat!'
+  const msg = rol === 'zoda_admin'       ? '⭐ Zoda Admin acordat!'
             : rol === 'balta_admin' ? '🏊 Baltă Admin acordat!'
             : '✓ Rol revocat — utilizator normal';
   showToast(msg);
