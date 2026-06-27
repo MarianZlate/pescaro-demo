@@ -880,17 +880,55 @@ function selectPescar(u) {
   checkFormValid();
 }
 
+// ── RESIZE IMAGE (Canvas API) ─────────────────────────────────────────────────
+// Returnează un Promise<File> cu imaginea redimensionată
+function resizeImage(file, maxWidth, maxHeight, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      // Calculăm dimensiunile păstrând proporțiile
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width  = Math.round(width  * ratio);
+        height = Math.round(height * ratio);
+      } else {
+        // Imaginea e deja mai mică — o returnăm neschimbată
+        resolve(file);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width  = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        if (!blob) { resolve(file); return; }
+        const resized = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+        resolve(resized);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // fallback la original
+    img.src = url;
+  });
+}
+
 // Foto select
 function onFotoSelect(input) {
   const file = input.files[0];
   if (!file) return;
-  _fotoFile = file;
-  const zona = document.getElementById('zona-foto');
-  zona.classList.add('has-file');
-  const preview = document.getElementById('foto-preview');
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = 'block';
-  checkFormValid();
+  // Resize la 1200px lățime max, JPEG 80% — async, stocăm fișierul rezizat
+  resizeImage(file, 1200, 99999, 0.80).then(resized => {
+    _fotoFile = resized;
+    const zona = document.getElementById('zona-foto');
+    zona.classList.add('has-file');
+    const preview = document.getElementById('foto-preview');
+    preview.src = URL.createObjectURL(resized);
+    preview.style.display = 'block';
+    checkFormValid();
+  });
 }
 
 // Video select
@@ -1221,7 +1259,9 @@ async function onAvatarFile(input) {
   btn.textContent = '⏳';
 
   try {
-    const avatarUrl = await uploadToR2(file, 'avatare');
+    // Resize la 200x200px max, JPEG 80%
+    const resized = await resizeImage(file, 200, 200, 0.80);
+    const avatarUrl = await uploadToR2(resized, 'avatare');
     // Salvăm în user_profiles
     await upsertProfile({ avatar_url: avatarUrl });
     currentProfile.avatar_url = avatarUrl;
