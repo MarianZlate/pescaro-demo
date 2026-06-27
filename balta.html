@@ -316,7 +316,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
     <div id="edit-bar-hint">
       📍 <strong style="color:#a3e635;">Trage pinurile</strong> pentru a le repoziționa pe harta baltii.<br/>
-      Funcționează și pe mobile (touch). Apasă <strong style="color:#fff;">💾 Salvează</strong> când ești mulțumit sau <strong style="color:#94a3b8;">✕ Anulează</strong> pentru a renunța.
+      📋 Apasă <strong style="color:#a3e635;">🗺️ Toate standurile</strong> și trage rândurile (⠿) pentru a reordona lista.<br/>
+      Apasă <strong style="color:#fff;">💾 Salvează</strong> când ești mulțumit sau <strong style="color:#94a3b8;">✕ Anulează</strong> pentru a renunța.
     </div>
   </div>
 
@@ -1103,6 +1104,8 @@ function showAll() {
   // Arată legenda cu capturile maxime per stand
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'block';
+  // Dacă suntem în edit mode, activează drag & drop
+  if (editMode) initSortableList();
 }
 
 function showDrumAcces() {
