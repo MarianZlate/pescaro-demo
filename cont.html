@@ -405,7 +405,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <!-- Stand -->
       <div class="fg">
         <label>STAND *</label>
-        <select id="mc-stand" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;">
+        <select id="mc-stand" onchange="checkFormValid()" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;">
           <option value="">Selectează standul...</option>
         </select>
       </div>
@@ -414,12 +414,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="fg">
           <label>GREUTATE (kg) *</label>
-          <input type="number" id="mc-kg" step="0.1" min="0.1" placeholder="ex: 8.5"
+          <input type="number" id="mc-kg" step="0.1" min="0.1" placeholder="ex: 8.5" oninput="checkFormValid()"
             style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" />
         </div>
         <div class="fg">
           <label>DATA CAPTURII *</label>
-          <input type="date" id="mc-data"
+          <input type="date" id="mc-data" onchange="checkFormValid()"
             style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" />
         </div>
       </div>
@@ -452,7 +452,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div id="pescar-manual-wrap" style="display:none;">
         <div class="fg">
           <label>NUME PESCAR (manual)</label>
-          <input type="text" id="mc-pescar-manual" placeholder="ex: Ion Popescu"
+          <input type="text" id="mc-pescar-manual" placeholder="ex: Ion Popescu" oninput="checkFormValid()"
             style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" />
         </div>
       </div>
@@ -478,7 +478,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
       <!-- Upload video dovadă -->
       <div class="fg">
-        <label>VIDEOCLIP DOVADĂ <span style="color:#334155;font-weight:400;">(opțional, vizibil doar admini)</span></label>
+        <label>VIDEOCLIP DOVADĂ *</label>
         <div class="video-zone" id="zona-video" onclick="document.getElementById('mc-video-input').click()">
           <div style="font-size:24px;margin-bottom:6px;">🎬</div>
           <div style="font-size:12px;font-weight:700;color:#64748b;" id="video-zone-text">Click sau trage videoclipul aici</div>
@@ -500,7 +500,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
     <div class="mc-footer">
       <button onclick="closeCaptura()" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:13px;padding:9px 20px;border-radius:8px;cursor:pointer;">Anulează</button>
-      <button id="mc-submit-btn" onclick="submitCaptura()" style="background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 24px;border-radius:8px;cursor:pointer;">📤 Trimite cererea</button>
+      <button id="mc-submit-btn" onclick="submitCaptura()" disabled style="background:#1e293b;border:none;color:#4b5563;font-size:13px;font-weight:700;padding:9px 24px;border-radius:8px;cursor:not-allowed;transition:background .2s,color .2s;" title="Completează toate câmpurile obligatorii și adaugă o fotografie">📤 Trimite cererea</button>
     </div>
   </div>
 </div>
@@ -689,6 +689,15 @@ async function openCaptura(baltaId, baltaNume) {
   document.getElementById('mc-foto-input').value = '';
   document.getElementById('mc-video-input').value = '';
 
+  // Reset buton submit
+  const btn = document.getElementById('mc-submit-btn');
+  btn.disabled = true;
+  btn.style.background = '#1e293b';
+  btn.style.color      = '#4b5563';
+  btn.style.cursor     = 'not-allowed';
+  btn.title            = 'Completează toate câmpurile și adaugă o fotografie';
+  btn.textContent      = '📤 Trimite cererea';
+
   document.getElementById('modal-captura').classList.add('open');
 
   // Încărcăm standurile baltii
@@ -729,6 +738,7 @@ function clearPescar() {
   document.getElementById('pescar-selectat').style.display = 'none';
   document.getElementById('mc-pescar-search').value = '';
   document.getElementById('mc-pescar-search').style.display = 'block';
+  checkFormValid();
 }
 
 // Search pescar cu debounce
@@ -788,6 +798,7 @@ function selectPescar(u) {
   document.getElementById('ps-name').textContent = u.username || '—';
   document.getElementById('ps-zoda').textContent = u.zoda_id || '';
   document.getElementById('pescar-selectat').style.display = 'flex';
+  checkFormValid();
 }
 
 // Foto select
@@ -800,6 +811,7 @@ function onFotoSelect(input) {
   const preview = document.getElementById('foto-preview');
   preview.src = URL.createObjectURL(file);
   preview.style.display = 'block';
+  checkFormValid();
 }
 
 // Video select
@@ -809,6 +821,46 @@ function onVideoSelect(input) {
   _videoFile = file;
   document.getElementById('zona-video').classList.add('has-file');
   document.getElementById('video-zone-text').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+  checkFormValid();
+}
+
+// ── VALIDARE FORMULAR MODAL ───────────────────────────────────────────────────
+function checkFormValid() {
+  const standId   = document.getElementById('mc-stand').value;
+  const kg        = parseFloat(document.getElementById('mc-kg').value);
+  const data      = document.getElementById('mc-data').value;
+  const faraCont  = document.getElementById('mc-fara-cont').checked;
+  const pescarId  = document.getElementById('mc-pescar-id').value;
+  const pescarMan = document.getElementById('mc-pescar-manual').value.trim();
+
+  const valid =
+    !!standId &&
+    (kg > 0 && !isNaN(kg)) &&
+    !!data &&
+    (faraCont ? !!pescarMan : !!pescarId) &&
+    !!_fotoFile &&
+    !!_videoFile;
+
+  const btn = document.getElementById('mc-submit-btn');
+  if (!btn) return;
+  btn.disabled = !valid;
+  if (valid) {
+    btn.style.background = '#1a6b3a';
+    btn.style.color      = '#a3e635';
+    btn.style.cursor     = 'pointer';
+    btn.title            = '';
+  } else {
+    btn.style.background = '#1e293b';
+    btn.style.color      = '#4b5563';
+    btn.style.cursor     = 'not-allowed';
+    btn.title            = 'Completează toate câmpurile, adaugă fotografie și videoclip';
+  }
+} else {
+    btn.style.background = '#1e293b';
+    btn.style.color      = '#4b5563';
+    btn.style.cursor     = 'not-allowed';
+    btn.title            = 'Completează toate câmpurile și adaugă o fotografie';
+  }
 }
 
 function showErr(msg) {
@@ -985,9 +1037,9 @@ async function submitCaptura() {
 
   } catch(e) {
     showErr('⚠️ ' + e.message);
-    btn.disabled = false;
     btn.textContent = '📤 Trimite cererea';
     document.getElementById('mc-progress').style.display = 'none';
+    checkFormValid(); // restaurează stilul corect (verde dacă formularul e valid)
   }
 }
 
