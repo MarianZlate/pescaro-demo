@@ -891,8 +891,7 @@ async function selectLunaIstoric(luna) {
   renderLunarRows(rows, 'lunar-istoric-list');
 }
 
-
-  document.getElementById('loading-screen').style.display = 'none';
+function showError(msg) {
   document.getElementById('error-msg').textContent = msg;
   document.getElementById('error-screen').style.display = 'flex';
 }
