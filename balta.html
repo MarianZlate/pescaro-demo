@@ -158,6 +158,11 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .isub{display:flex;gap:5px;padding:8px 14px;flex-wrap:wrap;}
 .ist{background:#0a0f1a;border:1px solid #1e293b;color:#64748b;font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;cursor:pointer;}
 .ist.active{background:#1a3020;border-color:#166534;color:#a3e635;font-weight:700;}
+/* Butoane selector luni istoric */
+#lunar-luna-buttons{display:flex;gap:6px;flex-wrap:nowrap;}
+.luna-btn{background:#0a0f1a;border:1px solid #1e293b;color:#64748b;font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.luna-btn:hover{border-color:#334155;color:#94a3b8;}
+.luna-btn.active{background:#1a3020;border-color:#a3e635;color:#a3e635;font-weight:700;}
 
 /* LEGENDĂ */
 .lgd{display:flex;flex-direction:column;gap:5px;}
@@ -383,15 +388,37 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div><!-- /#map-sidebar -->
 
-  <!-- Top10 — desktop: coloana 3; mobil: sub map-sidebar (adica sub YT) -->
+  <!-- Hall of Fame — desktop: coloana 3; mobil: sub map-sidebar (adica sub YT) -->
   <div id="rc-top10">
     <div class="t10c" id="top10-card" style="display:none;">
       <div class="t10tabs">
-        <button class="t10t active" onclick="switchT10('top')" id="tab-top">🏆 Top capturi</button>
+        <button class="t10t active" id="tab-top">🏆 Hall of Fame</button>
       </div>
       <div class="t10ct active" id="t10-top">
-        <div class="t10h">Top capturi — cei mai mari pești prinși <span class="lbdg">RECORD</span></div>
+        <div class="t10h">Cele mai mari capturi aprobate la această baltă</div>
         <div id="t10-list"></div>
+      </div>
+    </div>
+
+    <!-- Top 10 Lunar -->
+    <div class="t10c" id="top10-lunar-card" style="display:none;margin-top:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #1e293b;">
+        <div style="font-weight:800;font-size:12px;color:#a3e635;">📅 <span id="lunar-titlu">Top 10 Lunar</span></div>
+        <button id="btn-istoric" onclick="toggleIstoric()" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;transition:background .2s,color .2s;" onmouseover="this.style.background='#334155';this.style.color='#f1f5f9'" onmouseout="this.style.background='#1e293b';this.style.color='#94a3b8'">📜 Istoric</button>
+      </div>
+
+      <!-- Panel curent -->
+      <div id="lunar-curent-panel">
+        <div id="lunar-list"><div class="t10e">Se încarcă...</div></div>
+      </div>
+
+      <!-- Panel istoric -->
+      <div id="lunar-istoric-panel" style="display:none;">
+        <!-- Selector luni -->
+        <div style="display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid #0f172a;overflow-x:auto;">
+          <div id="lunar-luna-buttons"></div>
+        </div>
+        <div id="lunar-istoric-list"><div class="t10e">Selectează o lună.</div></div>
       </div>
     </div>
   </div><!-- /#rc-top10 -->
@@ -623,14 +650,10 @@ function renderPage(hartaUrl) {
     }).join('');
   }
 
-  // Clasamente (momentan goale — viitor: tabela captures)
-  var elTat  = document.getElementById('t-at');  if(elTat)  elTat.innerHTML  = '<div class="t10e">Nicio captură înregistrată încă</div>';
-  var elTlu  = document.getElementById('t-lu');  if(elTlu)  elTlu.innerHTML  = '<div class="t10e">Nicio captură în luna curentă</div>';
-  var elIsub = document.getElementById('isub');  if(elIsub) elIsub.innerHTML = '';
-  var elIsc  = document.getElementById('isc');   if(elIsc)  elIsc.innerHTML  = '<div class="t10e">Niciun istoric disponibil</div>';
-
-  // Top10 capturi din datele standurilor
-  renderTop10();
+  // Hall of Fame — capturi aprobate sortate desc după kg
+  loadHallOfFame(BALTA.id);
+  // Top 10 Lunar
+  loadTop10Lunar(BALTA.id);
 
   // Afișează pagina
   document.getElementById('loading-screen').style.display = 'none';
@@ -678,17 +701,19 @@ function steleHtml(zodaId) {
   return ' <span title="' + n + ' stele" style="color:#f59e0b;font-size:11px;font-weight:800;">⭐' + n + '</span>';
 }
 
-function renderTop10() {
-  // Ia standurile care au record (rec_kg nenul)
-  var withRec = ST.filter(function(s) { return s.r.kg && parseFloat(s.r.kg) > 0; });
-  // Sorteaza descrescator dupa kg
-  withRec.sort(function(a, b) { return parseFloat(b.r.kg) - parseFloat(a.r.kg); });
-
+async function loadHallOfFame(baltaId) {
   var card = document.getElementById('top10-card');
   var list = document.getElementById('t10-list');
-  if(!card || !list) return;
+  if (!card || !list) return;
 
-  if(withRec.length === 0) {
+  var { data: capturi } = await sb.from('capturi')
+    .select('id, kg, pescar_nume, pescar_id, data_captura, foto_url, stand_id, standuri(nume)')
+    .eq('balta_id', baltaId)
+    .eq('status', 'approved')
+    .order('kg', { ascending: false })
+    .limit(10);
+
+  if (!capturi || !capturi.length) {
     card.style.display = 'none';
     return;
   }
@@ -697,47 +722,176 @@ function renderTop10() {
   var medals = ['🥇','🥈','🥉'];
   var medalColors = ['#f59e0b','#94a3b8','#cd7f32'];
 
-  list.innerHTML = withRec.map(function(s, i) {
-    var medal = i < 3 ? medals[i] : (i + 1);
-    var medalBg = i < 3 ? medalColors[i] : '#1e293b';
-    var fotoHtml = s.r.foto
-      ? '<img src="' + s.r.foto + '" loading="lazy" id="rec-img-' + s.id + '" style="cursor:zoom-in;width:72px;height:72px;object-fit:cover;display:block;"/>'
+  list.innerHTML = capturi.map(function(c, i) {
+    var medal    = i < 3 ? medals[i] : (i + 1);
+    var medalBg  = i < 3 ? medalColors[i] : '#1e293b';
+    var fotoHtml = c.foto_url
+      ? '<img src="' + c.foto_url + '" loading="lazy" id="hof-img-' + c.id + '" style="cursor:zoom-in;width:72px;height:72px;object-fit:cover;display:block;"/>'
       : '<div class="t10r-foto-empty">🐟</div>';
-    var pescarStr = s.r.pe ? s.r.pe : '—';
-    var pescarStele = steleHtml(s.r.pid);
-    var pescarLink = s.r.pid
-      ? '<a href="pescar.html?id=' + s.r.pid + '" onclick="saveBaltaState();event.stopPropagation()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color=\'#a3e635\'" onmouseout="this.style.color=\'#e2e8f0\'">' + pescarStr + '</a>'
-      : pescarStr;
-    var dataStr   = s.r.da ? ' · ' + s.r.da : '';
-    return '<div class="t10r" onclick="selStand(' + s.id + ')" style="cursor:pointer;">'
+    var standNume  = c.standuri ? c.standuri.nume : '—';
+    var pescarNume = c.pescar_nume || '—';
+    var pescarStele = steleHtml(c.pescar_id);
+    var pescarLink = c.pescar_id
+      ? '<a href="pescar.html?id=' + c.pescar_id + '" onclick="saveBaltaState();event.stopPropagation()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color=\'#a3e635\'" onmouseout="this.style.color=\'#e2e8f0\'">' + escH(pescarNume) + '</a>'
+      : escH(pescarNume);
+    var dataStr = c.data_captura ? ' · ' + c.data_captura : '';
+    return '<div class="t10r">'
       + '<div class="t10r-foto">'
       + fotoHtml
       + '<div class="medal" style="background:' + medalBg + ';color:#fff;">' + medal + '</div>'
       + '</div>'
       + '<div class="t10r-info">'
-      + '<div class="t10-name">' + s.z + '</div>'
+      + '<div class="t10-name">' + escH(standNume) + '</div>'
       + '<div class="t10-meta">👤 ' + pescarLink + pescarStele + dataStr + '</div>'
       + '</div>'
-      + '<div class="t10-kg"><span>' + parseFloat(s.r.kg).toFixed(1) + ' kg</span></div>'
+      + '<div class="t10-kg"><span>' + parseFloat(c.kg).toFixed(1) + ' kg</span></div>'
       + '</div>';
   }).join('');
 
-  // Click pe poza record — zoom fullscreen
-  withRec.forEach(function(s) {
-    if(!s.r.foto) return;
-    var img = document.getElementById('rec-img-' + s.id);
-    if(img) img.addEventListener('click', function(e) { e.stopPropagation(); openFS(s.r.foto); });
+  // Click pe poza — zoom fullscreen
+  capturi.forEach(function(c) {
+    if (!c.foto_url) return;
+    var img = document.getElementById('hof-img-' + c.id);
+    if (img) img.addEventListener('click', function(e) { e.stopPropagation(); openFS(c.foto_url); });
   });
 }
 
-function switchT10(tab) {
-  document.querySelectorAll('.t10t').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.t10ct').forEach(function(t) { t.classList.remove('active'); });
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.getElementById('t10-' + tab).classList.add('active');
+function escH(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function showError(msg) {
+// ─── TOP 10 LUNAR ──────────────────────────────────────────────────────────
+
+var LUNI_RO = ['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
+
+function lunaLabel(mmYYYY) {
+  // format MM-YYYY → 'Iunie 2026'
+  var parts = mmYYYY.split('-');
+  if (parts.length !== 2) return mmYYYY;
+  var m = parseInt(parts[0], 10);
+  var y = parts[1];
+  return LUNI_RO[m - 1] + ' ' + y;
+}
+
+function lunaCurenta() {
+  var now = new Date();
+  var m = String(now.getMonth() + 1).padStart(2, '0');
+  var y = now.getFullYear();
+  return m + '-' + y;
+}
+
+function renderLunarRows(rows, containerId) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="t10e">Nicio captură înregistrată în această lună.</div>';
+    return;
+  }
+  var medals = ['🥇','🥈','🥉'];
+  var medalColors = ['#f59e0b','#94a3b8','#cd7f32'];
+  el.innerHTML = rows.map(function(r, i) {
+    var medal   = i < 3 ? medals[i] : (i + 1);
+    var medalBg = i < 3 ? medalColors[i] : '#1e293b';
+    var pescarLink = r.zoda_id
+      ? '<a href="pescar.html?id=' + r.zoda_id + '" onclick="saveBaltaState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color=\'#a3e635\'" onmouseout="this.style.color=\'#e2e8f0\'">' + escH(r.pescar_nume || '—') + '</a>'
+      : escH(r.pescar_nume || '—');
+    var pescarStele = steleHtml(r.zoda_id);
+    var sub = r.nr_capturi ? r.nr_capturi + ' capt.' : '';
+    return '<div class="t10r">'
+      + '<div class="t10r-foto" style="display:flex;align-items:center;justify-content:center;background:#0a0f1a;">'
+      + '<div class="medal" style="position:relative;top:auto;left:auto;width:32px;height:32px;border-radius:8px;background:' + medalBg + ';color:#fff;font-size:' + (i < 3 ? '16' : '13') + 'px;display:flex;align-items:center;justify-content:center;font-weight:800;">' + medal + '</div>'
+      + '</div>'
+      + '<div class="t10r-info">'
+      + '<div class="t10-name">👤 ' + pescarLink + pescarStele + '</div>'
+      + (sub ? '<div class="t10-meta">' + sub + '</div>' : '')
+      + '</div>'
+      + '<div class="t10-kg"><span>' + parseFloat(r.kg_total).toFixed(1) + ' kg</span></div>'
+      + '</div>';
+  }).join('');
+}
+
+async function loadTop10Lunar(baltaId) {
+  var card = document.getElementById('top10-lunar-card');
+  if (!card) return;
+
+  // Titlu: "Top 10 Iunie 2026"
+  var luna = lunaCurenta();
+  var titluEl = document.getElementById('lunar-titlu');
+  if (titluEl) titluEl.textContent = 'Top 10 ' + lunaLabel(luna);
+
+  // Query view top10_lunar_curent filtrat pe balta
+  var { data: rows } = await sb.from('top10_lunar_curent')
+    .select('balta_id, zoda_id, pescar_nume, kg_total, nr_capturi, pozitie')
+    .eq('balta_id', baltaId)
+    .order('pozitie', { ascending: true });
+
+  card.style.display = 'block';
+  renderLunarRows(rows, 'lunar-list');
+
+  // Construiește butoanele pentru ultimele 3 luni în istoric
+  var btnWrap = document.getElementById('lunar-luna-buttons');
+  if (btnWrap) {
+    var now = new Date();
+    var luniIstoric = [];
+    for (var i = 1; i <= 3; i++) {
+      var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      var mm = String(d.getMonth() + 1).padStart(2, '0');
+      luniIstoric.push(mm + '-' + d.getFullYear());
+    }
+    btnWrap.innerHTML = luniIstoric.map(function(l) {
+      return '<button class="luna-btn" data-luna="' + l + '" onclick="selectLunaIstoric(\'' + l + '\')">' + lunaLabel(l) + '</button>';
+    }).join('');
+  }
+}
+
+var _istoricLunaActiva = null;
+
+function toggleIstoric() {
+  var curent  = document.getElementById('lunar-curent-panel');
+  var istoric = document.getElementById('lunar-istoric-panel');
+  var btn     = document.getElementById('btn-istoric');
+  var titlu   = document.getElementById('lunar-titlu');
+  if (!curent || !istoric) return;
+  var isIstoric = istoric.style.display !== 'none';
+  if (isIstoric) {
+    // înapoi la curent
+    curent.style.display  = 'block';
+    istoric.style.display = 'none';
+    btn.textContent = '📜 Istoric';
+    titlu.textContent = 'Top 10 ' + lunaLabel(lunaCurenta());
+    _istoricLunaActiva = null;
+  } else {
+    curent.style.display  = 'none';
+    istoric.style.display = 'block';
+    btn.textContent = '◀ Înapoi';
+    titlu.textContent = 'Istoric lunar';
+    // selectează automat prima lună dacă niciuna nu e activă
+    if (!_istoricLunaActiva) {
+      var first = document.querySelector('.luna-btn');
+      if (first) first.click();
+    }
+  }
+}
+
+async function selectLunaIstoric(luna) {
+  _istoricLunaActiva = luna;
+  // Update butoane active
+  document.querySelectorAll('.luna-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.luna === luna);
+  });
+  var listEl = document.getElementById('lunar-istoric-list');
+  if (listEl) listEl.innerHTML = '<div class="t10e">Se încarcă...</div>';
+
+  var { data: rows } = await sb.from('top10_lunar_istoric')
+    .select('zoda_id, pescar_nume, kg_total, nr_capturi, pozitie')
+    .eq('balta_id', BALTA.id)
+    .eq('luna', luna)
+    .order('pozitie', { ascending: true });
+
+  renderLunarRows(rows, 'lunar-istoric-list');
+}
+
+
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('error-msg').textContent = msg;
   document.getElementById('error-screen').style.display = 'flex';
