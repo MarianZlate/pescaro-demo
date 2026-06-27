@@ -375,6 +375,31 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
       });
     });
 
+  // Stele extra pe standuri pe care LE MAI DEȚINE (recorduri depășite pe același stand)
+  // Prima stea per stand = activă, restul = trecute
+  const stelaVazuta = new Set();
+  steleLog
+    .filter(l => l.tip === 'record_stand' && activeStandIds.has(l.referinta))
+    .forEach(l => {
+      if (!stelaVazuta.has(l.referinta)) {
+        stelaVazuta.add(l.referinta); // prima apariție = activă, sărim
+        return;
+      }
+      const stand = recorduriActive.find(s => String(s.id) === l.referinta);
+      const baltaNume = l.balti?.nume || '—';
+      const standNume = stand?.nume || '';
+      trecuteHtml += realizareRow({
+        iconWrapClass: 'gray',
+        icon: '🏆',
+        title: standNume ? `Record Stand — ${standNume}` : 'Record Stand',
+        meta: baltaNume,
+        star: false,
+        date: 'Câștigat la ' + fmtDate(l.created_at),
+        trecut: true,
+        link: l.balta_id ? `balta.html?id=${l.balta_id}` : null,
+      });
+    });
+
   // ── TOP 10 LUNAR TRECUTE ──────────────────────────────────────────────────
   top10Istoric
     .filter(t => !luniRecenteSet.has(t.luna))
