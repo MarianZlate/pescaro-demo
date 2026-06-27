@@ -1052,10 +1052,6 @@ async function loadBalti() {
     return;
   }
 
-  // Obținem token-ul pentru a-l pasa la balta.html
-  const { data: { session } } = await sb.auth.getSession();
-  const token = session?.access_token || '';
-
   tbody.innerHTML = data.map(b => `
     <tr>
       <td class="col-id" style="color:#4b5563;font-size:11px;">#${b.id}</td>
@@ -1073,7 +1069,7 @@ async function loadBalti() {
             ? `<button class="btn-pub" onclick="setBaltaVis(${b.id},'public')">✓ Publică</button>`
             : `<button class="btn-unlist" onclick="setBaltaVis(${b.id},'unlisted')">🔒 Unlisted</button>`}
           <button class="btn-edit" onclick="openEditBalta(${b.id})">✏️ Editează</button>
-          <a class="btn-view" href="balta.html?id=${b.id}&edit=1&token=${token}">👁️ Vezi</a>
+          <a class="btn-view" href="balta.html?id=${b.id}&edit=1">👁️ Vezi</a>
           <button class="btn-del" onclick="confirmDeleteBalta(${b.id},'${b.nume.replace(/'/g,"\\'")}'">🗑️</button>
         </div>
       </td>
