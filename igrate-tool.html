@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<title>Zoda — Migrare Cloudinary → R2</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0f1a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.card { background: #111827; border: 1px solid #1e293b; border-radius: 16px; padding: 32px; max-width: 700px; width: 100%; }
+h1 { font-size: 20px; font-weight: 800; color: #a3e635; margin-bottom: 6px; }
+.sub { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+.field { margin-bottom: 16px; }
+label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px; font-weight: 600; }
+input { width: 100%; background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; color: #f1f5f9; font-size: 13px; padding: 10px 14px; outline: none; }
+input:focus { border-color: #a3e635; }
+button { width: 100%; background: #1a6b3a; border: none; color: #a3e635; font-weight: 800; font-size: 14px; padding: 14px; border-radius: 10px; cursor: pointer; margin-top: 8px; }
+button:hover { background: #1e7a42; }
+button:disabled { background: #1e293b; color: #4b5563; cursor: not-allowed; }
+#log { margin-top: 24px; display: none; }
+.log-title { font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; }
+#log-box { background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; font-size: 11px; font-family: monospace; line-height: 1.8; max-height: 400px; overflow-y: auto; white-space: pre-wrap; }
+.summary { background: #0d1f12; border: 1px solid #1a6b3a; border-radius: 10px; padding: 16px; margin-bottom: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center; }
+.sum-val { font-size: 24px; font-weight: 900; color: #a3e635; }
+.sum-lbl { font-size: 10px; color: #64748b; margin-top: 2px; }
+.err-box { background: #1a0808; border: 1px solid #7f1d1d; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 11px; font-family: monospace; color: #fca5a5; max-height: 200px; overflow-y: auto; white-space: pre-wrap; display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🔄 Migrare Cloudinary → Cloudflare R2</h1>
+  <p class="sub">Copiază toate pozele existente din Cloudinary în R2 și actualizează URL-urile în Supabase.</p>
+
+  <div class="field">
+    <label>URL platformă Vercel</label>
+    <input id="base-url" type="text" value="https://pescaro-demo.vercel.app" placeholder="https://pescaro-demo.vercel.app"/>
+  </div>
+
+  <div class="field">
+    <label>MIGRATION_SECRET (parola setată în Vercel)</label>
+    <input id="secret" type="password" placeholder="zoda-migrate-2026"/>
+  </div>
+
+  <button id="btn" onclick="runMigration()">🚀 Pornește migrarea</button>
+
+  <div id="log">
+    <div class="log-title">REZULTATE</div>
+    <div class="summary" id="summary" style="display:none;">
+      <div><div class="sum-val" id="s-total">-</div><div class="sum-lbl">Total</div></div>
+      <div><div class="sum-val" id="s-migrated">-</div><div class="sum-lbl">Migrate</div></div>
+      <div><div class="sum-val" id="s-skipped" style="color:#64748b">-</div><div class="sum-lbl">Skipped</div></div>
+      <div><div class="sum-val" id="s-errors" style="color:#ef4444">-</div><div class="sum-lbl">Erori</div></div>
+    </div>
+    <div class="err-box" id="err-box"></div>
+    <div class="log-title">LOG DETALIAT</div>
+    <div id="log-box"></div>
+  </div>
+</div>
+
+<script>
+async function runMigration() {
+  const baseUrl = document.getElementById('base-url').value.trim().replace(/\/$/, '');
+  const secret  = document.getElementById('secret').value.trim();
+  const btn     = document.getElementById('btn');
+  const logBox  = document.getElementById('log-box');
+  const logDiv  = document.getElementById('log');
+
+  if (!secret) { alert('Introdu MIGRATION_SECRET!'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Migrare în curs... (poate dura 1-5 minute)';
+  logDiv.style.display = 'block';
+  logBox.textContent = '⏳ Se conectează la server...\n';
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('err-box').style.display = 'none';
+
+  try {
+    const resp = await fetch(`${baseUrl}/api/r2-migrate`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${secret}` },
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      logBox.textContent = '❌ Eroare server:\n' + JSON.stringify(data, null, 2);
+      btn.disabled = false;
+      btn.textContent = '🔁 Încearcă din nou';
+      return;
+    }
+
+    // Sumar
+    const s = data.summary;
+    document.getElementById('summary').style.display = 'grid';
+    document.getElementById('s-total').textContent    = s.total;
+    document.getElementById('s-migrated').textContent = s.migrated;
+    document.getElementById('s-skipped').textContent  = s.skipped;
+    document.getElementById('s-errors').textContent   = s.errors;
+
+    // Erori
+    if (data.errors && data.errors.length > 0) {
+      const eb = document.getElementById('err-box');
+      eb.style.display = 'block';
+      eb.textContent = data.errors.join('\n');
+    }
+
+    // Log
+    logBox.textContent = (data.log || []).join('\n');
+
+    btn.textContent = s.errors === 0 ? '✅ Migrare completă!' : '⚠️ Terminat cu erori';
+    btn.disabled = false;
+
+  } catch(e) {
+    logBox.textContent = '❌ Eroare rețea: ' + e.message + '\n\nVerifică URL-ul platformei și că serverul e pornit.';
+    btn.disabled = false;
+    btn.textContent = '🔁 Încearcă din nou';
+  }
+}
+</script>
+</body>
+</html>
