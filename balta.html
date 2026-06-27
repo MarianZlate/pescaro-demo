@@ -559,7 +559,7 @@ async function loadBalta(id) {
       if (!user) return;
 
       var rRes = await sb.from('user_roles').select('rol').eq('id', user.id).single();
-      if (rRes.data && rRes.data.rol === 'admin') {
+      if (rRes.data && rRes.data.rol === 'zoda_admin') {
         document.getElementById('edit-bar').style.display = 'flex';
       }
     }
@@ -1184,6 +1184,8 @@ function initSortableList() {
   if (!list) return;
   var items = list.querySelectorAll('.li');
   items.forEach(function(item) {
+    if (item._sortableInit) return; // guard — nu atașa listeneri de două ori
+    item._sortableInit = true;
     item.classList.add('sortable');
     item.setAttribute('draggable', 'true');
 
@@ -1287,7 +1289,7 @@ function refreshLegendList() {
 }
 
 function toggleEdit() {
-  // Salvează pozițiile originale pentru cancel
+  // Salvează pozițiile originale și ordinea pentru cancel
   _origPositions = ST.map(function(s) { return { id: s.id, x: s.x, y: s.y }; });
 
   editMode = true;
@@ -1316,6 +1318,13 @@ function cancelEdit() {
     var s = ST.find(function(x) { return x.id === orig.id; });
     if (s) { s.x = orig.x; s.y = orig.y; }
   });
+  // Restaurează ordinea originală a ST
+  ST.sort(function(a, b) {
+    var oa = _origPositions.findIndex(function(o) { return o.id === a.id; });
+    var ob = _origPositions.findIndex(function(o) { return o.id === b.id; });
+    return oa - ob;
+  });
+  ST.forEach(function(s, i) { s.nr = i + 1; });
   exitEditMode();
   renderPins();
 }
