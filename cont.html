@@ -586,6 +586,12 @@ async function boot() {
 }
 
 // ── NOTIFICĂRI ────────────────────────────────────────────────────────────────
+function notifUrl(n) {
+  const meta = n.meta || {};
+  if (meta.balta_id) return `balta.html?id=${meta.balta_id}`;
+  return null;
+}
+
 async function loadNotificari() {
   const section = document.getElementById('section-notificari');
   const listEl  = document.getElementById('notif-list-cont');
@@ -603,20 +609,35 @@ async function loadNotificari() {
   }
 
   const unread = data.filter(n => !n.citita).length;
-  listEl.innerHTML = data.map(n => `
-    <div class="notif-item ${!n.citita ? 'unread' : ''}" id="notif-${n.id}">
+  listEl.innerHTML = data.map(n => {
+    const url = notifUrl(n);
+    const clickAttr = url ? `onclick="notifClick(event,'${n.id}','${url}')" style="cursor:pointer;"` : '';
+    return `
+    <div class="notif-item ${!n.citita ? 'unread' : ''}" id="notif-${n.id}" ${clickAttr}>
       ${!n.citita ? '<div class="notif-dot"></div>' : '<div class="notif-dot-read"></div>'}
       <div style="flex:1;">
         <div class="notif-msg-text">${escH(n.mesaj)}</div>
-        <div class="notif-time-text">${timeAgo(n.created_at)}</div>
+        <div class="notif-time-text">${timeAgo(n.created_at)}${url ? ' · <span style="color:#a3e635;font-size:10px;">↗ Vezi</span>' : ''}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   // Badge în header (dacă există)
   if (unread > 0) {
     const hdrTitle = document.querySelector('.hdr-title');
     if (hdrTitle) hdrTitle.innerHTML = `Contul meu <span class="notif-badge-count">🔔 ${unread} noi</span>`;
   }
+}
+
+async function notifClick(e, id, url) {
+  // Marchează ca citită
+  const el = document.getElementById('notif-' + id);
+  if (el && el.classList.contains('unread')) {
+    el.classList.remove('unread');
+    el.querySelector('.notif-dot')?.classList.replace('notif-dot', 'notif-dot-read');
+    await sb.from('notificari').update({ citita: true }).eq('id', id);
+  }
+  window.location.href = url;
 }
 
 async function markAllRead() {
