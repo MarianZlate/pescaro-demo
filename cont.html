@@ -770,6 +770,27 @@ async function openCaptura(baltaId, baltaNume) {
 
 function closeCaptura() {
   document.getElementById('modal-captura').classList.remove('open');
+  // Resetăm fișierele și formularul complet
+  _fotoFile  = null;
+  _videoFile = null;
+  document.getElementById('mc-kg').value = '';
+  document.getElementById('mc-data').value = '';
+  document.getElementById('mc-stand').innerHTML = '<option value="">Selectează standul...</option>';
+  document.getElementById('mc-pescar-search').value = '';
+  document.getElementById('mc-pescar-id').value = '';
+  document.getElementById('mc-pescar-manual').value = '';
+  document.getElementById('mc-fara-cont').checked = false;
+  document.getElementById('pescar-manual-wrap').style.display = 'none';
+  document.getElementById('pescar-selectat').style.display = 'none';
+  document.getElementById('zona-foto').classList.remove('has-file');
+  document.getElementById('zona-video').classList.remove('has-file');
+  const fotoPreview = document.getElementById('foto-preview');
+  if (fotoPreview) fotoPreview.style.display = 'none';
+  const videoText = document.getElementById('video-zone-text');
+  if (videoText) videoText.textContent = 'Click sau trage videoclipul aici';
+  document.getElementById('mc-err').style.display = 'none';
+  document.getElementById('mc-progress').style.display = 'none';
+  checkFormValid();
 }
 
 // Click în afara modalului → închide
