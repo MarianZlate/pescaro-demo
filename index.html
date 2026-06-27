@@ -2539,13 +2539,18 @@ async function loadNotifPanel() {
   list.innerHTML = data.map(n => {
     const unread = !n.citita;
     const time   = timeAgo(n.created_at);
+    const meta   = n.meta || {};
+    const url    = meta.balta_id ? `balta.html?id=${meta.balta_id}` : null;
+    const clickFn = url
+      ? `markNotifRead('${n.id}', this); window.location.href='${url}';`
+      : `markNotifRead('${n.id}', this)`;
     return `
-      <div class="notif-item ${unread ? 'unread' : ''}" onclick="markNotifRead('${n.id}', this)">
+      <div class="notif-item ${unread ? 'unread' : ''}" onclick="${clickFn}">
         <div style="display:flex;gap:10px;align-items:flex-start;">
           ${unread ? '<div class="notif-dot"></div>' : '<div style="width:7px;flex-shrink:0;"></div>'}
           <div style="flex:1;">
             <div class="notif-msg">${escHtmlNotif(n.mesaj)}</div>
-            <div class="notif-time">${time}</div>
+            <div class="notif-time">${time}${url ? ' · <span style="color:#a3e635;font-size:10px;">↗ Vezi</span>' : ''}</div>
           </div>
         </div>
       </div>`;
