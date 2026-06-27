@@ -112,7 +112,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   <div id="hdr-in">
     <a href="index.html" class="logo">Zoda</a>
     <span style="font-size:12px;color:#4b5563;" id="hdr-subtitle">Profil pescar</span>
-    <a href="javascript:history.back()" class="back-btn">← Înapoi</a>
+    <a href="index.html" class="back-btn" onclick="event.preventDefault(); savePescarState(); if(history.length > 1) { history.back(); } else { window.location.href='index.html'; }">← Înapoi</a>
   </div>
 </div>
 
