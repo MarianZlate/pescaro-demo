@@ -238,8 +238,26 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       </div>
       <div class="fg">
         <label>EMAIL</label>
-        <input type="email" id="inp-email" disabled/>
-        <div class="fg-hint">Emailul nu poate fi modificat din această pagină.</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="email" id="inp-email" disabled style="flex:1;"/>
+          <button onclick="toggleEmailChange()" id="btn-change-email" title="Schimbă emailul" style="flex-shrink:0;background:#1e293b;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.color='#f1f5f9'" onmouseout="this.style.color='#94a3b8'">✏️ Schimbă</button>
+        </div>
+        <div class="fg-hint" id="email-hint">Emailul este folosit pentru autentificare.</div>
+        <!-- Secțiune schimbare email -->
+        <div id="email-change-section" style="display:none;margin-top:10px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:12px;">
+          <div class="fg" style="margin-bottom:10px;">
+            <label>EMAIL NOU</label>
+            <input type="email" id="inp-email-nou" placeholder="adresa@noua.com"
+              style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;font-family:inherit;"
+              onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="saveEmail()" style="background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;">Trimite confirmare</button>
+            <button onclick="toggleEmailChange()" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;">Anulează</button>
+            <span id="save-email-msg" class="save-msg"></span>
+          </div>
+          <div style="font-size:10px;color:#334155;margin-top:8px;">Vei primi un email de confirmare la adresa nouă. Emailul se schimbă doar după confirmare.</div>
+        </div>
       </div>
       <div class="fg">
         <label>ID UNIC ZODA</label>
@@ -1228,6 +1246,62 @@ async function upsertProfile(fields) {
     ...fields,
   }, { onConflict: 'id' });
   if (error) throw new Error(error.message);
+}
+
+// ── EMAIL ─────────────────────────────────────────────────────────────────────
+function toggleEmailChange() {
+  const sec = document.getElementById('email-change-section');
+  const btn = document.getElementById('btn-change-email');
+  const isOpen = sec.style.display === 'block';
+  sec.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '✏️ Schimbă' : '✕ Anulează';
+  if (!isOpen) {
+    document.getElementById('inp-email-nou').value = '';
+    document.getElementById('save-email-msg').textContent = '';
+    document.getElementById('save-email-msg').className = 'save-msg';
+    setTimeout(() => document.getElementById('inp-email-nou').focus(), 50);
+  }
+}
+
+async function saveEmail() {
+  const emailNou = document.getElementById('inp-email-nou').value.trim();
+  const msgEl    = document.getElementById('save-email-msg');
+
+  if (!emailNou) {
+    msgEl.textContent = 'Introdu adresa nouă.';
+    msgEl.className = 'save-msg err';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNou)) {
+    msgEl.textContent = 'Adresă invalidă.';
+    msgEl.className = 'save-msg err';
+    return;
+  }
+  if (emailNou === currentUser.email) {
+    msgEl.textContent = 'E același email ca cel curent.';
+    msgEl.className = 'save-msg err';
+    return;
+  }
+
+  msgEl.textContent = '⏳ Se trimite...';
+  msgEl.className = 'save-msg';
+
+  const { error } = await sb.auth.updateUser({ email: emailNou });
+  if (error) {
+    msgEl.textContent = '⚠️ ' + error.message;
+    msgEl.className = 'save-msg err';
+    return;
+  }
+
+  msgEl.textContent = '✓ Email de confirmare trimis!';
+  msgEl.className = 'save-msg ok';
+  document.getElementById('inp-email-nou').value = '';
+  // Închidem secțiunea după 3 secunde
+  setTimeout(() => {
+    document.getElementById('email-change-section').style.display = 'none';
+    document.getElementById('btn-change-email').textContent = '✏️ Schimbă';
+    showToast('📧 Verifică inbox-ul pentru confirmare.');
+  }, 3000);
 }
 
 // ── PAROLĂ ───────────────────────────────────────────────────────────────────
