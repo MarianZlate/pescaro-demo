@@ -234,7 +234,7 @@ async function boot() {
   // 4b. Standuri pentru recordurile trecute (din stele_log tip record_stand)
   const { data: steleLogRaw } = await sb
     .from('stele_log')
-    .select('id, tip, referinta, balta_id, created_at, balti(nume)')
+    .select('id, tip, referinta, balta_id, created_at, kg, balti(nume)')
     .eq('zoda_id', zodaId)
     .order('created_at', { ascending: false });
 
@@ -363,11 +363,12 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
       const baltaNume  = l.balti?.nume || '—';
       const standNume  = standuriTrecuteMap[parseInt(l.referinta)] || '';
       const titleStr   = standNume ? `Record Stand — ${standNume}` : 'Record Stand — deținut anterior';
+      const kgStr      = l.kg ? ` · <strong style="color:#a3e635;">${parseFloat(l.kg).toFixed(1)} kg</strong>` : '';
       trecuteHtml += realizareRow({
         iconWrapClass: 'gray',
         icon: '🏆',
         title: titleStr,
-        meta: baltaNume,
+        meta: baltaNume + kgStr,
         star: false,
         date: 'Câștigat la ' + fmtDate(l.created_at),
         trecut: true,
@@ -388,11 +389,12 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
       const stand = recorduriActive.find(s => String(s.id) === l.referinta);
       const baltaNume = l.balti?.nume || '—';
       const standNume = stand?.nume || '';
+      const kgStr     = l.kg ? ` · <strong style="color:#a3e635;">${parseFloat(l.kg).toFixed(1)} kg</strong>` : '';
       trecuteHtml += realizareRow({
         iconWrapClass: 'gray',
         icon: '🏆',
         title: standNume ? `Record Stand — ${standNume}` : 'Record Stand',
-        meta: baltaNume,
+        meta: baltaNume + kgStr,
         star: false,
         date: 'Câștigat la ' + fmtDate(l.created_at),
         trecut: true,
