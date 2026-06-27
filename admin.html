@@ -673,6 +673,8 @@ th,td{padding:8px 6px;}
       </div>
       <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">ZODA-ID PESCAR</label><input type="text" id="ec-pescar-id" placeholder="ex: ZODA-1042" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#a3e635;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box;" /></div>
       <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">NUME PESCAR *</label><input type="text" id="ec-pescar-nume" placeholder="ex: Ion Popescu" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
+      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">STATUS</label><select id="ec-status" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;"><option value="pending">⏳ Pending</option><option value="approved">✅ Aprobat</option><option value="rejected">❌ Respins</option></select></div>
+      <div><label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">MOTIV RESPINGERE (opțional)</label><input type="text" id="ec-rejected-reason" placeholder="ex: Poza neclară..." style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;" /></div>
       <div>
         <label style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;margin-bottom:6px;">FOTOGRAFIE CAPTURĂ</label>
         <div id="ec-foto-preview-wrap" style="margin-bottom:8px;display:none;"><img id="ec-foto-preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;border:1px solid #1e293b;" /><div style="font-size:10px;color:#4b5563;margin-top:4px;">Foto curentă — încarcă una nouă pentru a o înlocui.</div></div>
@@ -846,6 +848,101 @@ async function loadCapturi() {
       </div>` : ''}
     </div>`;
   }).join('');
+}
+
+// ── RESIZE IMAGE (Canvas API) ─────────────────────────────────────────────────
+function resizeImage(file, maxWidth, maxHeight, quality) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width  = Math.round(width  * ratio);
+        height = Math.round(height * ratio);
+      } else { resolve(file); return; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        if (!blob) { resolve(file); return; }
+        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+// ── EDITARE CAPTURĂ ────────────────────────────────────────────────────────────
+let _ecCapturaId   = null;
+let _ecNewFotoFile = null;
+
+async function openEditCaptura(capturaId) {
+  _ecCapturaId   = capturaId;
+  _ecNewFotoFile = null;
+  document.getElementById('ec-foto-text').textContent = 'Click pentru a înlocui fotografia';
+  document.getElementById('ec-foto-preview-wrap').style.display = 'none';
+  document.getElementById('ec-foto-input').value = '';
+  const { data: c } = await sb.from('capturi')
+    .select('pescar_nume, kg, data_captura, status, rejected_reason, foto_url')
+    .eq('id', capturaId).single();
+  if (c) {
+    document.getElementById('ec-pescar-nume').value     = c.pescar_nume || '';
+    document.getElementById('ec-kg').value              = c.kg || '';
+    document.getElementById('ec-data').value            = c.data_captura || '';
+    document.getElementById('ec-status').value          = c.status || 'pending';
+    document.getElementById('ec-rejected-reason').value = c.rejected_reason || '';
+    if (c.foto_url) {
+      document.getElementById('ec-foto-preview').src = c.foto_url;
+      document.getElementById('ec-foto-preview-wrap').style.display = 'block';
+    }
+  }
+  document.getElementById('edit-captura-modal').style.display = 'flex';
+}
+
+function closeEditCaptura() {
+  document.getElementById('edit-captura-modal').style.display = 'none';
+  _ecCapturaId = null; _ecNewFotoFile = null;
+}
+
+function onEcFotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  resizeImage(file, 1200, 99999, 0.80).then(resized => {
+    _ecNewFotoFile = resized;
+    document.getElementById('ec-foto-text').textContent = 'Poza selectata: ' + file.name;
+    const preview = document.getElementById('ec-foto-preview');
+    preview.src = URL.createObjectURL(resized);
+    document.getElementById('ec-foto-preview-wrap').style.display = 'block';
+  });
+}
+
+async function saveEditCaptura() {
+  if (!_ecCapturaId) return;
+  const btn = document.getElementById('ec-save-btn');
+  btn.disabled = true; btn.textContent = 'Se salveaza...';
+  try {
+    const updates = {
+      pescar_nume:     document.getElementById('ec-pescar-nume').value.trim(),
+      kg:              parseFloat(document.getElementById('ec-kg').value),
+      data_captura:    document.getElementById('ec-data').value,
+      status:          document.getElementById('ec-status').value,
+      rejected_reason: document.getElementById('ec-rejected-reason').value.trim() || null,
+    };
+    if (_ecNewFotoFile) updates.foto_url = await uploadToR2(_ecNewFotoFile, 'capturi');
+    const { error } = await sb.from('capturi').update(updates).eq('id', _ecCapturaId);
+    if (error) throw new Error(error.message);
+    showToast('Captura actualizata!');
+    closeEditCaptura();
+    await loadCapturi();
+  } catch(e) {
+    showToast('Eroare: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salveaza';
+  }
 }
 
 async function adminAproba(capturaId) {
