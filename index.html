@@ -785,7 +785,7 @@ function onSearch(q) {
   document.getElementById('clear-btn').style.display = q ? 'block' : 'none';
   const dd = document.getElementById('dropdown');
   if (!q.trim()) { dd.style.display = 'none'; return; }
-  const isAdmin = currentRole === 'admin';
+  const isAdmin = currentRole === 'zoda_admin';
   const res = BALTI.filter(b =>
     (isAdmin || b.vizibilitate === 'public') &&
     (b.nume.toLowerCase().includes(q.toLowerCase()) ||
@@ -997,7 +997,7 @@ async function loadBaltiFromSupabase() {
 // Adaugă/actualizează markerii pe hartă în funcție de rol.
 // Admini văd toate bălțile (unlisted semi-transparent); userii văd doar public.
 function renderMapMarkers() {
-  const isAdmin = currentRole === 'admin';
+  const isAdmin = currentRole === 'zoda_admin';
   BALTI.forEach(b => {
     const visible = isAdmin || b.vizibilitate === 'public';
     if (!b.lat || !b.lng) return;
@@ -2465,7 +2465,7 @@ async function updateNavForUser(user) {
     ? `<img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #1a3020;flex-shrink:0;" alt="avatar"/>`
     : `<div class="nav-avatar" style="cursor:default;">${initials}</div>`;
 
-  const isAdmin = currentRole === 'admin';
+  const isAdmin = currentRole === 'zoda_admin';
 
   // Citim numărul de notificări necitite
   let unreadCount = 0;
