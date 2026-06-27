@@ -168,6 +168,14 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .lgd{display:flex;flex-direction:column;gap:5px;}
 .li{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;border:1px solid #1e293b;cursor:pointer;transition:all .15s;background:#111827;}
 .li:hover,.li.active{background:#1e3a2e;border-color:#a3e635;}
+/* Drag & drop ordine standuri */
+.li.sortable{cursor:default;}
+.li.sortable:hover{background:#111827;border-color:#1e293b;}
+.li-drag-handle{display:none;color:#334155;font-size:16px;cursor:grab;padding:0 4px;flex-shrink:0;touch-action:none;}
+.li-drag-handle:active{cursor:grabbing;}
+.li.sortable .li-drag-handle{display:flex;align-items:center;}
+.li.drag-over{border-color:#a3e635;background:#0d1f12;}
+.li.dragging-item{opacity:.4;}
 .lnr{width:22px;height:22px;border-radius:50%;background:#e8142a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#fff;flex-shrink:0;}
 .lz{font-size:11px;color:#94a3b8;}
 .ls{font-size:9px;color:#4b5563;margin-top:1px;}
@@ -484,8 +492,8 @@ async function loadBalta(id) {
   BALTA = bRes.data;
   DRUM_ACCES_YT = BALTA.drum_yt || '';
 
-  // 2. Standuri
-  var sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('id');
+  // 2. Standuri — sortate după sort_order
+  var sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true });
   var standuri = sRes.data || [];
 
   // 3. Poze
@@ -639,7 +647,8 @@ function renderPage(hartaUrl) {
     document.getElementById('legend-list').innerHTML = ST.map(function(s){
       var recText = s.r.kg ? '<span style="font-weight:800;color:#f59e0b;font-size:14px;white-space:nowrap;margin-left:auto;">🏆 ' + s.r.kg + ' kg</span>' : '';
       var recSub  = s.r.pe ? '<div style="font-size:12px;color:#f59e0b;margin-top:3px;">👤 ' + s.r.pe + (s.r.da ? ' · ' + s.r.da : '') + '</div>' : '';
-      return '<div class="li" data-id="'+s.id+'" onclick="selStand('+s.id+')">'
+      return '<div class="li" data-id="'+s.id+'" onclick="liClick(event,'+s.id+')">'
+        +'<span class="li-drag-handle" title="Trage pentru a reordona">⠿</span>'
         +'<div class="lnr">'+s.nr+'</div>'
         +'<div style="flex:1;min-width:0;">'
         +'<div style="font-size:14px;font-weight:700;color:#f1f5f9;">'+s.z+'</div>'
@@ -1158,6 +1167,122 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { clo
 // ─── EDIT MODE (admin) ─────────────────────────────────────────────────────
 var _origPositions = []; // backup pentru Anulează
 
+function liClick(e, standId) {
+  // În edit mode click-ul nu selectează standul (doar drag handle)
+  if (editMode) return;
+  selStand(standId);
+}
+
+// ── SORTARE LISTĂ STANDURI ────────────────────────────────────────────────────
+var _dragSrcId = null;
+
+function initSortableList() {
+  var list = document.getElementById('legend-list');
+  if (!list) return;
+  var items = list.querySelectorAll('.li');
+  items.forEach(function(item) {
+    item.classList.add('sortable');
+    item.setAttribute('draggable', 'true');
+
+    // Mouse drag
+    item.addEventListener('dragstart', function(e) {
+      _dragSrcId = item.dataset.id;
+      item.classList.add('dragging-item');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', function() {
+      item.classList.remove('dragging-item');
+      list.querySelectorAll('.li').forEach(function(i) { i.classList.remove('drag-over'); });
+    });
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      list.querySelectorAll('.li').forEach(function(i) { i.classList.remove('drag-over'); });
+      item.classList.add('drag-over');
+    });
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      if (_dragSrcId === item.dataset.id) return;
+      reorderST(_dragSrcId, item.dataset.id);
+      refreshLegendList();
+    });
+
+    // Touch drag
+    var touchSrc = null, touchClone = null;
+    item.addEventListener('touchstart', function(e) {
+      if (!e.target.closest('.li-drag-handle')) return;
+      touchSrc = item;
+      _dragSrcId = item.dataset.id;
+      item.classList.add('dragging-item');
+      // Clone vizual
+      touchClone = item.cloneNode(true);
+      touchClone.style.cssText = 'position:fixed;opacity:.8;pointer-events:none;z-index:9999;width:' + item.offsetWidth + 'px;background:#1e293b;border-radius:8px;';
+      document.body.appendChild(touchClone);
+      e.preventDefault();
+    }, { passive: false });
+    item.addEventListener('touchmove', function(e) {
+      if (!touchClone) return;
+      var t = e.touches[0];
+      touchClone.style.left = (t.clientX - touchClone.offsetWidth / 2) + 'px';
+      touchClone.style.top  = (t.clientY - 20) + 'px';
+      // Găsește elementul de sub deget
+      touchClone.style.display = 'none';
+      var el = document.elementFromPoint(t.clientX, t.clientY);
+      touchClone.style.display = '';
+      var target = el ? el.closest('.li') : null;
+      list.querySelectorAll('.li').forEach(function(i) { i.classList.remove('drag-over'); });
+      if (target && target !== touchSrc) target.classList.add('drag-over');
+      e.preventDefault();
+    }, { passive: false });
+    item.addEventListener('touchend', function(e) {
+      if (!touchClone) return;
+      var t = e.changedTouches[0];
+      touchClone.style.display = 'none';
+      var el = document.elementFromPoint(t.clientX, t.clientY);
+      touchClone.style.display = '';
+      var target = el ? el.closest('.li') : null;
+      if (target && target.dataset.id !== _dragSrcId) {
+        reorderST(_dragSrcId, target.dataset.id);
+        refreshLegendList();
+      }
+      document.body.removeChild(touchClone);
+      touchClone = null;
+      touchSrc.classList.remove('dragging-item');
+      list.querySelectorAll('.li').forEach(function(i) { i.classList.remove('drag-over'); });
+    });
+  });
+}
+
+function reorderST(srcIdStr, dstIdStr) {
+  var srcId = parseInt(srcIdStr), dstId = parseInt(dstIdStr);
+  var srcIdx = ST.findIndex(function(s) { return s.id === srcId; });
+  var dstIdx = ST.findIndex(function(s) { return s.id === dstId; });
+  if (srcIdx < 0 || dstIdx < 0) return;
+  var moved = ST.splice(srcIdx, 1)[0];
+  ST.splice(dstIdx, 0, moved);
+  // Actualizează nr de ordine vizual
+  ST.forEach(function(s, i) { s.nr = i + 1; });
+}
+
+function refreshLegendList() {
+  var list = document.getElementById('legend-list');
+  if (!list) return;
+  list.innerHTML = ST.map(function(s) {
+    var recText = s.r.kg ? '<span style="font-weight:800;color:#f59e0b;font-size:14px;white-space:nowrap;margin-left:auto;">🏆 ' + s.r.kg + ' kg</span>' : '';
+    var recSub  = s.r.pe ? '<div style="font-size:12px;color:#f59e0b;margin-top:3px;">👤 ' + s.r.pe + (s.r.da ? ' · ' + s.r.da : '') + '</div>' : '';
+    return '<div class="li sortable" draggable="true" data-id="'+s.id+'" onclick="liClick(event,'+s.id+')">'
+      +'<span class="li-drag-handle" title="Trage pentru a reordona">⠿</span>'
+      +'<div class="lnr">'+s.nr+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:14px;font-weight:700;color:#f1f5f9;">'+s.z+'</div>'
+      + recSub
+      +'</div>'
+      + recText
+      +'</div>';
+  }).join('');
+  initSortableList();
+}
+
 function toggleEdit() {
   // Salvează pozițiile originale pentru cancel
   _origPositions = ST.map(function(s) { return { id: s.id, x: s.x, y: s.y }; });
@@ -1178,6 +1303,8 @@ function toggleEdit() {
 
   document.getElementById('map-wrap').style.userSelect = 'none';
   renderPins();
+  // Activează drag & drop în lista de standuri
+  initSortableList();
 }
 
 function cancelEdit() {
@@ -1199,6 +1326,11 @@ function exitEditMode() {
   document.getElementById('edit-status-icon').textContent  = '🔒';
   document.getElementById('edit-status-title').style.color = '#e2e8f0';
   document.getElementById('map-wrap').style.userSelect = '';
+  // Dezactivează drag & drop în lista de standuri
+  document.querySelectorAll('#legend-list .li').forEach(function(item) {
+    item.classList.remove('sortable', 'dragging-item', 'drag-over');
+    item.removeAttribute('draggable');
+  });
 }
 
 async function savePositions() {
@@ -1213,7 +1345,8 @@ async function savePositions() {
     for (var i = 0; i < ST.length; i++) {
       var s = ST[i];
       await sb.from('standuri').update({
-        pozitie: JSON.stringify({ x: parseFloat(s.x.toFixed(3)), y: parseFloat(s.y.toFixed(3)) })
+        pozitie:    JSON.stringify({ x: parseFloat(s.x.toFixed(3)), y: parseFloat(s.y.toFixed(3)) }),
+        sort_order: i
       }).eq('id', s.id);
     }
     document.getElementById('edit-status-icon').textContent  = '✅';
