@@ -487,10 +487,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 <!-- FULLSCREEN MODAL -->
 <div id="fs-modal" onclick="closeFS()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
-  <div style="position:relative;display:inline-block;cursor:default;" onclick="event.stopPropagation()">
-    <img id="fs-img" src="" style="display:block;max-width:95vw;max-height:95vh;object-fit:contain;border-radius:10px;box-shadow:0 0 60px rgba(0,0,0,.9);"/>
-    <button onclick="closeFS()" style="position:absolute;top:-44px;right:8px;width:32px;height:32px;background:#1e293b;border:1.5px solid #334155;color:#f1f5f9;font-size:14px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;font-weight:700;z-index:10;">✕</button>
-  </div>
+  <button onclick="closeFS()" style="position:fixed;top:16px;right:16px;width:36px;height:36px;background:#1e293b;border:1.5px solid #334155;color:#f1f5f9;font-size:16px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;font-weight:700;z-index:10;flex-shrink:0;">✕</button>
+  <img id="fs-img" src="" style="display:block;max-width:95vw;max-height:95vh;object-fit:contain;border-radius:10px;box-shadow:0 0 60px rgba(0,0,0,.9);cursor:default;" onclick="event.stopPropagation()"/>
 </div>
 
 <!-- VIDEO EMBED MODAL -->
