@@ -1103,7 +1103,7 @@ function renderPins() {
       div.addEventListener('mousedown',  function(e) { startDrag(e, s.id); });
       div.addEventListener('touchstart', function(e) { startDrag(e, s.id); }, { passive: false });
     } else {
-      div.addEventListener('click', function(e) { e.stopPropagation(); openOverlay(s.id); });
+      div.addEventListener('click', function(e) { e.stopPropagation(); selStand(s.id); });
     }
     layer.appendChild(div);
   });
@@ -1131,12 +1131,24 @@ function scrollToMap() {
   }
 }
 function selStand(id) {
+  var overlay = document.getElementById('stand-overlay');
+  var overlayOpen = overlay.style.display !== 'none';
+
   if (selId === id) {
-    openOverlay(id);
+    // Al doilea sau al treilea tap pe același stand
+    if (!overlayOpen) {
+      openOverlay(id);  // tap 2 — deschide overlay
+    } else {
+      closeOverlay();   // tap 3 — închide overlay, lasă standul selectat
+      selId = id;       // păstrăm selId activ
+      renderPins();
+      updatePills();
+    }
     return;
   }
+  // Tap 1 — selectează standul, nu deschide overlay
   selId = id;
-  document.getElementById('stand-overlay').style.display = 'none';
+  overlay.style.display = 'none';
   document.getElementById('spr').style.display = 'block';
   renderPins();
   updatePills();
