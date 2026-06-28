@@ -1,9 +1,0 @@
-{
-  "name": "zoda-platform",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "formidable": "^3.5.1",
-    "googleapis": "^140.0.0"
-  }
-}
