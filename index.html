@@ -901,10 +901,15 @@ async function loadHof() {
   // Cache 60 minute — HoF se schimbă doar la aprobare capturi
   const cached = CACHE.get('hof_global');
   if (cached) {
-    HOF.length = 0;
-    cached.forEach(h => HOF.push(h));
-    renderHof();
-    return;
+    // Invalidăm cache-ul dacă are intrări cu ZODA-ID ca nume (bug vechi)
+    const hasIdAsName = cached.some(h => h.pe && h.pe.startsWith('ZODA-'));
+    if (!hasIdAsName) {
+      HOF.length = 0;
+      cached.forEach(h => HOF.push(h));
+      renderHof();
+      return;
+    }
+    CACHE.clear('hof_global');
   }
 
   const { data: stele } = await sb
@@ -933,13 +938,14 @@ async function loadHof() {
   HOF.length = 0;
   stele.forEach((s, i) => {
     const p = profileMap[s.zoda_id] || {};
+    const username = (p.username || '').trim();
     const parts = [];
     if (s.stele_record_stand)  parts.push(s.stele_record_stand + ' record' + (s.stele_record_stand !== 1 ? 'uri' : '') + ' stand');
     if (s.stele_top10_lunar)   parts.push(s.stele_top10_lunar + ' top 10 lunar');
     if (s.stele_hall_of_fame)  parts.push(s.stele_hall_of_fame + ' Hall of Fame');
     HOF.push({
       loc:    i + 1,
-      pe:     p.username || s.zoda_id,
+      pe:     username || 'Pescar',
       zodaId: s.zoda_id,
       stele:  s.total_stele || 0,
       detaliu: parts.join(' · '),
