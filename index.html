@@ -114,6 +114,17 @@ nav{display:flex;align-items:center;gap:6px;}
 .gt-btn:hover{background:#1e7a42;}
 .gt-close{background:transparent;border:none;color:#334155;font-size:18px;cursor:pointer;line-height:1;padding:0 0 0 4px;flex-shrink:0;transition:color .2s;}
 .gt-close:hover{color:#94a3b8;}
+/* PESCAR GUEST MODAL */
+#pescar-guest-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:4000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+#pescar-guest-modal.open{display:flex;}
+.pgm-box{background:#111827;border:1px solid #1e293b;border-radius:20px;padding:32px 28px;max-width:360px;width:100%;text-align:center;position:relative;}
+.pgm-icon{font-size:40px;margin-bottom:12px;}
+.pgm-title{font-size:17px;font-weight:900;color:#f1f5f9;margin-bottom:8px;}
+.pgm-sub{font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;}
+.pgm-btn{width:100%;background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;transition:background .2s;margin-bottom:10px;}
+.pgm-btn:hover{background:#1e7a42;}
+.pgm-close{background:transparent;border:none;color:#4b5563;font-size:13px;cursor:pointer;transition:color .2s;}
+.pgm-close:hover{color:#94a3b8;}
 #sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;}
 .hof-card,.balti-card{min-width:0;}
 .hof-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
@@ -897,7 +908,9 @@ function hofRowHtml(h, extended) {
     ? `<span style="color:#f59e0b;font-size:11px;font-weight:800;">⭐${h.stele}</span>`
     : '<span style="color:#334155;font-size:11px;">—</span>';
   const nameHtml = h.zodaId
-    ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</a>`
+    ? (currentUser
+        ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</a>`
+        : `<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</span>`)
     : `<span>${h.pe}</span>`;
   return `<div class="hof-row">
     <div class="hof-loc" style="background:${MEDAL_C[h.loc-1]||'#1e293b'};color:${h.loc<=3?'#000':'#a3e635'};">${h.loc<=3?MEDAL_I[h.loc-1]:h.loc}</div>
@@ -2836,11 +2849,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
     await updateNavForUser(currentUser);
     closeAuthModal();
+    if (HOF.length) renderHof(); // re-renderăm cu link-uri deblocate
   } else if(event === 'SIGNED_OUT') {
     currentUser = null;
     _roleCache  = null;
     await updateNavForUser(null);
     if (BALTI.length) { renderMapMarkers(); renderBalti(); }
+    if (HOF.length) renderHof(); // re-renderăm cu link-uri blocate pentru vizitatori
   }
 });
 
@@ -3207,6 +3222,22 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
   }
 })();
+</script>
+
+<!-- PESCAR GUEST MODAL -->
+<div id="pescar-guest-modal" onclick="if(event.target===this)closePescarGuestModal()">
+  <div class="pgm-box">
+    <div class="pgm-icon">🎣</div>
+    <div class="pgm-title">Creează un cont gratuit</div>
+    <div class="pgm-sub">Înregistrează-te pentru a vedea profilurile pescarilor, realizările lor și clasamentele complete.</div>
+    <button class="pgm-btn" onclick="closePescarGuestModal(); openAuthModal(); authSwitchTab('register');">Creează cont gratuit</button>
+    <button class="pgm-close" onclick="closePescarGuestModal()">Am înțeles, poate mai târziu</button>
+  </div>
+</div>
+
+<script>
+function openPescarGuestModal()  { document.getElementById('pescar-guest-modal').classList.add('open'); }
+function closePescarGuestModal() { document.getElementById('pescar-guest-modal').classList.remove('open'); }
 </script>
 
 <!-- GUEST TOAST -->
