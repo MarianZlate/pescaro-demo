@@ -102,6 +102,18 @@ nav{display:flex;align-items:center;gap:6px;}
 .mto-icon{font-size:20px;}
 .balta-tooltip{background:#111827!important;border:1px solid #1e293b!important;border-radius:7px!important;color:#f1f5f9!important;font-size:12px!important;font-weight:700!important;padding:5px 10px!important;box-shadow:0 4px 14px rgba(0,0,0,.6)!important;white-space:nowrap;}
 .balta-tooltip::before{border-top-color:#1e293b!important;}
+
+/* GUEST TOAST */
+#guest-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);z-index:3000;background:#111827;border:1px solid #1a6b3a;border-radius:14px;padding:14px 18px 14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:calc(100vw - 32px);width:max-content;}
+#guest-toast.show{transform:translateX(-50%) translateY(0);}
+.gt-icon{font-size:22px;flex-shrink:0;}
+.gt-text{flex:1;min-width:0;}
+.gt-title{font-size:13px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
+.gt-sub{font-size:11px;color:#64748b;line-height:1.4;}
+.gt-btn{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s;}
+.gt-btn:hover{background:#1e7a42;}
+.gt-close{background:transparent;border:none;color:#334155;font-size:18px;cursor:pointer;line-height:1;padding:0 0 0 4px;flex-shrink:0;transition:color .2s;}
+.gt-close:hover{color:#94a3b8;}
 #sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;}
 .hof-card,.balti-card{min-width:0;}
 .hof-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
@@ -2783,6 +2795,21 @@ sb.auth.onAuthStateChange(async (event, session) => {
     if(currentUser && sessionStorage.getItem('zoda-session-only') === '1') {
       window.addEventListener('beforeunload', () => { sb.auth.signOut(); });
     }
+    // Dacă vine din balta.html cu flag de register
+    const authFlag = sessionStorage.getItem('zoda_open_auth');
+    if (authFlag && !currentUser) {
+      sessionStorage.removeItem('zoda_open_auth');
+      setTimeout(() => {
+        openAuthModal();
+        authSwitchTab('register');
+      }, 400);
+    } else if (authFlag) {
+      sessionStorage.removeItem('zoda_open_auth');
+    }
+    // Toast pentru vizitatori (o dată per sesiune)
+    if (!currentUser && !sessionStorage.getItem('zoda_toast_shown')) {
+      setTimeout(showGuestToast, 30000);
+    }
   } else if(event === 'SIGNED_IN') {
     currentUser = session?.user || null;
     if (currentUser) {
@@ -3180,6 +3207,30 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
   }
 })();
+</script>
+
+<!-- GUEST TOAST -->
+<div id="guest-toast">
+  <div class="gt-icon">🎣</div>
+  <div class="gt-text">
+    <div class="gt-title">Ești pescar?</div>
+    <div class="gt-sub">Înregistrează-te gratuit și deblochezi<br/>toate funcționalitățile platformei.</div>
+  </div>
+  <button class="gt-btn" onclick="closeGuestToast(); openAuthModal(); authSwitchTab('register');">Creează cont</button>
+  <button class="gt-close" onclick="closeGuestToast()" title="Închide">✕</button>
+</div>
+
+<script>
+function showGuestToast() {
+  if (currentUser) return; // s-a logat între timp
+  sessionStorage.setItem('zoda_toast_shown', '1');
+  var t = document.getElementById('guest-toast');
+  if (t) setTimeout(function() { t.classList.add('show'); }, 50);
+}
+function closeGuestToast() {
+  var t = document.getElementById('guest-toast');
+  if (t) t.classList.remove('show');
+}
 </script>
 
 </body>
