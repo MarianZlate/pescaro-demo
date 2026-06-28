@@ -164,6 +164,17 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .luna-btn:hover{border-color:#334155;color:#94a3b8;}
 .luna-btn.active{background:#1a3020;border-color:#a3e635;color:#a3e635;font-weight:700;}
 
+/* BLUR TOP 10 LUNAR */
+#lunar-curent-blur-wrap{position:relative;}
+#lunar-curent-blur-wrap.blurred #lunar-list{filter:blur(5px);pointer-events:none;user-select:none;}
+#lunar-unlock-overlay{display:none;position:absolute;inset:0;z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:16px;text-align:center;}
+#lunar-curent-blur-wrap.blurred #lunar-unlock-overlay{display:flex;}
+.unlock-icon{font-size:28px;}
+.unlock-title{font-size:13px;font-weight:800;color:#f1f5f9;line-height:1.4;}
+.unlock-sub{font-size:11px;color:#64748b;line-height:1.5;}
+.unlock-btn{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:9px 20px;border-radius:9px;cursor:pointer;margin-top:4px;transition:background .2s;}
+.unlock-btn:hover{background:#1e7a42;}
+
 /* LEGENDĂ */
 .lgd{display:flex;flex-direction:column;gap:5px;}
 .li{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;border:1px solid #1e293b;cursor:pointer;transition:all .15s;background:#111827;}
@@ -431,8 +442,16 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       </div>
 
       <!-- Panel curent -->
-      <div id="lunar-curent-panel">
-        <div id="lunar-list"><div class="t10e">Se încarcă...</div></div>
+      <div id="lunar-curent-blur-wrap">
+        <div id="lunar-curent-panel">
+          <div id="lunar-list"><div class="t10e">Se încarcă...</div></div>
+        </div>
+        <div id="lunar-unlock-overlay">
+          <div class="unlock-icon">🔓</div>
+          <div class="unlock-title">Deblochează Top 10 Lunar</div>
+          <div class="unlock-sub">Creează un cont gratuit și vezi<br/>cine pescuiește cel mai bine luna aceasta.</div>
+          <button class="unlock-btn" onclick="openAuthFromBalta()">Creează cont gratuit</button>
+        </div>
       </div>
 
       <!-- Panel istoric -->
@@ -484,6 +503,7 @@ var ST = [];          // standuri cu pozitii + poze
 var CAPTURES = [];    // capturi (viitor: tabela captures)
 var selId = null, editMode = false;
 var DRUM_ACCES_YT = '';
+var BALTA_USER = null; // userul logat (null dacă vizitator)
 
 // ─── INIT ──────────────────────────────────────────────────────────────────
 window.addEventListener('load', async function() {
@@ -493,6 +513,13 @@ window.addEventListener('load', async function() {
     showError('Lipsă parametru ?id= în URL.');
     return;
   }
+
+  // Verifică sesiunea — nu blocăm, doar știm dacă e logat
+  try {
+    var { data: { session } } = await sb.auth.getSession();
+    BALTA_USER = session?.user || null;
+  } catch(e) { BALTA_USER = null; }
+
   try {
     await loadBalta(baltaId);
   } catch(e) {
@@ -942,6 +969,9 @@ async function loadTop10Lunar(baltaId) {
   card.style.display = 'block';
   renderLunarRows(rows, 'lunar-list', false);
 
+  // Blur dacă vizitator nelogat
+  applyLunarBlur();
+
   // Construiește butoanele pentru ultimele 3 luni în istoric
   var btnWrap = document.getElementById('lunar-luna-buttons');
   if (btnWrap) {
@@ -959,6 +989,22 @@ async function loadTop10Lunar(baltaId) {
 }
 
 var _istoricLunaActiva = null;
+
+function applyLunarBlur() {
+  var wrap = document.getElementById('lunar-curent-blur-wrap');
+  if (!wrap) return;
+  if (!BALTA_USER) {
+    wrap.classList.add('blurred');
+  } else {
+    wrap.classList.remove('blurred');
+  }
+}
+
+function openAuthFromBalta() {
+  // Trimite userul la index cu un flag să deschidă modalul de register
+  sessionStorage.setItem('zoda_open_auth', 'register');
+  window.location.href = 'index.html';
+}
 
 function toggleIstoric() {
   var curent  = document.getElementById('lunar-curent-panel');
