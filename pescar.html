@@ -93,6 +93,19 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   .hero-name{font-size:26px;}
   .tabs{max-width:360px;}
 }
+
+/* GUEST BLUR */
+#page.blurred{filter:blur(6px);pointer-events:none;user-select:none;}
+#pescar-guest-overlay{display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;padding:20px;}
+#pescar-guest-overlay.open{display:flex;}
+.pgo-box{background:#111827;border:1px solid #1e293b;border-radius:20px;padding:36px 28px;max-width:360px;width:100%;text-align:center;}
+.pgo-icon{font-size:44px;margin-bottom:14px;}
+.pgo-title{font-size:17px;font-weight:900;color:#f1f5f9;margin-bottom:8px;}
+.pgo-sub{font-size:13px;color:#64748b;line-height:1.6;margin-bottom:24px;}
+.pgo-btn{display:block;width:100%;background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:13px;border-radius:10px;cursor:pointer;transition:background .2s;margin-bottom:10px;}
+.pgo-btn:hover{background:#1e7a42;}
+.pgo-back{background:transparent;border:none;color:#4b5563;font-size:13px;cursor:pointer;transition:color .2s;}
+.pgo-back:hover{color:#94a3b8;}
 </style>
 </head>
 <body>
@@ -113,6 +126,17 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <a href="index.html" class="logo">Zoda</a>
     <span style="font-size:12px;color:#4b5563;" id="hdr-subtitle">Profil pescar</span>
     <a href="index.html" class="back-btn" onclick="event.preventDefault(); savePescarState(); if(history.length > 1) { history.back(); } else { window.location.href='index.html'; }">← Înapoi</a>
+  </div>
+</div>
+
+<!-- GUEST OVERLAY -->
+<div id="pescar-guest-overlay">
+  <div class="pgo-box">
+    <div class="pgo-icon">🎣</div>
+    <div class="pgo-title">Profil privat</div>
+    <div class="pgo-sub">Creează un cont gratuit pentru a putea accesa profilul pescarului și realizările sale.</div>
+    <button class="pgo-btn" onclick="sessionStorage.setItem('zoda_open_auth','register'); window.location.href='index.html';">Creează cont gratuit</button>
+    <button class="pgo-back" onclick="if(history.length > 1) { history.back(); } else { window.location.href='index.html'; }">← Înapoi</button>
   </div>
 </div>
 
@@ -197,9 +221,53 @@ function realizareRow(opts) {
   return `<div class="${cls}">${inner}</div>`;
 }
 
+async function loadProfileForBlur(zodaId) {
+  try {
+    const { data: profile } = await sb
+      .from('user_profiles')
+      .select('username, avatar_url, zoda_id')
+      .eq('zoda_id', zodaId)
+      .is('deleted_at', null)
+      .single();
+    if (!profile) return;
+    const username = profile.username || zodaId;
+    document.title = 'Zoda — ' + username;
+    document.getElementById('hdr-subtitle').textContent = username;
+    // Afișăm minimal în hero ca fundalul să arate ceva
+    document.getElementById('hero-name').textContent = username;
+    document.getElementById('hero-zoda').textContent = profile.zoda_id;
+    const avatarEl = document.getElementById('hero-avatar');
+    if (profile.avatar_url) {
+      avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="avatar"/>`;
+    } else {
+      avatarEl.textContent = username.slice(0, 2).toUpperCase();
+    }
+  } catch(e) {}
+}
+
 async function boot() {
   const zodaId = new URLSearchParams(location.search).get('id');
   if (!zodaId) { showError('Link invalid — lipsește ID-ul pescarului.'); return; }
+
+  // Verifică sesiunea — dacă nu e logat, blur + overlay
+  let isLoggedIn = false;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    isLoggedIn = !!session?.user;
+  } catch(e) { isLoggedIn = false; }
+
+  if (!isLoggedIn) {
+    // Încărcăm oricum profilul ca să afișăm pagina blurată în spate
+    // dar punem overlay-ul imediat
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('hdr').style.display = 'block';
+    document.getElementById('page').style.display = 'block';
+    document.getElementById('page').classList.add('blurred');
+    document.getElementById('pescar-guest-overlay').classList.add('open');
+    // Încărcăm datele în fundal pentru efectul vizual
+    loadProfileForBlur(zodaId);
+    return;
+  }
 
   // 1. Profil pescar
   const { data: profile, error: profErr } = await sb
