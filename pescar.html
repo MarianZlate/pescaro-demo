@@ -268,8 +268,39 @@ async function boot() {
     return (yb - ya) || (mb - ma);
   });
 
+  // 6. HOF activ — pentru fiecare baltă unde are stele hall_of_fame,
+  //    verificăm dacă capturile lui sunt încă în top 10 all-time
+  const hofBaltaIds = [...new Set(
+    (steleLogRaw || [])
+      .filter(l => l.tip === 'hall_of_fame')
+      .map(l => l.balta_id)
+      .filter(Boolean)
+  )];
+
+  // { balta_id -> [ {id_captura, pozitie, kg} ] } — pozițiile active ale pescarului
+  const hofActiveMap = {}; // balta_id -> array de {pozitie, kg, capturaId}
+
+  await Promise.all(hofBaltaIds.map(async (baltaId) => {
+    const { data: top10 } = await sb
+      .from('capturi')
+      .select('id, kg, pescar_id')
+      .eq('balta_id', baltaId)
+      .eq('status', 'approved')
+      .order('kg', { ascending: false })
+      .limit(10);
+
+    if (!top10) return;
+    const pozitii = [];
+    top10.forEach((c, i) => {
+      if (c.pescar_id === zodaId) {
+        pozitii.push({ pozitie: i + 1, kg: c.kg, capturaId: c.id });
+      }
+    });
+    if (pozitii.length) hofActiveMap[baltaId] = pozitii;
+  }));
+
   renderHero(profile, steleData);
-  renderRealizari(steleLogRaw || [], recorduriActive || [], top10Sortat, standuriTrecuteMap);
+  renderRealizari(steleLogRaw || [], recorduriActive || [], top10Sortat, standuriTrecuteMap, hofActiveMap, hofBaltaIds);
 
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
@@ -308,7 +339,7 @@ function renderHero(profile, steleData) {
     '<span style="color:#1e293b;">Nicio stea câștigată încă</span>';
 }
 
-function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecuteMap) {
+function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecuteMap, hofActiveMap, hofBaltaIds) {
   const activeList   = document.getElementById('active-list');
   const trecuteList  = document.getElementById('trecute-list');
 
@@ -326,7 +357,6 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
   recorduriActive.forEach(s => {
     const baltaNume = s.balti?.nume || '—';
     const judet = s.balti?.judet ? ` · ${s.balti.judet}` : '';
-    // Găsim steaua din log pentru data activării
     const stea = steleLog.find(l => l.tip === 'record_stand' && l.referinta === String(s.id));
     activeHtml += realizareRow({
       iconWrapClass: 'gold',
@@ -359,11 +389,27 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
       });
     });
 
-  // ── HALL OF FAME — PLACEHOLDER ────────────────────────────────────────────
-  // (se activează când implementăm HOF per baltă)
+  // ── HALL OF FAME ACTIVE ───────────────────────────────────────────────────
+  // Pentru fiecare baltă unde pescarul e activ în HOF, afișăm fiecare poziție
+  Object.entries(hofActiveMap || {}).forEach(([baltaId, pozitii]) => {
+    // Găsim numele băltii din stele_log
+    const logEntry = steleLog.find(l => l.tip === 'hall_of_fame' && String(l.balta_id) === String(baltaId));
+    const baltaNume = logEntry?.balti?.nume || '—';
+    pozitii.forEach(p => {
+      activeHtml += realizareRow({
+        iconWrapClass: 'gold',
+        icon: '🥇',
+        title: `Hall of Fame — Locul ${p.pozitie}`,
+        meta: `${baltaNume} · <strong style="color:#a3e635;">${parseFloat(p.kg).toFixed(1)} kg</strong>`,
+        star: true,
+        date: 'Activ',
+        trecut: false,
+        link: `balta.html?id=${baltaId}`,
+      });
+    });
+  });
 
   // ── RECORDURI STAND TRECUTE ───────────────────────────────────────────────
-  // Stelele de tip record_stand pentru standuri pe care nu le mai deține
   steleLog
     .filter(l => l.tip === 'record_stand' && !activeStandIds.has(l.referinta))
     .forEach(l => {
@@ -383,14 +429,13 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
       });
     });
 
-  // Stele extra pe standuri pe care LE MAI DEȚINE (recorduri depășite pe același stand)
-  // Prima stea per stand = activă, restul = trecute
+  // Stele extra pe standuri pe care LE MAI DEȚINE
   const stelaVazuta = new Set();
   steleLog
     .filter(l => l.tip === 'record_stand' && activeStandIds.has(l.referinta))
     .forEach(l => {
       if (!stelaVazuta.has(l.referinta)) {
-        stelaVazuta.add(l.referinta); // prima apariție = activă, sărim
+        stelaVazuta.add(l.referinta);
         return;
       }
       const stand = recorduriActive.find(s => String(s.id) === l.referinta);
@@ -425,6 +470,29 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
         date: '',
         trecut: true,
         link: null,
+      });
+    });
+
+  // ── HALL OF FAME TRECUTE ──────────────────────────────────────────────────
+  // Stele hall_of_fame pentru bălți unde pescarul NU mai e în top 10
+  steleLog
+    .filter(l => l.tip === 'hall_of_fame')
+    .forEach(l => {
+      const baltaId = String(l.balta_id);
+      // Dacă balta nu mai e în hofActiveMap sau nu mai e în hofBaltaIds = trecut
+      const esteActiv = hofActiveMap && hofActiveMap[baltaId];
+      if (esteActiv) return; // e activ, deja afișat mai sus
+      const baltaNume = l.balti?.nume || '—';
+      const kgStr = l.kg ? ` · <strong style="color:#a3e635;">${parseFloat(l.kg).toFixed(1)} kg</strong>` : '';
+      trecuteHtml += realizareRow({
+        iconWrapClass: 'gray',
+        icon: '🥇',
+        title: 'Hall of Fame — poziție pierdută',
+        meta: baltaNume + kgStr,
+        star: false,
+        date: 'Câștigat la ' + fmtDate(l.created_at),
+        trecut: true,
+        link: l.balta_id ? `balta.html?id=${l.balta_id}` : null,
       });
     });
 
