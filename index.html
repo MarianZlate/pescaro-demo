@@ -104,8 +104,8 @@ nav{display:flex;align-items:center;gap:6px;}
 .balta-tooltip::before{border-top-color:#1e293b!important;}
 
 /* GUEST TOAST */
-#guest-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);z-index:3000;background:#111827;border:1px solid #1a6b3a;border-radius:14px;padding:14px 18px 14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:calc(100vw - 32px);width:max-content;}
-#guest-toast.show{transform:translateX(-50%) translateY(0);}
+#guest-toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:3000;background:#111827;border:1px solid #1a6b3a;border-radius:14px;padding:14px 18px 14px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;max-width:calc(100vw - 32px);width:max-content;opacity:0;}
+#guest-toast.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0);}
 .gt-icon{font-size:22px;flex-shrink:0;}
 .gt-text{flex:1;min-width:0;}
 .gt-title{font-size:13px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
@@ -3253,14 +3253,18 @@ function closePescarGuestModal() { document.getElementById('pescar-guest-modal')
 
 <script>
 function showGuestToast() {
-  if (currentUser) return; // s-a logat între timp
+  if (currentUser) return;
   sessionStorage.setItem('zoda_toast_shown', '1');
   var t = document.getElementById('guest-toast');
-  if (t) setTimeout(function() { t.classList.add('show'); }, 50);
+  if (!t) return;
+  t.style.display = 'flex';
+  setTimeout(function() { t.classList.add('show'); }, 50);
 }
 function closeGuestToast() {
   var t = document.getElementById('guest-toast');
-  if (t) t.classList.remove('show');
+  if (!t) return;
+  t.classList.remove('show');
+  setTimeout(function() { t.style.display = 'none'; }, 400);
 }
 </script>
 
