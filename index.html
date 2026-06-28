@@ -745,14 +745,6 @@ function activateMap() {
     map.scrollWheelZoom.enable();
     map.touchZoom.enable();
   }
-  // Dezactivăm automat după 4s de inactivitate pe hartă
-  let inactivityTimer;
-  function resetTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(deactivateMap, 4000);
-  }
-  map.on('move zoom dragstart', resetTimer);
-  resetTimer();
 }
 
 function deactivateMap() {
@@ -765,6 +757,14 @@ function deactivateMap() {
     map.touchZoom.disable();
   }
 }
+
+// Dezactivează harta când userul atinge în afara ei
+document.addEventListener('touchstart', function(e) {
+  const mapWrap = document.getElementById('map-wrap');
+  if (mapWrap && !mapWrap.contains(e.target)) {
+    deactivateMap();
+  }
+}, { passive: true });
 
 function initMap() {
   map = L.map('map', { center: [45.5, 24.8], zoom: 7 });
