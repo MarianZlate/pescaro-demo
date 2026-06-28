@@ -529,6 +529,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 <script>
 const SUPA_URL = 'https://emnesflrzptqfttlzusw.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbmVzZmxyenB0cWZ0dGx6dXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NTc5NDUsImV4cCI6MjA5NzUzMzk0NX0.LoR6peujcdm1SLZ8SUSdtSH8wDa_ptCUEYT3qtAPZXk';
+
+// ── Cloudflare Workers endpoints ──────────────────────────────────────────────
+const WORKER_R2_UPLOAD     = 'https://zoda-r2-upload.zodaplatform.workers.dev';
+const WORKER_YOUTUBE_TOKEN = 'https://zoda-youtube-token.zodaplatform.workers.dev';
 // ── Cloudinary eliminat — upload via Cloudflare R2 ──────────────────────────
 // Funcție centralizată cu progress pentru R2
 async function uploadToR2(file, folder, onProgress) {
@@ -536,7 +540,7 @@ async function uploadToR2(file, folder, onProgress) {
     const fd = new FormData();
     fd.append('file', file);
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `/api/r2-upload?folder=${folder}`);
+    xhr.open('POST', `${WORKER_R2_UPLOAD}?folder=${folder}`);
     xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
     xhr.onload = () => {
       try {
@@ -1029,7 +1033,7 @@ async function submitCaptura() {
       setProgress(60, 'Se pregătește upload-ul...');
 
       // Pasul 1: obține access token de la Vercel (request mic ~1KB)
-      const tokenRes = await fetch('/api/get-youtube-token', { method: 'POST' });
+      const tokenRes = await fetch(WORKER_YOUTUBE_TOKEN, { method: 'POST' });
       const tokenData = await tokenRes.json();
       if (!tokenData.access_token) throw new Error(tokenData.error || 'Nu s-a putut obține token YouTube.');
 
