@@ -170,6 +170,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #lunar-curent-blur-wrap.blurred #lunar-list{filter:blur(5px);pointer-events:none;user-select:none;opacity:.6;}
 #lunar-unlock-overlay{display:none;position:absolute;inset:0;z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:16px;text-align:center;background:rgba(10,15,26,.7);border-radius:0 0 12px 12px;}
 #lunar-curent-blur-wrap.blurred #lunar-unlock-overlay{display:flex;}
+/* BLUR HALL OF FAME */
+#hof-blur-wrap{position:relative;}
+#hof-blur-wrap.blurred{min-height:180px;}
+#hof-blur-wrap.blurred #t10-list{filter:blur(5px);pointer-events:none;user-select:none;opacity:.6;}
+#hof-unlock-overlay{display:none;position:absolute;inset:0;z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:16px;text-align:center;background:rgba(10,15,26,.7);border-radius:0 0 12px 12px;}
+#hof-blur-wrap.blurred #hof-unlock-overlay{display:flex;}
 .unlock-icon{font-size:28px;}
 .unlock-title{font-size:13px;font-weight:800;color:#f1f5f9;line-height:1.4;}
 .unlock-sub{font-size:11px;color:#64748b;line-height:1.5;}
@@ -431,7 +437,15 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       </div>
       <div class="t10ct active" id="t10-top">
         <div class="t10h">Cele mai mari capturi aprobate la această baltă</div>
-        <div id="t10-list"></div>
+        <div id="hof-blur-wrap">
+          <div id="t10-list"></div>
+          <div id="hof-unlock-overlay">
+            <div class="unlock-icon">🔓</div>
+            <div class="unlock-title">Deblochează Hall of Fame</div>
+            <div class="unlock-sub">Creează un cont gratuit și vezi<br/>cele mai mari capturi de la această baltă.</div>
+            <button class="unlock-btn" onclick="openAuthFromBalta()">Creează cont gratuit</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -863,6 +877,9 @@ async function loadHallOfFame(baltaId) {
     var img = document.getElementById('hof-img-' + c.id);
     if (img) img.addEventListener('click', function(e) { e.stopPropagation(); openFS(c.foto_url); });
   });
+
+  // Blur dacă vizitator nelogat
+  applyHofBlur();
 }
 
 function escH(str) {
@@ -993,6 +1010,16 @@ var _istoricLunaActiva = null;
 
 function applyLunarBlur() {
   var wrap = document.getElementById('lunar-curent-blur-wrap');
+  if (!wrap) return;
+  if (!BALTA_USER) {
+    wrap.classList.add('blurred');
+  } else {
+    wrap.classList.remove('blurred');
+  }
+}
+
+function applyHofBlur() {
+  var wrap = document.getElementById('hof-blur-wrap');
   if (!wrap) return;
   if (!BALTA_USER) {
     wrap.classList.add('blurred');
