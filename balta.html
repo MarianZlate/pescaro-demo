@@ -500,7 +500,47 @@ window.addEventListener('load', async function() {
   }
 });
 
+// ── CACHE SISTEM ──────────────────────────────────────────────────────────────
+var CACHE = {
+  set: function(key, data, ttlMinutes) {
+    try {
+      localStorage.setItem('zoda_cache_' + key, JSON.stringify({
+        data: data, exp: Date.now() + ttlMinutes * 60 * 1000
+      }));
+    } catch(e) {}
+  },
+  get: function(key) {
+    try {
+      var raw = localStorage.getItem('zoda_cache_' + key);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (Date.now() > parsed.exp) { localStorage.removeItem('zoda_cache_' + key); return null; }
+      return parsed.data;
+    } catch(e) { return null; }
+  },
+  clear: function(key) {
+    try { localStorage.removeItem('zoda_cache_' + key); } catch(e) {}
+  }
+};
+
 async function loadBalta(id) {
+  var cacheKey = 'balta_' + id;
+  var cached = CACHE.get(cacheKey);
+
+  if (cached) {
+    // Servim din cache instant
+    BALTA = cached.balta;
+    DRUM_ACCES_YT = BALTA.drum_yt || '';
+    ST = cached.standuri;
+    var hartaUrl = cached.hartaUrl;
+    renderBalta(hartaUrl);
+    loadTop10(id);
+    loadHofBalta(id);
+    // Refresh în background
+    setTimeout(function() { refreshBaltaInBackground(id, cacheKey); }, 100);
+    return;
+  }
+
   // 1. Date baltă
   var bRes = await sb.from('balti').select('*').eq('id', id).single();
   if (bRes.error || !bRes.data) { showError('Balta cu ID=' + id + ' nu există.'); return; }
@@ -570,8 +610,39 @@ async function loadBalta(id) {
   // Randează UI
   await loadSteleForStanduri();
   renderPage(hartaUrl);
+  // Salvează în cache 15 minute
+  CACHE.set(cacheKey, { balta: BALTA, standuri: ST, hartaUrl: hartaUrl }, 15);
   // Restaurează starea dacă userul vine înapoi din altă pagină
   restoreBaltaState();
+}
+
+// Refresh baltă în background după ce cache-ul a servit UI-ul
+async function refreshBaltaInBackground(id, cacheKey) {
+  try {
+    var bRes = await sb.from('balti').select('*').eq('id', id).single();
+    if (bRes.error || !bRes.data) return;
+    var balta = bRes.data;
+    var sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true });
+    var pRes = await sb.from('poze').select('*').eq('balta_id', id);
+    var poze = pRes.data || [];
+    var hartaRows = poze.filter(function(p){ return !p.stand_id; });
+    var hartaUrl = hartaRows.length ? hartaRows[hartaRows.length-1].url : '';
+    var standuri = (sRes.data || []).map(function(s, i) {
+      var pozitie = {};
+      try { pozitie = s.pozitie ? JSON.parse(s.pozitie) : {}; } catch(e) {}
+      var pozeFotou = poze.filter(function(p){ return p.stand_id === s.id; }).map(function(p){ return {u: p.url, c: s.nume}; });
+      return {
+        id: s.id, nr: i+1,
+        x: pozitie.x != null ? pozitie.x : (30 + (i%5)*10),
+        y: pozitie.y != null ? pozitie.y : (30 + Math.floor(i/5)*20),
+        z: s.nume || ('Stand '+(i+1)),
+        ad: s.adancime||0, di: s.distanta||0, la: s.latime||0, yt: s.yt||'',
+        r: { kg: s.rec_kg!=null?String(s.rec_kg):'', pe: s.rec_pescar||'', pid: s.rec_pescar_id||'', da: s.rec_data||'', foto: s.rec_foto||'' },
+        g: pozeFotou, sort_order: s.sort_order
+      };
+    });
+    CACHE.set(cacheKey, { balta: balta, standuri: standuri, hartaUrl: hartaUrl }, 15);
+  } catch(e) {}
 }
 
 
