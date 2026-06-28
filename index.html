@@ -95,6 +95,11 @@ nav{display:flex;align-items:center;gap:6px;}
 .pop-btn{width:100%;background:#166534;border:none;color:#a3e635;font-weight:700;font-size:12px;padding:8px;border-radius:7px;cursor:pointer;}
 .pop-btn:hover{background:#1a7a40;}
 #map-legend{position:absolute;bottom:14px;left:14px;background:rgba(10,15,26,.85);border:1px solid #1e293b;border-radius:8px;padding:8px 12px;font-size:11px;color:#64748b;z-index:10;pointer-events:none;}
+/* Overlay scroll-block pe mobil */
+#map-touch-overlay{display:none;position:absolute;inset:0;z-index:20;cursor:pointer;background:rgba(10,15,26,.45);align-items:center;justify-content:center;flex-direction:column;gap:8px;transition:opacity .2s;}
+#map-touch-overlay.active{display:flex;}
+.mto-inner{background:rgba(10,15,26,.85);border:1px solid #1e293b;border-radius:12px;padding:10px 18px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#f1f5f9;box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.mto-icon{font-size:20px;}
 .balta-tooltip{background:#111827!important;border:1px solid #1e293b!important;border-radius:7px!important;color:#f1f5f9!important;font-size:12px!important;font-weight:700!important;padding:5px 10px!important;box-shadow:0 4px 14px rgba(0,0,0,.6)!important;white-space:nowrap;}
 .balta-tooltip::before{border-top-color:#1e293b!important;}
 #sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;}
@@ -399,6 +404,9 @@ nav{display:flex;align-items:center;gap:6px;}
     <div id="map-wrap">
     <div id="map"></div>
     <div id="map-legend">🎣 Click pe marker pentru detalii</div>
+    <div id="map-touch-overlay" onclick="activateMap()">
+      <div class="mto-inner"><span class="mto-icon">👆</span> Apasă pentru a interacționa cu harta</div>
+    </div>
   </div>
   </div>
 
@@ -725,12 +733,53 @@ const MEDAL_I = ['🥇','🥈','🥉'];
 // ── MAP ───────────────────────────────────────────────────────────────────────
 let map, highlightId = null;
 
+function isTouchDevice() {
+  return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+}
+
+function activateMap() {
+  const overlay = document.getElementById('map-touch-overlay');
+  overlay.classList.remove('active');
+  if (map) {
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.touchZoom.enable();
+  }
+  // Dezactivăm automat după 4s de inactivitate pe hartă
+  let inactivityTimer;
+  function resetTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(deactivateMap, 4000);
+  }
+  map.on('move zoom dragstart', resetTimer);
+  resetTimer();
+}
+
+function deactivateMap() {
+  if (!isTouchDevice()) return;
+  const overlay = document.getElementById('map-touch-overlay');
+  overlay.classList.add('active');
+  if (map) {
+    map.dragging.disable();
+    map.scrollWheelZoom.disable();
+    map.touchZoom.disable();
+  }
+}
+
 function initMap() {
   map = L.map('map', { center: [45.5, 24.8], zoom: 7 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(map);
+
+  // Pe mobil: dezactivăm interacțiunile touch implicit
+  if (isTouchDevice()) {
+    map.dragging.disable();
+    map.scrollWheelZoom.disable();
+    map.touchZoom.disable();
+    document.getElementById('map-touch-overlay').classList.add('active');
+  }
 
   BALTI.forEach(b => {
     if (!b.lat || !b.lng) return;
