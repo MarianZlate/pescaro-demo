@@ -1143,6 +1143,16 @@ async function loadStats() {
 }
 
 // ── BALTI ─────────────────────────────────────────────────────────────────────
+// ── CACHE INVALIDARE ─────────────────────────────────────────────────────────
+// Șterge cache-ul pentru o baltă specifică și lista globală
+function invalidateCache(baltaId) {
+  try {
+    if (baltaId) localStorage.removeItem('zoda_cache_balta_' + baltaId);
+    localStorage.removeItem('zoda_cache_balti_publice');
+    localStorage.removeItem('zoda_cache_hof_global');
+  } catch(e) {}
+}
+
 async function loadBalti() {
   const tbody = document.getElementById('balti-tbody');
   tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Se încarcă...</td></tr>';
@@ -1863,6 +1873,7 @@ async function saveEditBalta() {
   }
 
   showToast('✅ Balta "' + updates.nume + '" a fost actualizată!');
+  invalidateCache(editBaltaId);
   closeEditBalta();
   loadBalti();
   loadStats();
@@ -2103,6 +2114,8 @@ async function abSubmit() {
   document.getElementById('draft-banner').classList.remove('show');
   submitBtn.disabled=false; submitBtn.textContent='✓ Salvează balta';
   abStep=5; updateAbUI();
+  // Invalidează cache listă bălți
+  invalidateCache(null);
   // Reîncarcă tabelul de bălți
   await loadBalti();
 }
