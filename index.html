@@ -133,7 +133,9 @@ nav{display:flex;align-items:center;gap:6px;}
 .hof-sub{font-size:10px;color:#4b5563;margin-top:1px;}
 .hof-row{display:flex;align-items:center;border-bottom:1px solid #0f172a;gap:7px;padding:7px 10px;}
 .hof-row:last-child{border-bottom:none;}
-.hof-loc{border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;width:22px;height:22px;font-size:10px;}
+.hof-loc{display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;width:18px;font-size:10px;color:#4b5563;}
+.hof-avatar{width:32px;height:32px;border-radius:4px;object-fit:cover;flex-shrink:0;background:#0d1520;}
+.hof-avatar-empty{width:32px;height:32px;border-radius:4px;flex-shrink:0;background:#0d1520;}
 .hof-name{font-weight:700;color:#e2e8f0;font-size:11px;}
 .hof-detail{color:#4b5563;margin-top:1px;font-size:9px;}
 .hof-stars{display:flex;align-items:center;gap:2px;margin-left:auto;flex-shrink:0;}
@@ -907,13 +909,17 @@ function hofRowHtml(h, extended) {
   const steleIcon = h.stele > 0
     ? `<span style="color:#f59e0b;font-size:11px;font-weight:800;">⭐${h.stele}</span>`
     : '<span style="color:#334155;font-size:11px;">—</span>';
+  const avatarHtml = h.avatar
+    ? `<img class="hof-avatar" src="${h.avatar}" alt="" loading="lazy"/>`
+    : `<div class="hof-avatar-empty"></div>`;
   const nameHtml = h.zodaId
     ? (currentUser
         ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</a>`
         : `<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</span>`)
     : `<span>${h.pe}</span>`;
   return `<div class="hof-row">
-    <div class="hof-loc" style="background:${MEDAL_C[h.loc-1]||'#1e293b'};color:${h.loc<=3?'#000':'#a3e635'};">${h.loc<=3?MEDAL_I[h.loc-1]:h.loc}</div>
+    <div class="hof-loc">${h.loc}</div>
+    ${avatarHtml}
     <div style="flex:1;min-width:0;">
       <div class="hof-name">${nameHtml}</div>
       <div class="hof-detail">${h.zodaId}${extended && h.detaliu ? ' · ' + h.detaliu : ''}</div>
@@ -974,6 +980,7 @@ async function loadHof() {
       zodaId: s.zoda_id,
       stele:  s.total_stele || 0,
       detaliu: parts.join(' · '),
+      avatar: p.avatar_url || '',
     });
   });
 
