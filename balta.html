@@ -561,9 +561,9 @@ async function loadBalta(id) {
     DRUM_ACCES_YT = BALTA.drum_yt || '';
     ST = cached.standuri;
     var hartaUrl = cached.hartaUrl;
-    renderBalta(hartaUrl);
-    loadTop10(id);
-    loadHofBalta(id);
+    renderPage(hartaUrl);
+    loadTop10Lunar(id);
+    loadHallOfFame(id);
     // Refresh în background
     setTimeout(function() { refreshBaltaInBackground(id, cacheKey); }, 100);
     return;
