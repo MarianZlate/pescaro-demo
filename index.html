@@ -849,6 +849,15 @@ function hofRowHtml(h, extended) {
 }
 
 async function loadHof() {
+  // Cache 60 minute — HoF se schimbă doar la aprobare capturi
+  const cached = CACHE.get('hof_global');
+  if (cached) {
+    HOF.length = 0;
+    cached.forEach(h => HOF.push(h));
+    renderHof();
+    return;
+  }
+
   const { data: stele } = await sb
     .from('stele_totale')
     .select('zoda_id, total_stele, stele_record_stand, stele_top10_lunar, stele_hall_of_fame')
@@ -888,6 +897,8 @@ async function loadHof() {
     });
   });
 
+  // Salvează în cache 60 minute
+  CACHE.set('hof_global', HOF.slice(), 60);
   renderHof();
 }
 
@@ -977,8 +988,52 @@ const style = document.createElement('style');
 style.textContent = '.balta-row.active-row{background:#1e293b;border-left:3px solid #a3e635;}';
 document.head.appendChild(style);
 
+// ── CACHE SISTEM ──────────────────────────────────────────────────────────────
+// Cache localStorage cu TTL — reduce bandwidth Supabase dramatic
+const CACHE = {
+  set(key, data, ttlMinutes) {
+    try {
+      localStorage.setItem('zoda_cache_' + key, JSON.stringify({
+        data, exp: Date.now() + ttlMinutes * 60 * 1000
+      }));
+    } catch(e) {} // ignore QuotaExceeded
+  },
+  get(key) {
+    try {
+      const raw = localStorage.getItem('zoda_cache_' + key);
+      if (!raw) return null;
+      const { data, exp } = JSON.parse(raw);
+      if (Date.now() > exp) { localStorage.removeItem('zoda_cache_' + key); return null; }
+      return data;
+    } catch(e) { return null; }
+  },
+  clear(key) {
+    try { localStorage.removeItem('zoda_cache_' + key); } catch(e) {}
+  },
+  clearAll() {
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith('zoda_cache_')).forEach(k => localStorage.removeItem(k));
+    } catch(e) {}
+  }
+};
+
 // ── BOOT ─────────────────────────────────────────────────────────────────────
 async function loadBaltiFromSupabase() {
+  // Încearcă cache primul — TTL 30 minute
+  const cached = CACHE.get('balti_publice');
+  if (cached) {
+    BALTI = cached;
+    renderMapMarkers();
+    renderBalti();
+    loadHof();
+    const statUseri = document.getElementById('stat-useri');
+    const cachedUseri = CACHE.get('stat_useri');
+    if (statUseri && cachedUseri !== null) statUseri.textContent = cachedUseri;
+    restoreIndexState();
+    // Refresh în background fără să blocheze UI
+    refreshBaltiInBackground();
+    return;
+  }
   const { data, error } = await sb.from('balti').select('*').order('created_at', { ascending: false });
   if (error) { console.error('Eroare Supabase:', error); return; }
   BALTI = (data || []).map(b => ({
@@ -989,6 +1044,8 @@ async function loadBaltiFromSupabase() {
     vizibilitate: b.vizibilitate || 'unlisted',
     vizite: b.vizite || 0, _marker: null,
   }));
+  // Salvează în cache 30 minute
+  CACHE.set('balti_publice', BALTI, 30);
   renderMapMarkers();
   renderBalti();
   loadHof();
@@ -998,8 +1055,30 @@ async function loadBaltiFromSupabase() {
     .is('deleted_at', null);
   const statUseri = document.getElementById('stat-useri');
   if (statUseri) statUseri.textContent = count || 0;
+  CACHE.set('stat_useri', count || 0, 60);
   // Restaurează starea paginii dacă userul vine din altă pagină
   restoreIndexState();
+}
+
+// Refresh bălți în background (după ce cache-ul a servit UI-ul)
+async function refreshBaltiInBackground() {
+  try {
+    const { data, error } = await sb.from('balti').select('*').order('created_at', { ascending: false });
+    if (error || !data) return;
+    const fresh = data.map(b => ({
+      id: b.id, nume: b.nume, judet: b.judet, lat: b.lat, lng: b.lng,
+      standuri: b.standuri || 0, telefon: b.telefon || '—',
+      facebook: b.facebook || '', whatsapp: b.whatsapp || '',
+      adresa: b.adresa || '', rec: b.rec || '—',
+      vizibilitate: b.vizibilitate || 'unlisted',
+      vizite: b.vizite || 0, _marker: null,
+    }));
+    CACHE.set('balti_publice', fresh, 30);
+    // Actualizează BALTI și re-renderizează silențios
+    BALTI = fresh;
+    renderMapMarkers();
+    renderBalti();
+  } catch(e) {}
 }
 
 // Adaugă/actualizează markerii pe hartă în funcție de rol.
