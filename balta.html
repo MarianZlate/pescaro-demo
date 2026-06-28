@@ -652,6 +652,11 @@ async function loadBalta(id) {
   renderPage(hartaUrl);
   // Salvează în cache 15 minute
   CACHE.set(cacheKey, { balta: BALTA, standuri: ST, hartaUrl: hartaUrl }, 15);
+  // Incrementează vizite în background (fără await — nu blochează UI)
+  sb.rpc('increment_vizite', { balta_id: id }).catch(function() {
+    // fallback: update direct dacă rpc nu există
+    sb.from('balti').update({ vizite: (BALTA.vizite || 0) + 1 }).eq('id', id);
+  });
   // Restaurează starea dacă userul vine înapoi din altă pagină
   restoreBaltaState();
 }
