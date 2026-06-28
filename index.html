@@ -933,8 +933,10 @@ async function loadHof() {
   const cached = CACHE.get('hof_global');
   if (cached) {
     // Invalidăm cache-ul dacă are intrări cu ZODA-ID ca nume (bug vechi)
+    // sau dacă nu are câmpul avatar (structură veche)
     const hasIdAsName = cached.some(h => h.pe && h.pe.startsWith('ZODA-'));
-    if (!hasIdAsName) {
+    const missingAvatar = cached.some(h => !('avatar' in h));
+    if (!hasIdAsName && !missingAvatar) {
       HOF.length = 0;
       cached.forEach(h => HOF.push(h));
       renderHof();
