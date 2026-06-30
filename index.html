@@ -2837,7 +2837,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
     // Toast pentru vizitatori (o dată per sesiune)
     if (!currentUser && !sessionStorage.getItem('zoda_toast_shown')) {
-      setTimeout(showGuestToast, 30000);
+      setTimeout(function() { showGuestToast(); }, 30000);
     }
   } else if(event === 'SIGNED_IN') {
     currentUser = session?.user || null;
