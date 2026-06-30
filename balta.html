@@ -576,8 +576,8 @@ async function loadBalta(id) {
   var cacheKey = 'balta_' + id;
   var cached = CACHE.get(cacheKey);
 
-  if (cached) {
-    // Servim din cache instant
+  if (cached && cached.balta.vizibilitate !== 'unlisted') {
+    // Servim din cache instant — doar pentru bălți publice
     BALTA = cached.balta;
     DRUM_ACCES_YT = BALTA.drum_yt || '';
     ST = cached.standuri;
@@ -589,6 +589,7 @@ async function loadBalta(id) {
     setTimeout(function() { refreshBaltaInBackground(id, cacheKey); }, 100);
     return;
   }
+  if (cached) CACHE.clear(cacheKey); // baltă unlisted — nu folosim cache, verificăm mereu accesul
 
   // 1. Date baltă (cu retry automat — uneori prima cerere eșuează la cold start)
   var bRes = await sb.from('balti').select('*').eq('id', id).single();
@@ -600,6 +601,30 @@ async function loadBalta(id) {
   if (bRes.error || !bRes.data) { showError('Balta cu ID=' + id + ' nu există.'); return; }
   BALTA = bRes.data;
   DRUM_ACCES_YT = BALTA.drum_yt || '';
+
+  // Verificare acces — bălțile unlisted sunt vizibile DOAR pentru zoda_admin
+  // sau pentru balta_admin-ul desemnat acestei bălți specifice
+  if (BALTA.vizibilitate === 'unlisted') {
+    var hasAccess = false;
+    if (BALTA_USER) {
+      try {
+        var rRes2 = await sb.from('user_roles').select('rol').eq('id', BALTA_USER.id).single();
+        var rol = rRes2.data?.rol;
+        if (rol === 'zoda_admin') {
+          hasAccess = true;
+        } else if (rol === 'balta_admin') {
+          var pRes2 = await sb.from('user_profiles').select('zoda_id').eq('id', BALTA_USER.id).single();
+          if (pRes2.data?.zoda_id && pRes2.data.zoda_id === BALTA.admin_zoda_id) {
+            hasAccess = true;
+          }
+        }
+      } catch(e) { hasAccess = false; }
+    }
+    if (!hasAccess) {
+      showError('Această baltă nu este încă disponibilă public.');
+      return;
+    }
+  }
 
   // 2. Standuri — sortate după sort_order (cu retry dacă vine gol din eroare de rețea)
   var sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true });
