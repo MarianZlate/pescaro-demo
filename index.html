@@ -2578,7 +2578,13 @@ function doGoogleLogin() {
     }
   }).then(({ data, error }) => {
     if (error) { authShowErr('Eroare Google login: ' + error.message); return; }
-    if (data?.url) window.location.href = data.url;
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      authShowErr('Nu s-a primit URL de autentificare de la Google. Încearcă din nou.');
+    }
+  }).catch((err) => {
+    authShowErr('Eroare neașteptată: ' + (err?.message || 'verifică conexiunea la internet.'));
   });
 }
 
