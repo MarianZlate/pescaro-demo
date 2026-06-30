@@ -71,8 +71,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 /* MAP WRAP */
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
-#img-pins-wrap{position:relative;width:100%;aspect-ratio:1/1;background:#0d2010;display:flex;align-items:center;justify-content:center;}
-#lake-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;}
+#img-pins-wrap{position:relative;width:100%;display:flex;align-items:center;justify-content:center;background:#0a0f1a;}
+#lake-img{display:block;width:100%;height:auto;pointer-events:none;}
 #pins-layer{position:absolute;pointer-events:none;}
 
 /* STAND PINS */
@@ -81,11 +81,11 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stand-pin.dragging{cursor:grabbing!important;}
 .stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
 
-/* STAND OVERLAY — mobil: acoperă harta */
+/* STAND OVERLAY — mobil: modal fix peste tot ecranul, indiferent de mărimea hărții */
 #stand-overlay{
-  display:none;z-index:100;background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.85);
-  /* mobil: acoperă exact chenarul hărții */
-  position:absolute;top:0;left:0;right:0;bottom:0;width:100%;max-width:100%;max-height:100%;overflow-y:auto;}
+  display:none;z-index:2000;background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.85);
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:calc(100% - 24px);max-width:480px;max-height:88vh;overflow-y:auto;}
 #stand-overlay[style*="display: block"],
 #stand-overlay[style*="display:block"]{display:flex!important;flex-direction:column;}
 #stand-overlay > div:nth-child(2){grid-template-columns:1fr 1fr!important;flex:1;}
@@ -260,13 +260,13 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   /* MAP SIDEBAR — desktop: lățime fixă */
   #map-sidebar{width:240px;flex-shrink:0;}
 
-  /* STAND OVERLAY — desktop: centrat peste hartă */
+  /* STAND OVERLAY — desktop: centrat peste tot ecranul */
   #stand-overlay{
-    position:absolute;
+    position:fixed;
     top:50%;left:50%;
     transform:translate(-50%,-50%);
     width:460px;max-width:95%;
-    max-height:unset;overflow-y:unset;}
+    max-height:85vh;overflow-y:auto;}
 
   /* PILLS */
   .pill,#pill-all,#pill-drum{padding:4px 12px;font-size:12px;}
@@ -364,6 +364,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <img id="lake-img" src="" alt="Harta Baltă"/>
         <div id="pins-layer"></div>
       </div>
+      <div id="stand-overlay-backdrop" onclick="closeOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1999;"></div>
       <div id="stand-overlay">
       <div class="ov-hdr">
         <div class="spnr" id="ov-nr">Stand 1</div>
@@ -1221,6 +1222,7 @@ function selStand(id) {
   // Tap 1 — selectează standul, nu deschide overlay
   selId = id;
   overlay.style.display = 'none';
+  document.getElementById('stand-overlay-backdrop').style.display = 'none';
   document.getElementById('spr').style.display = 'block';
   renderPins();
   updatePills();
@@ -1290,17 +1292,20 @@ function openOverlay(id) {
 
   showMapYT(s);
   document.getElementById('stand-overlay').style.display = 'block';
+  document.getElementById('stand-overlay-backdrop').style.display = 'block';
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
 }
 
 function closeOverlay() {
   document.getElementById('stand-overlay').style.display = 'none';
+  document.getElementById('stand-overlay-backdrop').style.display = 'none';
 }
 
 function deselectStand() {
   selId = null;
   document.getElementById('stand-overlay').style.display = 'none';
+  document.getElementById('stand-overlay-backdrop').style.display = 'none';
   document.getElementById('spr').style.display = 'block';
   renderPins(); updatePills();
   document.querySelectorAll('.li').forEach(function(l) { l.classList.remove('active'); });
@@ -1326,6 +1331,7 @@ function showAll() {
 function showDrumAcces() {
   selId = null;
   document.getElementById('stand-overlay').style.display = 'none';
+  document.getElementById('stand-overlay-backdrop').style.display = 'none';
   renderPins();
   document.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.li').forEach(function(l) { l.classList.remove('active'); });
@@ -1644,6 +1650,7 @@ function toggleEdit() {
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
   document.getElementById('stand-overlay').style.display = 'none';
+  document.getElementById('stand-overlay-backdrop').style.display = 'none';
   renderSortList();
 }
 
