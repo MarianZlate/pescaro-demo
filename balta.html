@@ -581,14 +581,23 @@ async function loadBalta(id) {
     return;
   }
 
-  // 1. Date baltă
+  // 1. Date baltă (cu retry automat — uneori prima cerere eșuează la cold start)
   var bRes = await sb.from('balti').select('*').eq('id', id).single();
+  if (bRes.error || !bRes.data) {
+    // Retry o singură dată după scurtă pauză
+    await new Promise(function(r) { setTimeout(r, 600); });
+    bRes = await sb.from('balti').select('*').eq('id', id).single();
+  }
   if (bRes.error || !bRes.data) { showError('Balta cu ID=' + id + ' nu există.'); return; }
   BALTA = bRes.data;
   DRUM_ACCES_YT = BALTA.drum_yt || '';
 
-  // 2. Standuri — sortate după sort_order
+  // 2. Standuri — sortate după sort_order (cu retry dacă vine gol din eroare de rețea)
   var sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true });
+  if (sRes.error) {
+    await new Promise(function(r) { setTimeout(r, 400); });
+    sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true });
+  }
   var standuri = sRes.data || [];
 
   // 3. Poze
