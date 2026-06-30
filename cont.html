@@ -532,6 +532,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 
 // ── Cloudflare Workers endpoints ──────────────────────────────────────────────
 const WORKER_R2_UPLOAD     = 'https://zoda-r2-upload.marianzlate90.workers.dev';
+const WORKER_R2_PRESIGN    = 'https://zoda-r2-presign.marianzlate90.workers.dev';
 // ── Cloudinary eliminat — upload via Cloudflare R2 ──────────────────────────
 // Funcție centralizată cu progress pentru R2
 async function uploadToR2(file, folder, onProgress) {
@@ -550,6 +551,33 @@ async function uploadToR2(file, folder, onProgress) {
     };
     xhr.onerror = () => reject(new Error('Eroare rețea'));
     xhr.send(fd);
+  });
+}
+
+// Upload direct pe R2 prin presigned URL — fără limită de dimensiune (video mari)
+async function uploadToR2Presigned(file, folder, onProgress) {
+  // Pasul 1: cerem un presigned URL de la Worker
+  const params = new URLSearchParams({
+    folder,
+    filename: file.name || 'file',
+    contentType: file.type || 'application/octet-stream',
+  });
+  const presignRes = await fetch(`${WORKER_R2_PRESIGN}?${params.toString()}`, { method: 'POST' });
+  const presignData = await presignRes.json();
+  if (!presignData.uploadUrl) throw new Error(presignData.error || 'Nu s-a putut genera URL de upload.');
+
+  // Pasul 2: upload direct browser → R2, folosind presigned URL
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', presignData.uploadUrl);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
+    xhr.onload = () => {
+      if (xhr.status === 200 || xhr.status === 204) resolve(presignData.publicUrl);
+      else reject(new Error(`Eroare upload R2: ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new Error('Eroare rețea la upload video.'));
+    xhr.send(file);
   });
 }
 
@@ -1021,11 +1049,11 @@ async function submitCaptura() {
     setProgress(5, 'Se uploadează fotografia...');
     const fotoUrl = await uploadToR2(_fotoFile, 'capturi', pct => setProgress(5 + pct * 0.6, `Foto: ${pct}%`));
 
-    // 2. Upload video dovadă captură direct pe R2 (dacă există)
+    // 2. Upload video dovadă captură direct pe R2 prin presigned URL (dacă există)
     let videoUrl = null;
     if (_videoFile) {
       setProgress(60, 'Se uploadează videoclipul...');
-      videoUrl = await uploadToR2(_videoFile, 'video-capturi', pct => setProgress(60 + pct * 0.35, `Video: ${pct}%`));
+      videoUrl = await uploadToR2Presigned(_videoFile, 'video-capturi', pct => setProgress(60 + pct * 0.35, `Video: ${pct}%`));
     }
 
     setProgress(96, 'Se salvează cererea...');
