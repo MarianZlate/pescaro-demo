@@ -269,7 +269,24 @@ async function boot() {
     return;
   }
 
-  // 1. Profil pescar (cu retry automat — uneori prima cerere eșuează la cold start)
+  await loadPescarWithRetry(zodaId);
+}
+
+// Wrapper cu retry robust — încearcă încărcarea profilului de până la 3 ori,
+// cu pauză crescătoare. Rezolvă cazurile de conexiune lentă/cold start.
+async function loadPescarWithRetry(zodaId, attempt) {
+  attempt = attempt || 1;
+  try {
+    await loadPescarData(zodaId);
+  } catch(e) {
+    if (attempt >= 3) { showError(e.message || 'Eroare la încărcarea profilului.'); return; }
+    await new Promise(r => setTimeout(r, attempt * 700));
+    return loadPescarWithRetry(zodaId, attempt + 1);
+  }
+}
+
+async function loadPescarData(zodaId) {
+  // 1. Profil pescar
   let { data: profile, error: profErr } = await sb
     .from('user_profiles')
     .select('username, avatar_url, zoda_id, created_at')
@@ -277,17 +294,7 @@ async function boot() {
     .is('deleted_at', null)
     .single();
 
-  if (profErr || !profile) {
-    await new Promise(r => setTimeout(r, 600));
-    ({ data: profile, error: profErr } = await sb
-      .from('user_profiles')
-      .select('username, avatar_url, zoda_id, created_at')
-      .eq('zoda_id', zodaId)
-      .is('deleted_at', null)
-      .single());
-  }
-
-  if (profErr || !profile) { showError('Pescarul nu a fost găsit sau contul a fost șters.'); return; }
+  if (profErr || !profile) { throw new Error('Pescarul nu a fost găsit sau contul a fost șters.'); }
 
   // 2. Stele totale
   const { data: steleData } = await sb
