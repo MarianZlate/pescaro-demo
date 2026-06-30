@@ -551,11 +551,26 @@ window.addEventListener('load', async function() {
   } catch(e) { BALTA_USER = null; }
 
   try {
-    await loadBalta(baltaId);
+    await loadBaltaWithRetry(baltaId);
   } catch(e) {
-    showError('Eroare la încărcarea datelor: ' + e.message);
+    showError(e.message || 'Eroare la încărcarea datelor.');
   }
 });
+
+// Wrapper cu retry robust — încearcă loadBalta de până la 3 ori,
+// cu pauză crescătoare. Rezolvă cazurile de conexiune lentă/cold start
+// la prima accesare a paginii pe mobil. Erorile de business (ex: acces
+// interzis) nu se reîncearcă — sunt marcate cu noRetry.
+async function loadBaltaWithRetry(id, attempt) {
+  attempt = attempt || 1;
+  try {
+    await loadBalta(id);
+  } catch(e) {
+    if (e.noRetry || attempt >= 3) throw e;
+    await new Promise(function(r) { setTimeout(r, attempt * 700); });
+    return loadBaltaWithRetry(id, attempt + 1);
+  }
+}
 
 // ── CACHE SISTEM ──────────────────────────────────────────────────────────────
 var CACHE = {
@@ -606,7 +621,7 @@ async function loadBalta(id) {
     await new Promise(function(r) { setTimeout(r, 600); });
     bRes = await sb.from('balti').select('*').eq('id', id).single();
   }
-  if (bRes.error || !bRes.data) { showError('Balta cu ID=' + id + ' nu există.'); return; }
+  if (bRes.error || !bRes.data) { throw new Error('Balta cu ID=' + id + ' nu există.'); }
   BALTA = bRes.data;
   DRUM_ACCES_YT = BALTA.drum_yt || '';
 
@@ -629,8 +644,9 @@ async function loadBalta(id) {
       } catch(e) { hasAccess = false; }
     }
     if (!hasAccess) {
-      showError('Această baltă nu este încă disponibilă public.');
-      return;
+      var accessErr = new Error('Această baltă nu este încă disponibilă public.');
+      accessErr.noRetry = true;
+      throw accessErr;
     }
   }
 
