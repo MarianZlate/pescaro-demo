@@ -453,6 +453,7 @@ th,td{padding:8px 6px;}
           <option value="pending">⏳ În așteptare</option>
           <option value="approved">✅ Aprobate</option>
           <option value="rejected">❌ Respinse</option>
+          <option value="istoric">📜 Istoric (15 zile)</option>
           <option value="all">Toate</option>
         </select>
         <button onclick="loadCapturi()" style="background:#111827;border:1px solid #1e293b;border-radius:7px;padding:6px 12px;color:#94a3b8;font-size:12px;cursor:pointer;">↻ Reîncarcă</button>
@@ -785,19 +786,30 @@ async function loadCapturi() {
     .order('created_at', { ascending: false })
     .limit(100);
 
-  if (filter !== 'all') query = query.eq('status', filter);
+  if (filter === 'istoric') {
+    // Istoric: capturi procesate (approved/rejected) din ultimele 15 zile
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 15);
+    query = query.in('status', ['approved', 'rejected']).gte('reviewed_at', cutoff.toISOString())
+                 .order('reviewed_at', { ascending: false });
+  } else if (filter !== 'all') {
+    query = query.eq('status', filter);
+  }
 
   const { data, error } = await query;
 
   if (error) { listEl.innerHTML = `<div class="empty-state">Eroare: ${error.message}</div>`; return; }
   if (!data?.length) {
-    const labels = { pending:'în așteptare', approved:'aprobate', rejected:'respinse', all:'înregistrate' };
+    const labels = { pending:'în așteptare', approved:'aprobate', rejected:'respinse', all:'înregistrate', istoric:'în istoricul de 15 zile' };
     listEl.innerHTML = `<div class="empty-state">Nicio captură ${labels[filter] || ''} momentan.</div>`;
     return;
   }
 
-  // Fetch profiluri pentru submitted_by separat
-  const userIds = [...new Set(data.filter(c => c.submitted_by).map(c => c.submitted_by))];
+  // Fetch profiluri pentru submitted_by + reviewed_by separat
+  const userIds = [...new Set([
+    ...data.filter(c => c.submitted_by).map(c => c.submitted_by),
+    ...data.filter(c => c.reviewed_by).map(c => c.reviewed_by),
+  ])];
   let profileMap = {};
   if (userIds.length) {
     const { data: profiles } = await sb.from('user_profiles')
@@ -805,12 +817,17 @@ async function loadCapturi() {
     if (profiles) profiles.forEach(p => profileMap[p.id] = p);
   }
 
+  const isIstoric = filter === 'istoric';
+
   listEl.innerHTML = data.map(c => {
     const statusLabel = { pending:'⏳ Pending', approved:'✅ Aprobat', rejected:'❌ Respins' }[c.status] || c.status;
     const statusColor = { pending:'#f59e0b', approved:'#a3e635', rejected:'#ef4444' }[c.status] || '#64748b';
     const profile = profileMap[c.submitted_by] || {};
     const submittedBy = profile.username || '—';
     const submittedZoda = profile.zoda_id || '';
+    const reviewer = profileMap[c.reviewed_by] || {};
+    const reviewerName = reviewer.username || '—';
+    const reviewedAtStr = c.reviewed_at ? new Date(c.reviewed_at).toLocaleString('ro-RO', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
     return `
     <div class="captura-card" id="cc-${c.id}">
       <div class="captura-card-hdr">
@@ -823,6 +840,9 @@ async function loadCapturi() {
             Trimis de: ${escHtml(submittedBy)} ${submittedZoda ? '('+escHtml(submittedZoda)+')' : ''} ·
             ${new Date(c.created_at).toLocaleDateString('ro-RO')}
           </div>
+          ${isIstoric && c.reviewed_by ? `<div style="font-size:10px;color:#475569;margin-top:2px;">
+            ${c.status === 'approved' ? '✅ Aprobat' : '❌ Respins'} de: <strong style="color:#94a3b8;">${escHtml(reviewerName)}</strong> · ${reviewedAtStr}
+          </div>` : ''}
           ${c.pescar_id ? `<div style="font-size:10px;color:#4b5563;">Pescar: <span style="color:#a3e635;font-family:monospace;">${escHtml(c.pescar_id)}</span></div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
@@ -845,7 +865,11 @@ async function loadCapturi() {
         <button onclick="adminAproba(${c.id})" style="background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;">✅ Aprobă</button>
         <button onclick="adminRespinge(${c.id})" style="background:transparent;border:1px solid #ef4444;color:#ef4444;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;">❌ Respinge</button>
       </div>` : ''}
-      ${c.video_url && !c.video_deleted && c.status !== 'pending' ? `
+      ${isIstoric ? `
+      <div style="margin-top:8px;">
+        <button onclick="openViewCaptura(${c.id})" style="background:#111827;border:1px solid #334155;color:#94a3b8;font-size:11px;font-weight:700;padding:7px 14px;border-radius:7px;cursor:pointer;">👁️ Vezi detalii (view-only)</button>
+      </div>` : ''}
+      ${c.video_url && !c.video_deleted && c.status !== 'pending' && !isIstoric ? `
       <div style="margin-top:8px;">
         <button onclick="markVideoDeleted(${c.id})" style="background:transparent;border:1px solid #334155;color:#64748b;font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;">🗑️ Marchează video ca șters</button>
       </div>` : ''}
@@ -994,6 +1018,62 @@ async function markVideoDeleted(capturaId) {
   await sb.from('capturi').update({ video_deleted: true }).eq('id', capturaId);
   showToast('Video marcat ca șters.');
   await loadCapturi();
+}
+
+// ── VIEW-ONLY ISTORIC ──────────────────────────────────────────────────────
+async function openViewCaptura(capturaId) {
+  const { data: c, error } = await sb.from('capturi')
+    .select('*, standuri(nume), balti(nume, judet)')
+    .eq('id', capturaId)
+    .single();
+  if (error || !c) { showToast('❌ Nu s-a putut încărca captura.', true); return; }
+
+  let reviewerName = '—';
+  let submitterName = '—';
+  const ids = [c.reviewed_by, c.submitted_by].filter(Boolean);
+  if (ids.length) {
+    const { data: profiles } = await sb.from('user_profiles').select('id, username').in('id', ids);
+    if (profiles) {
+      const map = {};
+      profiles.forEach(p => map[p.id] = p.username);
+      reviewerName = map[c.reviewed_by] || '—';
+      submitterName = map[c.submitted_by] || '—';
+    }
+  }
+
+  const statusLabel = { approved:'✅ Aprobat', rejected:'❌ Respins' }[c.status] || c.status;
+  const statusColor = { approved:'#a3e635', rejected:'#ef4444' }[c.status] || '#64748b';
+  const reviewedAtStr = c.reviewed_at ? new Date(c.reviewed_at).toLocaleString('ro-RO', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+
+  const existing = document.getElementById('view-captura-overlay');
+  if (existing) existing.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'view-captura-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML = `
+    <div style="background:#111827;border:1px solid #1e293b;border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:800;color:#f1f5f9;">👁️ Detalii captură (view-only)</div>
+        <button onclick="document.getElementById('view-captura-overlay').remove()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      ${c.foto_url ? `<img src="${c.foto_url}" style="width:100%;border-radius:10px;margin-bottom:12px;cursor:zoom-in;" onclick="window.open('${c.foto_url}','_blank')"/>` : ''}
+      ${c.video_url && !c.video_deleted ? `<div class="captura-video-btn" onclick="openVideoAdmin('${escHtml(c.video_url)}', ${c.id})" style="margin-bottom:12px;">▶ Vezi videoclip dovadă</div>` : (c.video_url && c.video_deleted ? '<div style="font-size:11px;color:#334155;margin-bottom:12px;">Video șters</div>' : '')}
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#94a3b8;">
+        <div><strong style="color:#f1f5f9;">Pescar:</strong> ${escHtml(c.pescar_nume||'—')} ${c.pescar_id ? '('+escHtml(c.pescar_id)+')' : ''}</div>
+        <div><strong style="color:#f1f5f9;">Greutate:</strong> ${c.kg} kg</div>
+        <div><strong style="color:#f1f5f9;">Baltă:</strong> ${escHtml(c.balti?.nume||'—')}</div>
+        <div><strong style="color:#f1f5f9;">Stand:</strong> ${escHtml(c.standuri?.nume||'—')}</div>
+        <div><strong style="color:#f1f5f9;">Data capturii:</strong> ${c.data_captura||'—'}</div>
+        <div><strong style="color:#f1f5f9;">Trimis de:</strong> ${escHtml(submitterName)} · ${new Date(c.created_at).toLocaleDateString('ro-RO')}</div>
+        <div style="border-top:1px solid #1e293b;padding-top:8px;margin-top:4px;">
+          <strong style="color:${statusColor};">${statusLabel}</strong> de <strong style="color:#f1f5f9;">${escHtml(reviewerName)}</strong> · ${reviewedAtStr}
+        </div>
+        ${c.rejected_reason ? `<div style="background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:8px 12px;color:#fca5a5;">Motiv respingere: ${escHtml(c.rejected_reason)}</div>` : ''}
+      </div>
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
 }
 
 function openVideoAdmin(url, capturaId) {
