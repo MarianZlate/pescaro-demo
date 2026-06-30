@@ -1223,7 +1223,7 @@ function selStand(id) {
   selId = id;
   overlay.style.display = 'none';
   document.getElementById('stand-overlay-backdrop').style.display = 'none';
-  document.getElementById('spr').style.display = 'block';
+  document.getElementById('spr').style.display = 'none';
   renderPins();
   updatePills();
   document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
