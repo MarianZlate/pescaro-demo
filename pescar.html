@@ -269,13 +269,23 @@ async function boot() {
     return;
   }
 
-  // 1. Profil pescar
-  const { data: profile, error: profErr } = await sb
+  // 1. Profil pescar (cu retry automat — uneori prima cerere eșuează la cold start)
+  let { data: profile, error: profErr } = await sb
     .from('user_profiles')
     .select('username, avatar_url, zoda_id, created_at')
     .eq('zoda_id', zodaId)
     .is('deleted_at', null)
     .single();
+
+  if (profErr || !profile) {
+    await new Promise(r => setTimeout(r, 600));
+    ({ data: profile, error: profErr } = await sb
+      .from('user_profiles')
+      .select('username, avatar_url, zoda_id, created_at')
+      .eq('zoda_id', zodaId)
+      .is('deleted_at', null)
+      .single());
+  }
 
   if (profErr || !profile) { showError('Pescarul nu a fost găsit sau contul a fost șters.'); return; }
 
