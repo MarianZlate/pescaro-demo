@@ -83,6 +83,26 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .empty-title{font-size:13px;font-weight:700;color:#334155;margin-bottom:4px;}
 .empty-sub{font-size:11px;color:#1e293b;line-height:1.6;}
 
+/* ECRANE FOARTE MICI (320-360px) */
+@media(max-width:480px){
+  #page{padding:16px 10px 50px;}
+  .hero-card{padding:18px 14px;gap:14px;}
+  .hero-avatar{width:60px;height:60px;font-size:22px;}
+  .hero-name{font-size:18px;}
+  .hero-zoda{font-size:10px;margin-bottom:6px;}
+  .stele-badge{padding:5px 10px;gap:4px;}
+  .stele-num{font-size:18px;}
+  .stele-lbl{font-size:10px;}
+  .rez-row{padding:11px 12px;gap:9px;}
+  .rez-icon-wrap{width:32px;height:32px;font-size:15px;}
+}
+@media(max-width:360px){
+  .hero-card{flex-wrap:wrap;}
+  .hero-stele{width:100%;margin-top:6px;}
+  .rez-title{font-size:12px;}
+  .rez-meta{font-size:10px;}
+}
+
 /* DESKTOP */
 @media(min-width:769px){
   #hdr-in{padding:0 24px;height:62px;}
