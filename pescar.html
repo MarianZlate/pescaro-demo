@@ -15,7 +15,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 /* HEADER */
 #hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);}
 #hdr-in{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:0 14px;height:52px;}
-.logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;}
+.logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;display:flex;align-items:center;}
+.logo-img{height:28px;width:auto;display:block;}
 .back-btn{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;color:#94a3b8;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;margin-left:auto;padding:5px 12px;font-size:12px;}
 .back-btn:hover{border-color:#a3e635;color:#a3e635;}
 
@@ -143,7 +144,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 <div id="hdr" style="display:none;">
   <div id="hdr-in">
-    <a href="index.html" class="logo" onclick="try{sessionStorage.removeItem('zoda_index_state');}catch(e){}">Zoda</a>
+    <a href="index.html" class="logo" onclick="try{sessionStorage.removeItem('zoda_index_state');}catch(e){}"><img src="zoda-logo.png" alt="Zoda" class="logo-img"/></a>
     <span style="font-size:12px;color:#4b5563;" id="hdr-subtitle">Profil pescar</span>
     <a href="index.html" class="back-btn" onclick="event.preventDefault(); savePescarState(); if(history.length > 1) { history.back(); } else { window.location.href='index.html'; }">← Înapoi</a>
   </div>
