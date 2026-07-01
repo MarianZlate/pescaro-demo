@@ -426,6 +426,19 @@ nav{display:flex;align-items:center;gap:6px;}
         <div class="stat-chip"><strong id="stat-useri">—</strong> pescari înregistrați</div>
       </div>
     </div>
+    <!-- RECLAMA / BANNER PUBLICITAR -->
+    <div id="ad-banner-wrap" style="display:none;margin-bottom:10px;">
+      <div id="ad-banner" onclick="adBannerClick()">
+        <span class="ad-banner-tag">Publicitate</span>
+        <img id="ad-banner-img" src="" alt=""/>
+        <div class="ad-banner-text">
+          <div class="ad-banner-title" id="ad-banner-title"></div>
+          <div class="ad-banner-sub" id="ad-banner-sub"></div>
+        </div>
+      </div>
+      <div id="ad-banner-dots"></div>
+    </div>
+
     <div id="map-wrap">
     <div id="map"></div>
     <div id="map-legend">🎣 Click pe marker pentru detalii</div>
@@ -3364,6 +3377,86 @@ function closeGuestToast() {
   };
   if(document.readyState === 'complete') zodaCheckCookieNotice();
   else window.addEventListener('load', zodaCheckCookieNotice);
+})();
+</script>
+
+
+<!-- ═══════════ RECLAMA / BANNER PUBLICITAR — stil + logică ═══════════ -->
+<style>
+#ad-banner{position:relative;display:flex;align-items:center;gap:14px;background:#111827;border:1px solid #1e293b;border-radius:14px;padding:12px 16px;cursor:pointer;overflow:hidden;transition:border-color .2s;min-height:64px;}
+#ad-banner:hover{border-color:#a3e635;}
+.ad-banner-tag{position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:#4b5563;background:#0a0f1a;border:1px solid #1e293b;padding:2px 7px;border-radius:5px;letter-spacing:.04em;}
+#ad-banner-img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#0a0f1a;}
+.ad-banner-text{min-width:0;flex:1;}
+.ad-banner-title{font-size:14px;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ad-banner-sub{font-size:12px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#ad-banner-dots{display:flex;gap:5px;justify-content:center;margin-top:8px;}
+.ad-dot{width:6px;height:6px;border-radius:50%;background:#1e293b;cursor:pointer;transition:background .2s;}
+.ad-dot.active{background:#a3e635;}
+</style>
+<script>
+(function(){
+  var AD_BANNERS = [];
+  var adBannerIdx = 0;
+  var adBannerTimer = null;
+
+  async function loadAdBanners(){
+    try{
+      var wrap = document.getElementById('ad-banner-wrap');
+      if(!wrap) return;
+      var res = await sb.from('reclame').select('*').order('sort_order', { ascending: true });
+      var data = res.data;
+      if(!data || !data.length){ wrap.style.display = 'none'; return; }
+      AD_BANNERS = data;
+      wrap.style.display = 'block';
+      renderAdDots();
+      showAdBanner(0);
+      if(AD_BANNERS.length > 1){
+        adBannerTimer = setInterval(function(){ showAdBanner((adBannerIdx + 1) % AD_BANNERS.length); }, 6000);
+      }
+    }catch(e){}
+  }
+
+  function renderAdDots(){
+    var wrap = document.getElementById('ad-banner-dots');
+    if(!wrap) return;
+    if(AD_BANNERS.length <= 1){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = AD_BANNERS.map(function(b, i){
+      return '<span class="ad-dot' + (i===0?' active':'') + '" onclick="event.stopPropagation();window.__adBannerGoTo(' + i + ')"></span>';
+    }).join('');
+  }
+
+  function showAdBanner(idx){
+    adBannerIdx = idx;
+    var b = AD_BANNERS[idx];
+    if(!b) return;
+    var img = document.getElementById('ad-banner-img');
+    var title = document.getElementById('ad-banner-title');
+    var sub = document.getElementById('ad-banner-sub');
+    if(img) img.src = b.imagine_url || '';
+    if(title) title.textContent = b.titlu || '';
+    if(sub) sub.textContent = b.subtitlu || '';
+    document.querySelectorAll('.ad-dot').forEach(function(d, i){ d.classList.toggle('active', i === idx); });
+    sb.rpc('increment_reclama_afisare', { reclama_id: b.id }).catch(function(){});
+  }
+
+  window.__adBannerGoTo = function(idx){
+    showAdBanner(idx);
+    if(adBannerTimer){
+      clearInterval(adBannerTimer);
+      adBannerTimer = setInterval(function(){ showAdBanner((adBannerIdx + 1) % AD_BANNERS.length); }, 6000);
+    }
+  };
+
+  window.adBannerClick = function(){
+    var b = AD_BANNERS[adBannerIdx];
+    if(!b) return;
+    sb.rpc('increment_reclama_click', { reclama_id: b.id }).catch(function(){});
+    window.open(b.link_destinatie, '_blank', 'noopener');
+  };
+
+  if(document.readyState === 'complete') loadAdBanners();
+  else window.addEventListener('load', loadAdBanners);
 })();
 </script>
 
