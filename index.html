@@ -479,16 +479,16 @@ nav{display:flex;align-items:center;gap:6px;}
 </div>
 
 <!-- RECLAMA / BANNER PUBLICITAR -->
-<div id="ad-banner-wrap" style="display:none;max-width:1400px;margin:0 auto 20px;padding:0 8px;">
-  <div id="ad-banner" onclick="adBannerClick()">
-    <span class="ad-banner-tag">Publicitate</span>
-    <img id="ad-banner-img" src="" alt=""/>
-    <div class="ad-banner-text">
-      <div class="ad-banner-title" id="ad-banner-title"></div>
-      <div class="ad-banner-sub" id="ad-banner-sub"></div>
+<div id="promo-wrap" style="display:none;max-width:1400px;margin:0 auto 20px;padding:0 8px;">
+  <div id="promo-box" onclick="promoItemClick()">
+    <span class="promo-tag">Publicitate</span>
+    <img id="promo-img" src="" alt=""/>
+    <div class="promo-text">
+      <div class="promo-title" id="promo-title"></div>
+      <div class="promo-sub" id="promo-sub"></div>
     </div>
   </div>
-  <div id="ad-banner-dots"></div>
+  <div id="promo-dots"></div>
 </div>
 
 <!-- HALL OF FAME MODAL -->
@@ -3384,80 +3384,80 @@ function closeGuestToast() {
 
 <!-- ═══════════ RECLAMA / BANNER PUBLICITAR — stil + logică ═══════════ -->
 <style>
-#ad-banner{position:relative;display:block;height:130px;background:#111827;border:1px solid #1e293b;border-radius:14px;cursor:pointer;overflow:hidden;transition:border-color .2s;}
-#ad-banner:hover{border-color:#a3e635;}
-.ad-banner-tag{position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:#e2e8f0;background:rgba(10,15,26,.7);border:1px solid rgba(255,255,255,.15);padding:2px 7px;border-radius:5px;letter-spacing:.04em;z-index:2;backdrop-filter:blur(2px);}
-#ad-banner-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0a0f1a;}
-.ad-banner-text{position:absolute;left:0;right:0;bottom:0;padding:10px 14px 9px;background:linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0));}
-.ad-banner-title{font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6);}
-.ad-banner-sub{font-size:12px;color:#e2e8f0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6);}
-#ad-banner-dots{display:flex;gap:5px;justify-content:center;margin-top:8px;}
-.ad-dot{width:6px;height:6px;border-radius:50%;background:#1e293b;cursor:pointer;transition:background .2s;}
-.ad-dot.active{background:#a3e635;}
+#promo-box{position:relative;display:block;height:130px;background:#111827;border:1px solid #1e293b;border-radius:14px;cursor:pointer;overflow:hidden;transition:border-color .2s;}
+#promo-box:hover{border-color:#a3e635;}
+.promo-tag{position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:#e2e8f0;background:rgba(10,15,26,.7);border:1px solid rgba(255,255,255,.15);padding:2px 7px;border-radius:5px;letter-spacing:.04em;z-index:2;backdrop-filter:blur(2px);}
+#promo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0a0f1a;}
+.promo-text{position:absolute;left:0;right:0;bottom:0;padding:10px 14px 9px;background:linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0));}
+.promo-title{font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.promo-sub{font-size:12px;color:#e2e8f0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+#promo-dots{display:flex;gap:5px;justify-content:center;margin-top:8px;}
+.promo-dot{width:6px;height:6px;border-radius:50%;background:#1e293b;cursor:pointer;transition:background .2s;}
+.promo-dot.active{background:#a3e635;}
 </style>
 <script>
 (function(){
-  var AD_BANNERS = [];
-  var adBannerIdx = 0;
-  var adBannerTimer = null;
+  var PROMO_ITEMS = [];
+  var promoIdx = 0;
+  var promoTimer = null;
 
-  async function loadAdBanners(){
+  async function loadPromoItems(){
     try{
-      var wrap = document.getElementById('ad-banner-wrap');
+      var wrap = document.getElementById('promo-wrap');
       if(!wrap) return;
       var res = await sb.from('reclame').select('*').order('sort_order', { ascending: true });
       var data = res.data;
       if(!data || !data.length){ wrap.style.display = 'none'; return; }
-      AD_BANNERS = data;
+      PROMO_ITEMS = data;
       wrap.style.display = 'block';
-      renderAdDots();
-      showAdBanner(0);
-      if(AD_BANNERS.length > 1){
-        adBannerTimer = setInterval(function(){ showAdBanner((adBannerIdx + 1) % AD_BANNERS.length); }, 6000);
+      renderPromoDots();
+      showPromoItem(0);
+      if(PROMO_ITEMS.length > 1){
+        promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 6000);
       }
     }catch(e){}
   }
 
-  function renderAdDots(){
-    var wrap = document.getElementById('ad-banner-dots');
+  function renderPromoDots(){
+    var wrap = document.getElementById('promo-dots');
     if(!wrap) return;
-    if(AD_BANNERS.length <= 1){ wrap.innerHTML = ''; return; }
-    wrap.innerHTML = AD_BANNERS.map(function(b, i){
-      return '<span class="ad-dot' + (i===0?' active':'') + '" onclick="event.stopPropagation();window.__adBannerGoTo(' + i + ')"></span>';
+    if(PROMO_ITEMS.length <= 1){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = PROMO_ITEMS.map(function(b, i){
+      return '<span class="promo-dot' + (i===0?' active':'') + '" onclick="event.stopPropagation();window.__promoGoTo(' + i + ')"></span>';
     }).join('');
   }
 
-  function showAdBanner(idx){
-    adBannerIdx = idx;
-    var b = AD_BANNERS[idx];
+  function showPromoItem(idx){
+    promoIdx = idx;
+    var b = PROMO_ITEMS[idx];
     if(!b) return;
-    var img = document.getElementById('ad-banner-img');
-    var title = document.getElementById('ad-banner-title');
-    var sub = document.getElementById('ad-banner-sub');
+    var img = document.getElementById('promo-img');
+    var title = document.getElementById('promo-title');
+    var sub = document.getElementById('promo-sub');
     if(img) img.src = b.imagine_url || '';
     if(title) title.textContent = b.titlu || '';
     if(sub) sub.textContent = b.subtitlu || '';
-    document.querySelectorAll('.ad-dot').forEach(function(d, i){ d.classList.toggle('active', i === idx); });
+    document.querySelectorAll('.promo-dot').forEach(function(d, i){ d.classList.toggle('active', i === idx); });
     sb.rpc('increment_reclama_afisare', { reclama_id: b.id }).catch(function(){});
   }
 
-  window.__adBannerGoTo = function(idx){
-    showAdBanner(idx);
-    if(adBannerTimer){
-      clearInterval(adBannerTimer);
-      adBannerTimer = setInterval(function(){ showAdBanner((adBannerIdx + 1) % AD_BANNERS.length); }, 6000);
+  window.__promoGoTo = function(idx){
+    showPromoItem(idx);
+    if(promoTimer){
+      clearInterval(promoTimer);
+      promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 6000);
     }
   };
 
-  window.adBannerClick = function(){
-    var b = AD_BANNERS[adBannerIdx];
+  window.promoItemClick = function(){
+    var b = PROMO_ITEMS[promoIdx];
     if(!b) return;
     sb.rpc('increment_reclama_click', { reclama_id: b.id }).catch(function(){});
     window.open(b.link_destinatie, '_blank', 'noopener');
   };
 
-  if(document.readyState === 'complete') loadAdBanners();
-  else window.addEventListener('load', loadAdBanners);
+  if(document.readyState === 'complete') loadPromoItems();
+  else window.addEventListener('load', loadPromoItems);
 })();
 </script>
 
