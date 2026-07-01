@@ -624,5 +624,40 @@ function restorePescarState() {
 
 boot();
 </script>
+
+<!-- ═══════════ COOKIE NOTICE (info stocare locală strict necesară) ═══════════ -->
+<style>
+#cookie-notice{display:none;position:fixed;bottom:0;left:0;right:0;z-index:5000;background:#111827;border-top:1px solid #1e293b;padding:14px 16px;box-shadow:0 -8px 32px rgba(0,0,0,.5);align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+#cookie-notice.show{display:flex;}
+#cookie-notice-text{font-size:12px;color:#94a3b8;line-height:1.6;max-width:640px;}
+#cookie-notice-text a{color:#a3e635;}
+#cookie-notice-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:12px;padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+</style>
+<div id="cookie-notice">
+  <div id="cookie-notice-text">
+    🍪 Folosim cookie-uri și stocare locală <strong>strict necesare</strong> pentru autentificare și funcționarea site-ului. Nu folosim cookie-uri de tracking sau publicitate. <a href="confidentialitate.html">Politica de Confidențialitate</a>
+  </div>
+  <button id="cookie-notice-btn" onclick="zodaAcceptCookieNotice()">Am înțeles</button>
+</div>
+<script>
+(function(){
+  function zodaCheckCookieNotice(){
+    try{
+      if(!localStorage.getItem('zoda_cookie_notice_seen')){
+        var el = document.getElementById('cookie-notice');
+        if(el) el.classList.add('show');
+      }
+    }catch(e){}
+  }
+  window.zodaAcceptCookieNotice = function(){
+    try{ localStorage.setItem('zoda_cookie_notice_seen','1'); }catch(e){}
+    var el = document.getElementById('cookie-notice');
+    if(el) el.classList.remove('show');
+  };
+  if(document.readyState === 'complete') zodaCheckCookieNotice();
+  else window.addEventListener('load', zodaCheckCookieNotice);
+})();
+</script>
+
 </body>
 </html>
