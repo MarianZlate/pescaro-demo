@@ -571,7 +571,26 @@ async function uploadToR2(file, folder, onProgress) {
 }
 
 // Upload direct pe R2 prin presigned URL — fără limită de dimensiune (video mari)
-async function uploadToR2Presigned(file, folder, onProgress) {
+// Reîncearcă automat de 2 ori dacă apare o eroare de rețea (frecvent pe mobil, la fluctuații de semnal)
+async function uploadToR2Presigned(file, folder, onProgress, _attempt = 1) {
+  const MAX_ATTEMPTS = 3;
+  try {
+    return await uploadToR2PresignedOnce(file, folder, onProgress);
+  } catch (e) {
+    const isNetworkErr = /rețea|network/i.test(e.message || '');
+    if (isNetworkErr && _attempt < MAX_ATTEMPTS) {
+      if (onProgress) onProgress(0, `Conexiune întreruptă, reîncerc (${_attempt}/${MAX_ATTEMPTS - 1})...`);
+      await new Promise(r => setTimeout(r, 1500));
+      return uploadToR2Presigned(file, folder, onProgress, _attempt + 1);
+    }
+    if (isNetworkErr) {
+      throw new Error('Conexiunea s-a întrerupt de mai multe ori la încărcarea videoclipului. Verifică semnalul (WiFi e mai stabil decât datele mobile) și încearcă din nou.');
+    }
+    throw e;
+  }
+}
+
+async function uploadToR2PresignedOnce(file, folder, onProgress) {
   // Pasul 1: cerem un presigned URL de la Worker
   const params = new URLSearchParams({
     folder,
@@ -593,6 +612,8 @@ async function uploadToR2Presigned(file, folder, onProgress) {
       else reject(new Error(`Eroare upload R2: ${xhr.status}`));
     };
     xhr.onerror = () => reject(new Error('Eroare rețea la upload video.'));
+    xhr.ontimeout = () => reject(new Error('Eroare rețea la upload video (timeout).'));
+    xhr.timeout = 120000; // 2 minute per încercare
     xhr.send(file);
   });
 }
@@ -979,12 +1000,19 @@ function onFotoSelect(input) {
 }
 
 // Video select
+const MAX_VIDEO_MB = 150;
 function onVideoSelect(input) {
   const file = input.files[0];
   if (!file) return;
+  const sizeMB = file.size / 1024 / 1024;
+  if (sizeMB > MAX_VIDEO_MB) {
+    showErr(`Videoclipul e prea mare (${sizeMB.toFixed(0)} MB). Maxim ${MAX_VIDEO_MB} MB — filmează mai scurt sau la o calitate mai mică.`);
+    input.value = '';
+    return;
+  }
   _videoFile = file;
   document.getElementById('zona-video').classList.add('has-file');
-  document.getElementById('video-zone-text').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+  document.getElementById('video-zone-text').textContent = `✓ ${file.name} (${sizeMB.toFixed(1)} MB)`;
   checkFormValid();
 }
 
@@ -1069,7 +1097,7 @@ async function submitCaptura() {
     let videoUrl = null;
     if (_videoFile) {
       setProgress(60, 'Se uploadează videoclipul...');
-      videoUrl = await uploadToR2Presigned(_videoFile, 'video-capturi', pct => setProgress(60 + pct * 0.35, `Video: ${pct}%`));
+      videoUrl = await uploadToR2Presigned(_videoFile, 'video-capturi', (pct, msg) => setProgress(60 + pct * 0.35, msg || `Video: ${pct}%`));
     }
 
     setProgress(96, 'Se salvează cererea...');
