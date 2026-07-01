@@ -158,19 +158,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div>
 
-  <!-- RECLAMA / BANNER PUBLICITAR -->
-  <div id="ad-banner-wrap" style="display:none;margin-bottom:10px;">
-    <div id="ad-banner" onclick="adBannerClick()">
-      <span class="ad-banner-tag">Publicitate</span>
-      <img id="ad-banner-img" src="" alt=""/>
-      <div class="ad-banner-text">
-        <div class="ad-banner-title" id="ad-banner-title"></div>
-        <div class="ad-banner-sub" id="ad-banner-sub"></div>
-      </div>
-    </div>
-    <div id="ad-banner-dots"></div>
-  </div>
-
   <!-- TABS -->
   <div class="tabs">
     <button class="tab active" onclick="switchTab('active')" id="tab-active">⚡ Active</button>
@@ -195,6 +182,19 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div class="empty-title">Nicio realizare trecută</div>
       <div class="empty-sub">Realizările pierdute vor apărea aici.</div>
     </div>
+  </div>
+
+  <!-- RECLAMA / BANNER PUBLICITAR -->
+  <div id="ad-banner-wrap" style="display:none;margin-top:12px;">
+    <div id="ad-banner" onclick="adBannerClick()">
+      <span class="ad-banner-tag">Publicitate</span>
+      <img id="ad-banner-img" src="" alt=""/>
+      <div class="ad-banner-text">
+        <div class="ad-banner-title" id="ad-banner-title"></div>
+        <div class="ad-banner-sub" id="ad-banner-sub"></div>
+      </div>
+    </div>
+    <div id="ad-banner-dots"></div>
   </div>
 
 </div><!-- /#page -->
@@ -479,7 +479,7 @@ function renderRealizari(steleLog, recorduriActive, top10Istoric, standuriTrecut
         iconWrapClass: 'green',
         icon: '📅',
         title: `Top 10 lunar — Locul ${t.pozitie}`,
-        meta: `${baltaNume} · ${lunaFmt}${t.kg_total ? ' · ' + parseFloat(t.kg_total).toFixed(1) + ' kg total' : ''}`,
+        meta: `${baltaNume} · ${lunaFmt}${t.kg_total ? ' · ' + parseFloat(t.kg_total).toFixed(1) + ' kg' : ''}`,
         star: true,
         date: '',
         trecut: false,
