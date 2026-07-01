@@ -170,6 +170,21 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .toast.err{background:#7f1d1d;}
 
 /* ============================================================
+   ECRANE FOARTE MICI (320-360px)
+   ============================================================ */
+@media(max-width:480px){
+  #hdr-in{padding:0 10px;gap:8px;}
+  .hdr-title{display:none;} /* redundant — pagina explică deja contextul */
+  .toast{left:12px;right:12px;bottom:16px;max-width:calc(100vw - 24px);text-align:center;}
+  .avatar-row{gap:12px;}
+  #avatar-img,.avatar-initials{width:58px;height:58px;font-size:20px;}
+  .avatar-name{font-size:14px;}
+  .avatar-email{font-size:11px;word-break:break-all;}
+  .section-body{padding:14px;}
+  .section-hdr{padding:14px 16px;}
+}
+
+/* ============================================================
    DESKTOP (min-width: 769px)
    ============================================================ */
 @media(min-width:769px){
