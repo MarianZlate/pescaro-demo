@@ -2475,12 +2475,17 @@ function getStanduriData() {
         <label>CONFIRMĂ PAROLA</label>
         <input type="password" id="reg-pass2" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"/>
       </div>
+      <div class="auth-remember" style="align-items:flex-start;margin-bottom:14px;">
+        <input type="checkbox" id="reg-terms"/>
+        <label for="reg-terms" style="font-size:11px;color:#94a3b8;line-height:1.5;cursor:pointer;">Sunt de acord cu <a href="termeni.html" target="_blank" style="color:#a3e635;">Termenii și Condițiile</a> și <a href="confidentialitate.html" target="_blank" style="color:#a3e635;">Politica de Confidențialitate</a></label>
+      </div>
       <button class="auth-btn" id="reg-btn" onclick="doRegister()">Creează cont</button>
       <div class="auth-divider">sau</div>
       <button class="auth-google" onclick="doGoogleLogin()">
         <svg width="18" height="18" viewBox="0 0 48 48" style="pointer-events:none;flex-shrink:0;"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continuă cu Google
       </button>
+      <div style="font-size:10px;color:#334155;text-align:center;margin-top:8px;line-height:1.5;">Continuând cu Google, ești de acord cu <a href="termeni.html" target="_blank" style="color:#4b5563;">Termenii</a> și <a href="confidentialitate.html" target="_blank" style="color:#4b5563;">Politica de Confidențialitate</a>.</div>
     </div>
   </div>
 </div>
@@ -2555,6 +2560,7 @@ async function doRegister() {
   if(!email || !pass)     { authShowErr('Completează toate câmpurile.'); return; }
   if(pass !== pass2)      { authShowErr('Parolele nu coincid.'); return; }
   if(pass.length < 6)     { authShowErr('Parola trebuie să aibă minim 6 caractere.'); return; }
+  if(!document.getElementById('reg-terms').checked) { authShowErr('Trebuie să fii de acord cu Termenii și Politica de Confidențialitate.'); return; }
   const btn = document.getElementById('reg-btn');
   btn.disabled = true; btn.textContent = 'Se creează contul...';
   const { data, error } = await sb.auth.signUp({ email, password: pass });
@@ -3280,6 +3286,41 @@ function closeGuestToast() {
   t.classList.remove('show');
   setTimeout(function() { t.style.display = 'none'; }, 400);
 }
+</script>
+
+
+<!-- ═══════════ COOKIE NOTICE (info stocare locală strict necesară) ═══════════ -->
+<style>
+#cookie-notice{display:none;position:fixed;bottom:0;left:0;right:0;z-index:5000;background:#111827;border-top:1px solid #1e293b;padding:14px 16px;box-shadow:0 -8px 32px rgba(0,0,0,.5);align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+#cookie-notice.show{display:flex;}
+#cookie-notice-text{font-size:12px;color:#94a3b8;line-height:1.6;max-width:640px;}
+#cookie-notice-text a{color:#a3e635;}
+#cookie-notice-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:12px;padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+</style>
+<div id="cookie-notice">
+  <div id="cookie-notice-text">
+    🍪 Folosim cookie-uri și stocare locală <strong>strict necesare</strong> pentru autentificare și funcționarea site-ului. Nu folosim cookie-uri de tracking sau publicitate. <a href="confidentialitate.html">Politica de Confidențialitate</a>
+  </div>
+  <button id="cookie-notice-btn" onclick="zodaAcceptCookieNotice()">Am înțeles</button>
+</div>
+<script>
+(function(){
+  function zodaCheckCookieNotice(){
+    try{
+      if(!localStorage.getItem('zoda_cookie_notice_seen')){
+        var el = document.getElementById('cookie-notice');
+        if(el) el.classList.add('show');
+      }
+    }catch(e){}
+  }
+  window.zodaAcceptCookieNotice = function(){
+    try{ localStorage.setItem('zoda_cookie_notice_seen','1'); }catch(e){}
+    var el = document.getElementById('cookie-notice');
+    if(el) el.classList.remove('show');
+  };
+  if(document.readyState === 'complete') zodaCheckCookieNotice();
+  else window.addEventListener('load', zodaCheckCookieNotice);
+})();
 </script>
 
 </body>
