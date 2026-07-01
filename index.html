@@ -465,11 +465,11 @@ nav{display:flex;align-items:center;gap:6px;}
       <div class="see-all" onclick="openHof()">Vezi Top 20 complet →</div>
     </div>
 
-    <!-- LISTA BALTI -->
+    <!-- ISTORIC BALTI VIZITATE -->
     <div class="balti-card">
       <div class="balti-header">
-        <span class="balti-title">🔥 Top 10 cele mai accesate bălți</span>
-        <span class="balti-count" id="balti-count">1</span>
+        <span class="balti-title">🕓 Ultimele bălți vizitate</span>
+        <span class="balti-count" id="balti-count">0</span>
       </div>
       <div id="balti-list"></div>
     </div>
@@ -1005,32 +1005,30 @@ async function goToAdmin(e) {
 function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
 function closeHof() { document.getElementById('hof-modal').classList.remove('open'); }
 
-// ── LISTA BALTI ───────────────────────────────────────────────────────────────
+// ── ISTORIC BALTI VIZITATE (personal, local — nu e un contor public) ──────────
 function renderBalti() {
-  // Sortam dupa vizite (descrescator) si luam top 10
-  const sorted = [...BALTI]
-    .filter(b => b.vizibilitate !== 'unlisted')
-    .sort((a,b) => (b.vizite||0) - (a.vizite||0))
-    .slice(0, 10);
+  let istoric = [];
+  try {
+    const raw = localStorage.getItem('zoda_istoric_balti');
+    istoric = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(istoric)) istoric = [];
+  } catch(e) { istoric = []; }
 
-  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('balti-count').textContent = istoric.length;
 
-  document.getElementById('balti-list').innerHTML = sorted.map((b, idx) => {
-    const rank = idx + 1;
-    const medalColor = idx===0?'#FFD700':idx===1?'#C0C0C0':idx===2?'#CD7F32':'#1e293b';
-    const textColor  = idx<3?'#000':'#64748b';
+  document.getElementById('balti-list').innerHTML = istoric.map((b, idx) => {
     return `<div class="balta-row" data-id="${b.id}" onclick="__goToBalta(${b.id})" style="cursor:pointer;">
-      <div style="width:28px;height:28px;border-radius:7px;background:${medalColor};display:flex;align-items:center;justify-content:center;font-size:${idx<3?'14':'11'}px;font-weight:900;color:${textColor};flex-shrink:0;">
-        ${idx<3?medals[idx]:rank}
+      <div style="width:28px;height:28px;border-radius:7px;background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">
+        🎣
       </div>
       <div style="flex:1;min-width:0;">
         <div class="balta-name">${b.nume}</div>
       </div>
       <div style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap;flex-shrink:0;">
-        👁️ ${(b.vizite||0).toLocaleString()}
+        ${timeAgo(b.ts)}
       </div>
     </div>`;
-  }).join('') || '<div style="padding:20px;text-align:center;color:#4b5563;font-size:12px;">Nicio baltă publică înregistrată</div>';
+  }).join('') || '<div style="padding:20px;text-align:center;color:#4b5563;font-size:12px;">Nicio baltă vizitată încă — explorează harta! 🗺️</div>';
 }
 
 function setVizibilitate(status) {
@@ -1195,7 +1193,6 @@ function renderMapMarkers() {
   const visibleCount = isAdmin ? BALTI.length : publicCount;
   const statChips = document.querySelectorAll('.stat-chip strong');
   if (statChips[0]) statChips[0].textContent = visibleCount;
-  document.getElementById('balti-count').textContent = visibleCount;
 }
 
 
