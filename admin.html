@@ -559,15 +559,11 @@ th,td{padding:8px 6px;}
       </div>
 
       <div class="fg">
-        <label>IMAGINE (pătrată, min. 200×200px)</label>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div id="rc-img-preview" style="width:64px;height:64px;border-radius:10px;background:#0a0f1a;border:1.5px dashed #1e293b;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;color:#4b5563;font-size:22px;">📷</div>
-          <div style="flex:1;">
-            <label for="rc-img-input" style="display:inline-block;background:#1e293b;border:none;color:#94a3b8;font-size:12px;padding:8px 14px;border-radius:7px;cursor:pointer;">Alege imagine</label>
-            <input type="file" id="rc-img-input" accept="image/*" style="display:none;" onchange="rcImgSelected(this)"/>
-            <div id="rc-img-status" style="font-size:10px;color:#4b5563;margin-top:4px;"></div>
-          </div>
-        </div>
+        <label>IMAGINE BANNER (dreptunghiulară, recomandat 1200×450px)</label>
+        <div id="rc-img-preview" style="width:100%;height:100px;border-radius:10px;background:#0a0f1a;border:1.5px dashed #1e293b;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#4b5563;font-size:22px;margin-bottom:8px;">📷</div>
+        <label for="rc-img-input" style="display:inline-block;background:#1e293b;border:none;color:#94a3b8;font-size:12px;padding:8px 14px;border-radius:7px;cursor:pointer;">Alege imagine</label>
+        <input type="file" id="rc-img-input" accept="image/*" style="display:none;" onchange="rcImgSelected(this)"/>
+        <div id="rc-img-status" style="font-size:10px;color:#4b5563;margin-top:4px;"></div>
       </div>
 
       <div class="fg">
@@ -1340,7 +1336,7 @@ async function rcImgSelected(input) {
   const preview = document.getElementById('rc-img-preview');
   try {
     statusEl.textContent = '⏳ Se procesează...';
-    const resized = await resizeImage(file, 400, 400, 0.85);
+    const resized = await resizeImage(file, 1200, 450, 0.85);
     preview.innerHTML = `<img src="${URL.createObjectURL(resized)}" style="width:100%;height:100%;object-fit:cover;"/>`;
     rcImgFile = resized;
     statusEl.textContent = '✓ Gata — se va încărca la salvare';
