@@ -720,13 +720,24 @@ async function loadBalta(id) {
   renderPage(hartaUrl);
   // Salvează în cache 15 minute
   CACHE.set(cacheKey, { balta: BALTA, standuri: ST, hartaUrl: hartaUrl }, 15);
-  // Incrementează vizite în background (fără await — nu blochează UI)
-  sb.rpc('increment_vizite', { balta_id: id }).catch(function() {
-    // fallback: update direct dacă rpc nu există
-    sb.from('balti').update({ vizite: (BALTA.vizite || 0) + 1 }).eq('id', id);
-  });
+  // Salvează balta în istoricul personal de vizite (local, per browser — nu e un contor public)
+  saveVizitaIstoric(id, BALTA.nume);
   // Restaurează starea dacă userul vine înapoi din altă pagină
   restoreBaltaState();
+}
+
+// Istoric personal „ultimele bălți vizitate" — strict local (localStorage), fără server,
+// fără contor public. Ține ultimele 10 bălți distincte, cea mai recentă prima.
+function saveVizitaIstoric(id, nume) {
+  try {
+    var raw = localStorage.getItem('zoda_istoric_balti');
+    var istoric = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(istoric)) istoric = [];
+    istoric = istoric.filter(function(item) { return item.id !== id; });
+    istoric.unshift({ id: id, nume: nume, ts: Date.now() });
+    istoric = istoric.slice(0, 10);
+    localStorage.setItem('zoda_istoric_balti', JSON.stringify(istoric));
+  } catch (e) {}
 }
 
 // Refresh baltă în background după ce cache-ul a servit UI-ul
