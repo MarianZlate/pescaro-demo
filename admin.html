@@ -57,16 +57,16 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 /* ── RESPONSIVE — mobile-first ── */
 
 /* Baza = mobil */
-#adm-hdr-in{padding:0 12px;height:48px;flex-wrap:wrap;gap:6px;}
-#adm-hdr-in .logo{font-size:15px;}
+#hdr-in{padding:0 12px;height:48px;flex-wrap:wrap;gap:6px;}
+#hdr-in .logo{font-size:15px;}
 
-.adm-tabs{padding:0 12px;gap:0;overflow-x:auto;}
-.adm-tab{padding:10px 12px;font-size:12px;white-space:nowrap;}
+.tabs{padding:0;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;width:auto;max-width:100%;}
+.tab{padding:10px 12px;font-size:12px;white-space:nowrap;flex-shrink:0;}
 
-#tab-balti,#tab-users{padding:14px 12px;}
+#panel-balti,#panel-users{padding:14px 12px;}
 
 .stats-row{padding:12px;}
-.stat-box{padding:12px;}
+.stat-card{padding:12px;}
 .stat-num{font-size:24px;}
 
 table{font-size:11px;}
@@ -82,22 +82,22 @@ th,td{padding:8px 6px;}
 .edit-title{font-size:14px;}
 .edit-save-btn{padding:7px 12px;font-size:12px;}
 .edit-body{padding:16px;}
-.fg-row,.fg-row3{grid-template-columns:1fr;}
+.fg-row{grid-template-columns:1fr;}
 
 /* Tabletă și mai mare ≥ 480px */
 
 /* Desktop ≥ 769px */
 @media(min-width:769px){
-  #adm-hdr-in{padding:0 24px;height:62px;flex-wrap:nowrap;gap:16px;}
-  #adm-hdr-in .logo{font-size:20px;}
+  #hdr-in{padding:0 24px;height:62px;flex-wrap:nowrap;gap:16px;}
+  #hdr-in .logo{font-size:20px;}
 
-  .adm-tabs{padding:0;gap:4px;overflow-x:visible;}
-  .adm-tab{padding:12px 18px;font-size:13px;}
+  .tabs{padding:0;gap:4px;overflow-x:visible;width:fit-content;}
+  .tab{padding:12px 18px;font-size:13px;}
 
-  #tab-balti,#tab-users{padding:28px 24px;}
+  #panel-balti,#panel-users{padding:28px 24px;}
 
   .stats-row{padding:0;}
-  .stat-box{padding:16px 20px;}
+  .stat-card{padding:16px 20px;}
   .stat-num{font-size:28px;}
 
   .action-btns{flex-wrap:nowrap;gap:6px;}
