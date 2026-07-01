@@ -1019,9 +1019,10 @@ function renderLunarRows(rows, containerId, isIstoric) {
     var zodaId     = isIstoric ? r.zoda_id   : r.pescar_id;
     var kg         = isIstoric ? r.kg_total   : r.kg;
     var pescarNume = r.pescar_nume || '—';
-    var fotoUrl    = isIstoric ? null         : r.foto_url;
-    var standNume  = isIstoric ? null         : (r.standuri ? r.standuri.nume : null);
-    var dataStr    = isIstoric ? ''           : (r.data_captura ? ' · ' + r.data_captura : '');
+    var capturaInfo = isIstoric ? (r.capturi || null) : null;
+    var fotoUrl    = isIstoric ? (capturaInfo ? capturaInfo.foto_url : null) : r.foto_url;
+    var standNume  = isIstoric ? (capturaInfo && capturaInfo.standuri ? capturaInfo.standuri.nume : null) : (r.standuri ? r.standuri.nume : null);
+    var dataStr    = isIstoric ? (capturaInfo && capturaInfo.data_captura ? ' · ' + capturaInfo.data_captura : '') : (r.data_captura ? ' · ' + r.data_captura : '');
 
     var fotoHtml = fotoUrl
       ? '<img src="' + fotoUrl + '" loading="lazy" id="lun-img-' + r.id + '" style="width:32px;height:32px;object-fit:cover;border-radius:4px;flex-shrink:0;cursor:zoom-in;display:block;"/>'
@@ -1044,13 +1045,12 @@ function renderLunarRows(rows, containerId, isIstoric) {
   }).join('');
 
   // zoom foto
-  if (!isIstoric) {
-    rows.forEach(function(r) {
-      if (!r.foto_url) return;
-      var img = document.getElementById('lun-img-' + r.id);
-      if (img) img.addEventListener('click', function(e) { e.stopPropagation(); openFS(r.foto_url); });
-    });
-  }
+  rows.forEach(function(r) {
+    var url = isIstoric ? (r.capturi ? r.capturi.foto_url : null) : r.foto_url;
+    if (!url) return;
+    var img = document.getElementById('lun-img-' + r.id);
+    if (img) img.addEventListener('click', function(e) { e.stopPropagation(); openFS(url); });
+  });
 }
 
 async function loadTop10Lunar(baltaId) {
@@ -1165,7 +1165,7 @@ async function selectLunaIstoric(luna) {
   if (listEl) listEl.innerHTML = '<div class="t10e">Se încarcă...</div>';
 
   var { data: rows, error } = await sb.from('top10_lunar_istoric')
-    .select('zoda_id, kg_total, pozitie')
+    .select('id, zoda_id, kg_total, pozitie, capturi(foto_url, data_captura, standuri(nume))')
     .eq('balta_id', BALTA.id)
     .eq('luna', luna)
     .order('pozitie', { ascending: true });
