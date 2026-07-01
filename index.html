@@ -1005,14 +1005,28 @@ async function goToAdmin(e) {
 function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
 function closeHof() { document.getElementById('hof-modal').classList.remove('open'); }
 
-// ── ISTORIC BALTI VIZITATE (personal, local — nu e un contor public) ──────────
-function renderBalti() {
+// ── ISTORIC BALTI VIZITATE (personal — din cont dacă ești logat, altfel local) ─
+async function renderBalti() {
   let istoric = [];
-  try {
-    const raw = localStorage.getItem('zoda_istoric_balti');
-    istoric = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(istoric)) istoric = [];
-  } catch(e) { istoric = []; }
+
+  if (currentUser) {
+    try {
+      const { data, error } = await sb.from('istoric_vizite')
+        .select('balta_id, vizitat_la, balti(nume)')
+        .eq('user_id', currentUser.id)
+        .order('vizitat_la', { ascending: false })
+        .limit(10);
+      if (!error && data) {
+        istoric = data.map(r => ({ id: r.balta_id, nume: r.balti?.nume || 'Baltă', ts: r.vizitat_la }));
+      }
+    } catch(e) {}
+  } else {
+    try {
+      const raw = localStorage.getItem('zoda_istoric_balti');
+      istoric = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(istoric)) istoric = [];
+    } catch(e) { istoric = []; }
+  }
 
   document.getElementById('balti-count').textContent = istoric.length;
 
@@ -1029,6 +1043,25 @@ function renderBalti() {
       </div>
     </div>`;
   }).join('') || '<div style="padding:20px;text-align:center;color:#4b5563;font-size:12px;">Nicio baltă vizitată încă — explorează harta! 🗺️</div>';
+}
+
+// Mută istoricul local (salvat înainte de logare) în cont, o singură dată la login.
+// Nu suprascrie intrări deja existente în cont (acelea vin din alte dispozitive).
+async function mergeLocalIstoricInCont(userId) {
+  try {
+    const raw = localStorage.getItem('zoda_istoric_balti');
+    const local = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(local) || !local.length) return;
+    const { data: existing } = await sb.from('istoric_vizite').select('balta_id').eq('user_id', userId);
+    const existingIds = new Set((existing || []).map(r => r.balta_id));
+    const deInserat = local.filter(item => !existingIds.has(item.id));
+    if (deInserat.length) {
+      await sb.from('istoric_vizite').insert(
+        deInserat.map(item => ({ user_id: userId, balta_id: item.id, vizitat_la: new Date(item.ts).toISOString() }))
+      );
+    }
+    localStorage.removeItem('zoda_istoric_balti');
+  } catch(e) {}
 }
 
 function setVizibilitate(status) {
@@ -2840,6 +2873,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     if (!currentUser && !sessionStorage.getItem('zoda_toast_shown')) {
       setTimeout(function() { showGuestToast(); }, 30000);
     }
+    renderBalti(); // reîncarcă istoricul din sursa corectă (cont sau local)
   } else if(event === 'SIGNED_IN') {
     currentUser = session?.user || null;
     if (currentUser) {
@@ -2867,11 +2901,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
     await updateNavForUser(currentUser);
     closeAuthModal();
     if (HOF.length) renderHof(); // re-renderăm cu link-uri deblocate
+    if (currentUser) { await mergeLocalIstoricInCont(currentUser.id); renderBalti(); }
   } else if(event === 'SIGNED_OUT') {
     currentUser = null;
     _roleCache  = null;
     await updateNavForUser(null);
-    if (BALTI.length) { renderMapMarkers(); renderBalti(); }
+    if (BALTI.length) renderMapMarkers();
+    renderBalti(); // revine la istoricul local (guest)
     if (HOF.length) renderHof(); // re-renderăm cu link-uri blocate pentru vizitatori
   }
 });
