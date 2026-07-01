@@ -571,55 +571,65 @@ async function uploadToR2(file, folder, onProgress) {
 }
 
 // Upload video pe bucăți (multipart) — rezistent la conexiuni instabile/semnal slab.
-// Dacă o bucată eșuează, se reia DOAR acea bucată (max 5 încercări), nu tot fișierul.
-const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB per bucată
+// Dacă o bucată eșuează, se reia DOAR acea bucată (până la 10 încercări, cu pauze
+// tot mai lungi). Dacă TOT eșuează, progresul rămâne salvat — la un nou "Trimite"
+// (fără să schimbi fișierul), continuă de unde a rămas, nu ia totul de la capăt.
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB — minimul acceptat de R2/S3 per bucată
+let _multipartState = null; // { fileRef, key, uploadId, parts, nextPartNumber }
 
 async function uploadToR2Presigned(file, folder, onProgress) {
-  // Fișiere mici (sub 2 bucăți) — nu are rost să complicăm, upload dintr-o bucată
+  // Fișiere mici — nu are rost să complicăm, upload dintr-o bucată
   if (file.size <= CHUNK_SIZE) {
     return uploadSingleShot(file, folder, onProgress);
   }
 
-  // 1. Inițiem multipart upload
-  const createParams = new URLSearchParams({
-    action: 'create', folder, filename: file.name || 'file', contentType: file.type || 'application/octet-stream',
-  });
-  const createRes = await fetch(`${WORKER_R2_PRESIGN}?${createParams.toString()}`, { method: 'POST' });
-  const createData = await createRes.json();
-  if (!createData.uploadId) throw new Error(createData.error || 'Nu s-a putut iniția upload-ul.');
-  const { uploadId, key, publicUrl } = createData;
-
-  // 2. Împărțim fișierul în bucăți și le trimitem pe rând
   const totalParts = Math.ceil(file.size / CHUNK_SIZE);
-  const parts = [];
-  let uploadedBytes = 0;
+  let key, uploadId, parts, startPart;
 
-  try {
-    for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-      const start = (partNumber - 1) * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
+  // Reluăm un upload neterminat pentru ACELAȘI fișier, dacă a mai fost încercat
+  if (_multipartState && _multipartState.fileRef === file) {
+    ({ key, uploadId, parts } = _multipartState);
+    startPart = _multipartState.nextPartNumber;
+    if (onProgress) onProgress(Math.round(((startPart - 1) / totalParts) * 100), `Reluăm de la bucata ${startPart}/${totalParts}...`);
+  } else {
+    const createParams = new URLSearchParams({
+      action: 'create', folder, filename: file.name || 'file', contentType: file.type || 'application/octet-stream',
+    });
+    const createRes = await fetch(`${WORKER_R2_PRESIGN}?${createParams.toString()}`, { method: 'POST' });
+    const createData = await createRes.json();
+    if (!createData.uploadId) throw new Error(createData.error || 'Nu s-a putut iniția upload-ul.');
+    key = createData.key; uploadId = createData.uploadId;
+    parts = [];
+    startPart = 1;
+    _multipartState = { fileRef: file, key, uploadId, parts, nextPartNumber: 1, publicUrl: createData.publicUrl };
+  }
 
-      const etag = await uploadChunkWithRetry(key, uploadId, partNumber, chunk, (chunkLoaded) => {
+  let uploadedBytes = (startPart - 1) * CHUNK_SIZE;
+
+  for (let partNumber = startPart; partNumber <= totalParts; partNumber++) {
+    const start = (partNumber - 1) * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunk = file.slice(start, end);
+
+    let etag;
+    try {
+      etag = await uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts, (chunkLoaded) => {
         if (onProgress) {
           const pct = Math.round(((uploadedBytes + chunkLoaded) / file.size) * 100);
           onProgress(pct, `Video: ${pct}% (bucata ${partNumber}/${totalParts})`);
         }
       });
-
-      parts.push({ partNumber, etag });
-      uploadedBytes += chunk.size;
+    } catch (e) {
+      // NU anulăm uploadul pe R2 — rămâne salvat, ca să putem relua la următoarea încercare
+      throw e;
     }
-  } catch (e) {
-    // Curățăm upload-ul neterminat de pe R2, ca să nu rămână „gunoi"
-    try {
-      const abortParams = new URLSearchParams({ action: 'abort', key, uploadId });
-      fetch(`${WORKER_R2_PRESIGN}?${abortParams.toString()}`, { method: 'POST' });
-    } catch (err) {}
-    throw e;
+
+    parts.push({ partNumber, etag });
+    uploadedBytes += chunk.size;
+    _multipartState.nextPartNumber = partNumber + 1;
   }
 
-  // 3. Finalizăm — spunem la R2 din ce bucăți e compus fișierul
+  // Toate bucățile au reușit — finalizăm
   const completeRes = await fetch(`${WORKER_R2_PRESIGN}?action=complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -628,26 +638,43 @@ async function uploadToR2Presigned(file, folder, onProgress) {
   const completeData = await completeRes.json();
   if (!completeData.success) throw new Error(completeData.error || 'Finalizare upload eșuată.');
 
+  const publicUrl = _multipartState.publicUrl;
+  _multipartState = null; // gata, curățăm starea
   return publicUrl;
 }
 
-// O bucată, cu reîncercare proprie (până la 5 încercări — bucata e mică, deci reîncercarea e ieftină)
-async function uploadChunkWithRetry(key, uploadId, partNumber, chunk, onChunkProgress, attempt = 1) {
-  const MAX_ATTEMPTS = 5;
+// Așteaptă să revină conexiunea, dacă browserul o detectează ca fiind offline chiar acum
+function waitForOnline(maxWaitMs) {
+  return new Promise(resolve => {
+    if (navigator.onLine !== false) return resolve();
+    const timer = setTimeout(() => { window.removeEventListener('online', onOnline); resolve(); }, maxWaitMs);
+    function onOnline() { clearTimeout(timer); window.removeEventListener('online', onOnline); resolve(); }
+    window.addEventListener('online', onOnline);
+  });
+}
+
+// O bucată, cu reîncercare proprie — până la 10 încercări, cu pauze exponențiale
+// (1s, 2s, 4s, 8s, 16s, 30s, 30s...) și așteptare activă dacă telefonul chiar
+// și-a pierdut semnalul complet (nu doar e lent).
+async function uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts, onChunkProgress, attempt = 1) {
+  const MAX_ATTEMPTS = 10;
   try {
     return await uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress);
   } catch (e) {
     if (attempt < MAX_ATTEMPTS) {
-      await new Promise(r => setTimeout(r, 1000 * attempt)); // backoff progresiv: 1s, 2s, 3s...
-      return uploadChunkWithRetry(key, uploadId, partNumber, chunk, onChunkProgress, attempt + 1);
+      await waitForOnline(60000);
+      const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
+      await new Promise(r => setTimeout(r, backoffMs));
+      return uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts, onChunkProgress, attempt + 1);
     }
-    throw new Error(`Bucata ${partNumber} a eșuat de ${MAX_ATTEMPTS} ori. Verifică semnalul și încearcă din nou.`);
+    throw new Error(`Bucata ${partNumber}/${totalParts} tot eșuează după ${MAX_ATTEMPTS} încercări. Progresul e salvat — apasă din nou „Trimite" când ai semnal mai bun, va continua de aici, nu ia totul de la capăt.`);
   }
 }
 
 function uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress) {
   return new Promise(async (resolve, reject) => {
     try {
+
       const signParams = new URLSearchParams({ action: 'sign-part', key, uploadId, partNumber: String(partNumber) });
       const signRes = await fetch(`${WORKER_R2_PRESIGN}?${signParams.toString()}`, { method: 'POST' });
       const signData = await signRes.json();
@@ -867,8 +894,7 @@ async function openCaptura(baltaId, baltaNume) {
   _pescarSelectat = null;
   _fotoFile = null;
   _videoFile = null;
-
-  // Reset form
+  _multipartState = null;
   document.getElementById('mc-stand').innerHTML = '<option value="">Selectează standul...</option>';
   document.getElementById('mc-kg').value = '';
   document.getElementById('mc-data').value = new Date().toISOString().split('T')[0];
@@ -917,6 +943,7 @@ function closeCaptura() {
   // Resetăm fișierele și formularul complet
   _fotoFile  = null;
   _videoFile = null;
+  _multipartState = null;
   document.getElementById('mc-kg').value = '';
   document.getElementById('mc-data').value = '';
   document.getElementById('mc-stand').innerHTML = '<option value="">Selectează standul...</option>';
