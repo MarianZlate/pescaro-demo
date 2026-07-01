@@ -214,15 +214,15 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   .info-bar > div:first-child{display:none!important;} /* numele băltii — deja vizibil în header */
   #btn-tel{grid-area:tel;width:100%;justify-content:center;padding:8px 6px;}
   #btn-wa{grid-area:wa;width:100%;justify-content:center;padding:8px 4px;font-size:12px;gap:4px;}
-  #btn-fb{grid-area:fb;width:100%;justify-content:center;padding:5px 4px;font-size:11px;gap:3px;}
-  #btn-waze{grid-area:waze;width:100%;justify-content:center;padding:5px 2px;font-size:11px;gap:3px;}
-  #btn-gmaps{grid-area:gmaps;width:100%;justify-content:center;padding:5px 2px;font-size:11px;gap:3px;}
+  #btn-fb{grid-area:fb;width:100%;justify-content:center;padding:5px 4px!important;font-size:11px;gap:3px;}
+  #btn-waze{grid-area:waze;width:100%;justify-content:center;padding:5px 2px!important;font-size:11px;gap:3px;}
+  #btn-gmaps{grid-area:gmaps;width:100%;justify-content:center;padding:5px 2px!important;font-size:11px;gap:3px;}
   /* Când Facebook (regulament) lipsește, Waze+GMaps ocupă tot rândul 2 */
   .info-bar:has(#btn-fb[style*="display: none"]){grid-template-columns:1fr 1fr;grid-template-areas:"tel wa" "waze gmaps";}
   .ebtn{flex:1;text-align:center;}
 }
 @media(max-width:360px){
-  #btn-fb,#btn-waze,#btn-gmaps{font-size:10px;padding:5px 1px;gap:2px;}
+  #btn-fb,#btn-waze,#btn-gmaps{font-size:10px;padding:5px 1px!important;gap:2px;}
 }
 
 /* LOADING & ERROR */
