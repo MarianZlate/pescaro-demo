@@ -1279,6 +1279,8 @@ function selStand(id) {
   renderPins();
   updatePills();
   document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
+  var selectedStand = ST.find(function(x) { return x.id === id; });
+  showMapYT(selectedStand);
 }
 
 function openOverlay(id) {
