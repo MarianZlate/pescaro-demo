@@ -280,6 +280,17 @@ nav{display:flex;align-items:center;gap:6px;}
 .add-stand-btn:hover{border-color:#1a6b3a;color:#a3e635;background:#0d1f12;}
 
 /* ============================================================
+   ECRANE FOARTE MICI (320-360px)
+   ============================================================ */
+@media(max-width:480px){
+  #hdr-in{padding:0 8px;gap:4px;}
+  .nav-btn{padding:6px;font-size:13px;}
+  .logo-text{font-size:16px;}
+  #notif-panel{width:calc(100vw - 24px);right:12px;left:12px;}
+  .hero-title{font-size:22px;}
+}
+
+/* ============================================================
    DESKTOP (min-width: 769px)
    ============================================================ */
 @media(min-width:769px){
@@ -354,7 +365,7 @@ nav{display:flex;align-items:center;gap:6px;}
       <span class="logo-badge">Beta</span>
     </a>
     <nav>
-      <button class="nav-btn" onclick="openRegModal()" style="background:#1e3a2e;color:#a3e635;font-weight:700;border:1px solid #166534;">📋 Înregistrează balta</button>
+      <button class="nav-btn" onclick="openRegModal()" style="background:#1e3a2e;color:#a3e635;font-weight:700;border:1px solid #166534;">📋 <span class="nav-label">Înregistrează balta</span></button>
       <div id="nav-auth-area">
         <button class="nav-primary" onclick="openAuthModal()">Conectare</button>
       </div>
@@ -2696,7 +2707,7 @@ async function updateNavForUser(user) {
 
   area.innerHTML = `
     <div class="nav-user">
-      ${isAdmin ? '<a href="#" onclick="goToAdmin(event)" class="nav-admin-badge" style="text-decoration:none;cursor:pointer;" title="Panou de administrare">⚙️ Admin</a>' : ''}
+      ${isAdmin ? '<a href="#" onclick="goToAdmin(event)" class="nav-admin-badge" style="text-decoration:none;cursor:pointer;" title="Panou de administrare">⚙️ <span class="nav-label">Admin</span></a>' : ''}
       <div class="nav-bell" onclick="toggleNotifPanel()" title="Notificări" id="nav-bell-btn">
         🔔${bellBadge}
       </div>
