@@ -23,9 +23,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;backdrop-filter:blur(8px);}
 #hdr-in{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:52px;gap:8px;}
 .logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;}
+.logo-img{height:32px;width:auto;display:block;}
 .logo-icon{font-size:22px;}
 .logo-text{font-size:18px;font-weight:900;color:#a3e635;letter-spacing:-.5px;}
-.logo-badge{display:none;font-size:10px;background:#1a6b3a;color:#a3e635;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:.04em;}
 nav{display:flex;align-items:center;gap:6px;}
 .nav-btn{background:transparent;border:none;color:#94a3b8;cursor:pointer;border-radius:8px;transition:color .2s;font-size:12px;padding:6px 8px;}
 .nav-btn:hover{color:#f1f5f9;}
@@ -297,7 +297,6 @@ nav{display:flex;align-items:center;gap:6px;}
   #hdr-in{padding:0 24px;height:62px;gap:16px;}
   .logo-icon{font-size:28px;}
   .logo-text{font-size:22px;}
-  .logo-badge{display:inline;}
   .nav-btn{font-size:14px;padding:8px 14px;}
   .nav-primary{font-size:13px;padding:8px 18px;}
   .nav-user-name{display:block;}
@@ -360,9 +359,7 @@ nav{display:flex;align-items:center;gap:6px;}
 <div id="hdr">
   <div id="hdr-in">
     <a class="logo" href="index.html" onclick="return goHome(event)">
-      <span class="logo-icon">🎣</span>
-      <span class="logo-text">Zoda</span>
-      <span class="logo-badge">Beta</span>
+      <img src="zoda-logo.png" alt="Zoda" class="logo-img"/>
     </a>
     <nav>
       <button class="nav-btn" onclick="openRegModal()" style="background:#1e3a2e;color:#a3e635;font-weight:700;border:1px solid #166534;">📋 <span class="nav-label">Înregistrează balta</span></button>
