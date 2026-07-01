@@ -415,6 +415,7 @@ th,td{padding:8px 6px;}
     <button class="tab" onclick="switchTab('users')">👥 Utilizatori</button>
     <button class="tab" onclick="switchTab('capturi')">📸 Capturi</button>
     <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
+    <button class="tab" onclick="switchTab('reclame')">📢 Reclame</button>
   </div>
 
   <!-- BALTI PANEL -->
@@ -505,6 +506,96 @@ th,td{padding:8px 6px;}
     </div>
   </div>
 
+  <!-- RECLAME PANEL -->
+  <div id="panel-reclame" style="display:none;">
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <span>📢 Reclame — bălți, concursuri, magazine</span>
+      <button onclick="openAddReclama()" style="display:flex;align-items:center;gap:8px;background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;">
+        ＋ Adaugă reclamă
+      </button>
+    </div>
+    <div id="reclame-list" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="empty-state">Se încarcă...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL ADAUGĂ/EDITEAZĂ RECLAMĂ -->
+<div id="reclama-modal" onclick="if(event.target===this)closeReclamaModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1700;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:480px;margin:16px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;background:#0a0f1a;position:sticky;top:0;">
+      <div style="font-size:16px;font-weight:900;color:#f1f5f9;" id="reclama-modal-title">📢 Adaugă reclamă</div>
+      <button onclick="closeReclamaModal()" style="background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:2px;">
+      <input type="hidden" id="rc-id"/>
+
+      <div class="fg">
+        <label>TIP RECLAMĂ</label>
+        <select id="rc-tip" onchange="rcTipChanged()" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;cursor:pointer;">
+          <option value="balta">🎣 Promovare baltă</option>
+          <option value="concurs">🏆 Concurs</option>
+          <option value="magazin">🛒 Ofertă magazin</option>
+          <option value="altele">📌 Altele</option>
+        </select>
+      </div>
+
+      <div class="fg" id="rc-balta-wrap" style="display:none;">
+        <label>BALTĂ PROMOVATĂ</label>
+        <select id="rc-balta-id" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;cursor:pointer;">
+          <option value="">— selectează o baltă —</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label>TITLU</label>
+        <input type="text" id="rc-titlu" placeholder="ex: Balta Ileana — Weekend cu premii"/>
+      </div>
+
+      <div class="fg">
+        <label>SUBTITLU (opțional)</label>
+        <input type="text" id="rc-subtitlu" placeholder="ex: -20% la bilet, doar în weekend"/>
+      </div>
+
+      <div class="fg">
+        <label>IMAGINE (pătrată, min. 200×200px)</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div id="rc-img-preview" style="width:64px;height:64px;border-radius:10px;background:#0a0f1a;border:1.5px dashed #1e293b;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;color:#4b5563;font-size:22px;">📷</div>
+          <div style="flex:1;">
+            <label for="rc-img-input" style="display:inline-block;background:#1e293b;border:none;color:#94a3b8;font-size:12px;padding:8px 14px;border-radius:7px;cursor:pointer;">Alege imagine</label>
+            <input type="file" id="rc-img-input" accept="image/*" style="display:none;" onchange="rcImgSelected(this)"/>
+            <div id="rc-img-status" style="font-size:10px;color:#4b5563;margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>LINK DESTINAȚIE</label>
+        <input type="url" id="rc-link" placeholder="https://..."/>
+      </div>
+
+      <div class="fg-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg">
+          <label>DATA START</label>
+          <input type="date" id="rc-start"/>
+        </div>
+        <div class="fg">
+          <label>DATA SFÂRȘIT</label>
+          <input type="date" id="rc-sfarsit"/>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>ORDINE ÎN ROTAȚIE (opțional, mai mic = primul afișat)</label>
+        <input type="number" id="rc-sort" value="0"/>
+      </div>
+
+      <div id="reclama-err" style="display:none;background:#1c0a0a;border:1px solid #7f1d1d;color:#fca5a5;border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:10px;"></div>
+
+      <button onclick="saveReclama()" id="reclama-save-btn" style="background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;margin-top:6px;margin-bottom:20px;">💾 Salvează reclama</button>
+    </div>
+  </div>
 </div>
 
 <!-- DRAFT BANNER -->
@@ -765,14 +856,16 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','capturi','settings'][i]===tab));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','capturi','settings','reclame'][i]===tab));
   const pB = document.getElementById('panel-balti');    if(pB) pB.style.display    = tab==='balti'    ? 'block' : 'none';
   const pU = document.getElementById('panel-users');    if(pU) pU.style.display    = tab==='users'    ? 'block' : 'none';
   const pC = document.getElementById('panel-capturi');  if(pC) pC.style.display    = tab==='capturi'  ? 'block' : 'none';
   const pS = document.getElementById('panel-settings'); if(pS) pS.style.display    = tab==='settings' ? 'block' : 'none';
+  const pR = document.getElementById('panel-reclame');  if(pR) pR.style.display    = tab==='reclame'  ? 'block' : 'none';
   if(tab==='users')    loadUsers();
   if(tab==='capturi')  loadCapturi();
   if(tab==='settings') loadSettings();
+  if(tab==='reclame')  loadReclame();
 }
 
 async function loadCapturi() {
@@ -1131,6 +1224,203 @@ async function saveSettings() {
     st.textContent = '✅ Setări salvate!'; st.style.color = '#a3e635';
     setTimeout(() => { st.textContent = ''; }, 3000);
   }
+}
+
+// ── RECLAME ───────────────────────────────────────────────────────────────────
+let RECLAME = [];
+let rcEditId = null;
+let rcImgFile = null;
+let rcImgUrl = '';
+
+const RC_TIP_LABEL = { balta: '🎣 Baltă', concurs: '🏆 Concurs', magazin: '🛒 Magazin', altele: '📌 Altele' };
+
+async function loadReclame() {
+  const wrap = document.getElementById('reclame-list');
+  wrap.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+  const { data, error } = await sb.from('reclame').select('*').order('sort_order', { ascending: true });
+  if(error) { wrap.innerHTML = '<div class="empty-state">Eroare la încărcare: ' + error.message + '</div>'; return; }
+  RECLAME = data || [];
+  if(!RECLAME.length) { wrap.innerHTML = '<div class="empty-state">Nicio reclamă adăugată încă.</div>'; return; }
+
+  const today = new Date().toISOString().slice(0, 10);
+  wrap.innerHTML = RECLAME.map(r => {
+    let statusTxt, statusColor;
+    if(!r.activ)                statusTxt = '⏸️ Dezactivată',  statusColor = '#4b5563';
+    else if(r.data_sfarsit < today) statusTxt = '⌛ Expirată',   statusColor = '#ef4444';
+    else if(r.data_start > today)   statusTxt = '🕓 Programată', statusColor = '#f59e0b';
+    else                          statusTxt = '✅ Activă',      statusColor = '#a3e635';
+
+    return `<div style="display:flex;align-items:center;gap:14px;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;">
+      <img src="${r.imagine_url}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#0a0f1a;" onerror="this.style.opacity=0.2"/>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${RC_TIP_LABEL[r.tip] || r.tip} · ${escH(r.titlu)}</div>
+        <div style="font-size:11px;color:#4b5563;margin-top:2px;">${r.data_start} → ${r.data_sfarsit} · 👁️ ${r.afisari||0} afișări · 🖱️ ${r.clickuri||0} click-uri</div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:${statusColor};white-space:nowrap;">${statusTxt}</div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="openEditReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">✏️</button>
+        <button onclick="toggleActivReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">${r.activ ? '⏸️' : '▶️'}</button>
+        <button onclick="deleteReclama(${r.id})" style="background:#1e293b;border:none;color:#ef4444;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escH(str) {
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function rcPopulateBaltiSelect() {
+  const sel = document.getElementById('rc-balta-id');
+  const { data } = await sb.from('balti').select('id, nume').order('nume');
+  sel.innerHTML = '<option value="">— selectează o baltă —</option>' +
+    (data || []).map(b => `<option value="${b.id}">${escH(b.nume)}</option>`).join('');
+}
+
+function rcTipChanged() {
+  const tip = document.getElementById('rc-tip').value;
+  document.getElementById('rc-balta-wrap').style.display = tip === 'balta' ? 'block' : 'none';
+}
+
+function rcResetForm() {
+  rcEditId = null; rcImgFile = null; rcImgUrl = '';
+  document.getElementById('rc-id').value = '';
+  document.getElementById('rc-tip').value = 'balta';
+  document.getElementById('rc-balta-id').value = '';
+  document.getElementById('rc-titlu').value = '';
+  document.getElementById('rc-subtitlu').value = '';
+  document.getElementById('rc-link').value = '';
+  document.getElementById('rc-start').value = new Date().toISOString().slice(0,10);
+  document.getElementById('rc-sfarsit').value = '';
+  document.getElementById('rc-sort').value = '0';
+  document.getElementById('rc-img-preview').innerHTML = '📷';
+  document.getElementById('rc-img-status').textContent = '';
+  document.getElementById('reclama-err').style.display = 'none';
+  rcTipChanged();
+}
+
+async function openAddReclama() {
+  rcResetForm();
+  document.getElementById('reclama-modal-title').textContent = '📢 Adaugă reclamă';
+  await rcPopulateBaltiSelect();
+  document.getElementById('reclama-modal').style.display = 'flex';
+}
+
+async function openEditReclama(id) {
+  const r = RECLAME.find(x => x.id === id);
+  if(!r) return;
+  rcResetForm();
+  await rcPopulateBaltiSelect();
+  rcEditId = id;
+  rcImgUrl = r.imagine_url;
+  document.getElementById('reclama-modal-title').textContent = '✏️ Editează reclama';
+  document.getElementById('rc-id').value = r.id;
+  document.getElementById('rc-tip').value = r.tip;
+  document.getElementById('rc-balta-id').value = r.balta_id || '';
+  document.getElementById('rc-titlu').value = r.titlu || '';
+  document.getElementById('rc-subtitlu').value = r.subtitlu || '';
+  document.getElementById('rc-link').value = r.link_destinatie || '';
+  document.getElementById('rc-start').value = r.data_start;
+  document.getElementById('rc-sfarsit').value = r.data_sfarsit;
+  document.getElementById('rc-sort').value = r.sort_order || 0;
+  document.getElementById('rc-img-preview').innerHTML = r.imagine_url ? `<img src="${r.imagine_url}" style="width:100%;height:100%;object-fit:cover;"/>` : '📷';
+  rcTipChanged();
+  document.getElementById('reclama-modal').style.display = 'flex';
+}
+
+function closeReclamaModal() {
+  document.getElementById('reclama-modal').style.display = 'none';
+}
+
+async function rcImgSelected(input) {
+  const file = input.files[0];
+  if(!file) return;
+  rcImgFile = file;
+  const statusEl = document.getElementById('rc-img-status');
+  const preview = document.getElementById('rc-img-preview');
+  try {
+    statusEl.textContent = '⏳ Se procesează...';
+    const resized = await resizeImage(file, 400, 400, 0.85);
+    preview.innerHTML = `<img src="${URL.createObjectURL(resized)}" style="width:100%;height:100%;object-fit:cover;"/>`;
+    rcImgFile = resized;
+    statusEl.textContent = '✓ Gata — se va încărca la salvare';
+  } catch(e) {
+    statusEl.textContent = '❌ Eroare la procesarea imaginii';
+    rcImgFile = null;
+  }
+}
+
+async function saveReclama() {
+  const tip        = document.getElementById('rc-tip').value;
+  const baltaId    = document.getElementById('rc-balta-id').value;
+  const titlu      = document.getElementById('rc-titlu').value.trim();
+  const subtitlu   = document.getElementById('rc-subtitlu').value.trim();
+  const link       = document.getElementById('rc-link').value.trim();
+  const dataStart  = document.getElementById('rc-start').value;
+  const dataSfarsit= document.getElementById('rc-sfarsit').value;
+  const sortOrder  = parseInt(document.getElementById('rc-sort').value, 10) || 0;
+  const errEl = document.getElementById('reclama-err');
+  errEl.style.display = 'none';
+
+  if(!titlu)                          return rcShowErr('Completează titlul.');
+  if(!link)                           return rcShowErr('Completează link-ul de destinație.');
+  if(!dataStart || !dataSfarsit)      return rcShowErr('Completează data de start și de sfârșit.');
+  if(dataSfarsit < dataStart)         return rcShowErr('Data de sfârșit e înaintea datei de start.');
+  if(!rcImgFile && !rcImgUrl)         return rcShowErr('Alege o imagine pentru reclamă.');
+
+  const btn = document.getElementById('reclama-save-btn');
+  btn.disabled = true; btn.textContent = 'Se salvează...';
+
+  try {
+    let imgUrl = rcImgUrl;
+    if(rcImgFile) {
+      imgUrl = await uploadToR2(rcImgFile, 'reclame');
+    }
+
+    const payload = {
+      tip, titlu, subtitlu: subtitlu || null,
+      imagine_url: imgUrl,
+      link_destinatie: link,
+      data_start: dataStart, data_sfarsit: dataSfarsit,
+      balta_id: tip === 'balta' && baltaId ? parseInt(baltaId, 10) : null,
+      sort_order: sortOrder,
+    };
+
+    let error;
+    if(rcEditId) {
+      ({ error } = await sb.from('reclame').update(payload).eq('id', rcEditId));
+    } else {
+      payload.activ = true;
+      ({ error } = await sb.from('reclame').insert(payload));
+    }
+
+    if(error) { rcShowErr(error.message); btn.disabled = false; btn.textContent = '💾 Salvează reclama'; return; }
+
+    closeReclamaModal();
+    showToast(rcEditId ? '✅ Reclama a fost actualizată!' : '✅ Reclama a fost adăugată!');
+    loadReclame();
+  } catch(e) {
+    rcShowErr('Eroare upload imagine: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = '💾 Salvează reclama';
+}
+
+function rcShowErr(msg) {
+  const el = document.getElementById('reclama-err');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function toggleActivReclama(id) {
+  const r = RECLAME.find(x => x.id === id);
+  if(!r) return;
+  const { error } = await sb.from('reclame').update({ activ: !r.activ }).eq('id', id);
+  if(!error) loadReclame();
+}
+
+async function deleteReclama(id) {
+  if(!confirm('Ștergi definitiv această reclamă? Nu se poate anula.')) return;
+  const { error } = await sb.from('reclame').delete().eq('id', id);
+  if(!error) loadReclame();
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
