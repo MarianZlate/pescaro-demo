@@ -926,7 +926,7 @@ function goHome(e) {
   if (e) e.preventDefault();
   try { sessionStorage.removeItem('zoda_index_state'); } catch(err) {}
   clearSearch();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
   if (typeof map !== 'undefined' && map) map.setView([45.5, 24.8], 7, { animate: true });
   return false;
 }
