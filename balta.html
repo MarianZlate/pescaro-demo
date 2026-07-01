@@ -23,7 +23,8 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #hdr-in{max-width:1600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;
   /* mobil */
   padding:0 12px;height:48px;}
-.logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;}
+.logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;display:flex;align-items:center;}
+.logo-img{height:28px;width:auto;display:block;}
 .badge{font-size:10px;background:#7c3aed;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:6px;}
 #hdr-balta-info{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;}
 #hdr-balta-name{font-weight:700;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -299,8 +300,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 <div id="hdr" style="display:none;">
   <div id="hdr-in">
     <div style="display:flex;align-items:center;gap:6px;min-width:0;">
-      <a href="index.html" class="logo" onclick="try{sessionStorage.removeItem('zoda_index_state');}catch(e){}">Zoda</a>
-      <span class="badge">BETA</span>
+      <a href="index.html" class="logo" onclick="try{sessionStorage.removeItem('zoda_index_state');}catch(e){}"><img src="zoda-logo.png" alt="Zoda" class="logo-img"/></a>
     </div>
     <div id="hdr-balta-info">
       <span id="hdr-balta-name">—</span>
