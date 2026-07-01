@@ -674,35 +674,29 @@ async function uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts
 }
 
 function uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress) {
-  return new Promise(async (resolve, reject) => {
-    try {
-
-      const signParams = new URLSearchParams({ action: 'sign-part', key, uploadId, partNumber: String(partNumber) });
-      let signRes, signData;
-      try {
-        signRes = await fetch(`${WORKER_R2_PRESIGN}?${signParams.toString()}`, { method: 'POST' });
-        signData = await signRes.json();
-      } catch (fetchErr) {
-        return reject(new Error(`Nu am putut contacta Worker-ul de semnare (${fetchErr.message})`));
-      }
-      if (!signRes.ok) return reject(new Error(`Worker semnare a răspuns cu status ${signRes.status}`));
-      if (!signData.uploadUrl) return reject(new Error(signData.error || 'Nu s-a putut semna bucata.'));
-
-      const xhr = new XMLHttpRequest();
-      xhr.open('PUT', signData.uploadUrl);
-      xhr.upload.onprogress = e => { if (e.lengthComputable && onChunkProgress) onChunkProgress(e.loaded); };
-      xhr.onload = () => {
-        if (xhr.status === 200 || xhr.status === 204) {
-          const etag = xhr.getResponseHeader('ETag');
-          if (!etag) { reject(new Error(`R2 a răspuns ${xhr.status} dar fără ETag (verifică ExposeHeaders pe bucket)`)); return; }
-          resolve(etag);
-        } else {
-          reject(new Error(`R2 a respins bucata cu status ${xhr.status}: ${(xhr.responseText || '').slice(0, 150)}`));
+  return new Promise((resolve, reject) => {
+    // Bucata trece prin Worker-ul nostru (nu direct browser → R2) — evită orice
+    // blocaj de rețea/telefon specific domeniului R2; browserul vorbește doar
+    // cu domeniul nostru workers.dev, care s-a dovedit accesibil.
+    const params = new URLSearchParams({ action: 'upload-part', key, uploadId, partNumber: String(partNumber) });
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${WORKER_R2_PRESIGN}?${params.toString()}`);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onChunkProgress) onChunkProgress(e.loaded); };
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (data.etag) resolve(data.etag);
+          else reject(new Error(data.error || 'Worker nu a returnat ETag.'));
+        } catch (parseErr) {
+          reject(new Error(`Răspuns invalid de la worker: ${(xhr.responseText || '').slice(0, 150)}`));
         }
-      };
-      xhr.onerror = () => reject(new Error(`xhr.onerror (status: ${xhr.status}, readyState: ${xhr.readyState}) — de obicei CORS blocat sau conexiune întreruptă`));
-      xhr.send(chunk);
-    } catch (e) { reject(e); }
+      } else {
+        reject(new Error(`Worker a respins bucata cu status ${xhr.status}: ${(xhr.responseText || '').slice(0, 150)}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error(`xhr.onerror (status: ${xhr.status}, readyState: ${xhr.readyState}) la upload către worker`));
+    xhr.send(chunk);
   });
 }
 
