@@ -570,40 +570,116 @@ async function uploadToR2(file, folder, onProgress) {
   });
 }
 
-// Upload direct pe R2 prin presigned URL — fără limită de dimensiune (video mari)
-// Reîncearcă automat dacă apare o eroare de rețea SAU dacă semnătura presemnată a expirat
-// (upload lung pe conexiune lentă) — în ambele cazuri, se cere un URL nou și se reia.
-async function uploadToR2Presigned(file, folder, onProgress, _attempt = 1) {
-  const MAX_ATTEMPTS = 3;
+// Upload video pe bucăți (multipart) — rezistent la conexiuni instabile/semnal slab.
+// Dacă o bucată eșuează, se reia DOAR acea bucată (max 5 încercări), nu tot fișierul.
+const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB per bucată
+
+async function uploadToR2Presigned(file, folder, onProgress) {
+  // Fișiere mici (sub 2 bucăți) — nu are rost să complicăm, upload dintr-o bucată
+  if (file.size <= CHUNK_SIZE) {
+    return uploadSingleShot(file, folder, onProgress);
+  }
+
+  // 1. Inițiem multipart upload
+  const createParams = new URLSearchParams({
+    action: 'create', folder, filename: file.name || 'file', contentType: file.type || 'application/octet-stream',
+  });
+  const createRes = await fetch(`${WORKER_R2_PRESIGN}?${createParams.toString()}`, { method: 'POST' });
+  const createData = await createRes.json();
+  if (!createData.uploadId) throw new Error(createData.error || 'Nu s-a putut iniția upload-ul.');
+  const { uploadId, key, publicUrl } = createData;
+
+  // 2. Împărțim fișierul în bucăți și le trimitem pe rând
+  const totalParts = Math.ceil(file.size / CHUNK_SIZE);
+  const parts = [];
+  let uploadedBytes = 0;
+
   try {
-    return await uploadToR2PresignedOnce(file, folder, onProgress);
+    for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+      const start = (partNumber - 1) * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+
+      const etag = await uploadChunkWithRetry(key, uploadId, partNumber, chunk, (chunkLoaded) => {
+        if (onProgress) {
+          const pct = Math.round(((uploadedBytes + chunkLoaded) / file.size) * 100);
+          onProgress(pct, `Video: ${pct}% (bucata ${partNumber}/${totalParts})`);
+        }
+      });
+
+      parts.push({ partNumber, etag });
+      uploadedBytes += chunk.size;
+    }
   } catch (e) {
-    const msg = e.message || '';
-    const isRetryable = /rețea|network|eroare upload r2/i.test(msg);
-    if (isRetryable && _attempt < MAX_ATTEMPTS) {
-      if (onProgress) onProgress(0, `Conexiune întreruptă, reîncerc (${_attempt}/${MAX_ATTEMPTS - 1})...`);
-      await new Promise(r => setTimeout(r, 1500));
-      return uploadToR2Presigned(file, folder, onProgress, _attempt + 1);
-    }
-    if (isRetryable) {
-      throw new Error('Conexiunea s-a întrerupt de mai multe ori la încărcarea videoclipului. Verifică semnalul (WiFi e mai stabil decât datele mobile) și încearcă din nou.');
-    }
+    // Curățăm upload-ul neterminat de pe R2, ca să nu rămână „gunoi"
+    try {
+      const abortParams = new URLSearchParams({ action: 'abort', key, uploadId });
+      fetch(`${WORKER_R2_PRESIGN}?${abortParams.toString()}`, { method: 'POST' });
+    } catch (err) {}
     throw e;
+  }
+
+  // 3. Finalizăm — spunem la R2 din ce bucăți e compus fișierul
+  const completeRes = await fetch(`${WORKER_R2_PRESIGN}?action=complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, uploadId, parts }),
+  });
+  const completeData = await completeRes.json();
+  if (!completeData.success) throw new Error(completeData.error || 'Finalizare upload eșuată.');
+
+  return publicUrl;
+}
+
+// O bucată, cu reîncercare proprie (până la 5 încercări — bucata e mică, deci reîncercarea e ieftină)
+async function uploadChunkWithRetry(key, uploadId, partNumber, chunk, onChunkProgress, attempt = 1) {
+  const MAX_ATTEMPTS = 5;
+  try {
+    return await uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress);
+  } catch (e) {
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise(r => setTimeout(r, 1000 * attempt)); // backoff progresiv: 1s, 2s, 3s...
+      return uploadChunkWithRetry(key, uploadId, partNumber, chunk, onChunkProgress, attempt + 1);
+    }
+    throw new Error(`Bucata ${partNumber} a eșuat de ${MAX_ATTEMPTS} ori. Verifică semnalul și încearcă din nou.`);
   }
 }
 
-async function uploadToR2PresignedOnce(file, folder, onProgress) {
-  // Pasul 1: cerem un presigned URL de la Worker
+function uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const signParams = new URLSearchParams({ action: 'sign-part', key, uploadId, partNumber: String(partNumber) });
+      const signRes = await fetch(`${WORKER_R2_PRESIGN}?${signParams.toString()}`, { method: 'POST' });
+      const signData = await signRes.json();
+      if (!signData.uploadUrl) return reject(new Error(signData.error || 'Nu s-a putut semna bucata.'));
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', signData.uploadUrl);
+      xhr.upload.onprogress = e => { if (e.lengthComputable && onChunkProgress) onChunkProgress(e.loaded); };
+      xhr.onload = () => {
+        if (xhr.status === 200 || xhr.status === 204) {
+          const etag = xhr.getResponseHeader('ETag');
+          if (!etag) { reject(new Error('R2 nu a returnat ETag pentru bucată (verifică CORS pe bucket: ExposeHeaders trebuie să includă ETag).')); return; }
+          resolve(etag);
+        } else {
+          reject(new Error(`Eroare upload bucată: ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Eroare rețea la upload bucată.'));
+      xhr.send(chunk);
+    } catch (e) { reject(e); }
+  });
+}
+
+// Upload dintr-o bucată — folosit doar pentru fișiere sub 8MB (nu justifică multipart)
+async function uploadSingleShot(file, folder, onProgress) {
   const params = new URLSearchParams({
-    folder,
-    filename: file.name || 'file',
-    contentType: file.type || 'application/octet-stream',
+    folder, filename: file.name || 'file', contentType: file.type || 'application/octet-stream',
   });
   const presignRes = await fetch(`${WORKER_R2_PRESIGN}?${params.toString()}`, { method: 'POST' });
   const presignData = await presignRes.json();
   if (!presignData.uploadUrl) throw new Error(presignData.error || 'Nu s-a putut genera URL de upload.');
 
-  // Pasul 2: upload direct browser → R2, folosind presigned URL
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', presignData.uploadUrl);
@@ -614,8 +690,6 @@ async function uploadToR2PresignedOnce(file, folder, onProgress) {
       else reject(new Error(`Eroare upload R2: ${xhr.status}`));
     };
     xhr.onerror = () => reject(new Error('Eroare rețea la upload video.'));
-    // Fără timeout fix — la 2GB pe conexiune mobilă lentă, un upload legitim poate dura mult;
-    // reîncercarea automată se ocupă de erorile de rețea reale (conexiune întreruptă), nu de durată.
     xhr.send(file);
   });
 }
