@@ -1164,11 +1164,28 @@ async function selectLunaIstoric(luna) {
   var listEl = document.getElementById('lunar-istoric-list');
   if (listEl) listEl.innerHTML = '<div class="t10e">Se încarcă...</div>';
 
-  var { data: rows } = await sb.from('top10_lunar_istoric')
-    .select('zoda_id, pescar_nume, kg_total, nr_capturi, pozitie')
+  var { data: rows, error } = await sb.from('top10_lunar_istoric')
+    .select('zoda_id, kg_total, pozitie')
     .eq('balta_id', BALTA.id)
     .eq('luna', luna)
     .order('pozitie', { ascending: true });
+
+  if (error) {
+    console.error('Eroare la încărcarea istoricului lunar:', error);
+    renderLunarRows([], 'lunar-istoric-list', true);
+    return;
+  }
+
+  // top10_lunar_istoric nu stochează numele pescarului — îl luăm separat din user_profiles
+  var zodaIds = (rows || []).map(function(r) { return r.zoda_id; }).filter(Boolean);
+  if (zodaIds.length) {
+    var { data: profiluri } = await sb.from('user_profiles')
+      .select('zoda_id, username')
+      .in('zoda_id', zodaIds);
+    var numeMap = {};
+    (profiluri || []).forEach(function(p) { numeMap[p.zoda_id] = p.username; });
+    rows.forEach(function(r) { r.pescar_nume = numeMap[r.zoda_id] || r.zoda_id || '—'; });
+  }
 
   renderLunarRows(rows, 'lunar-istoric-list', true);
 }
