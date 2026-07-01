@@ -571,19 +571,21 @@ async function uploadToR2(file, folder, onProgress) {
 }
 
 // Upload direct pe R2 prin presigned URL — fără limită de dimensiune (video mari)
-// Reîncearcă automat de 2 ori dacă apare o eroare de rețea (frecvent pe mobil, la fluctuații de semnal)
+// Reîncearcă automat dacă apare o eroare de rețea SAU dacă semnătura presemnată a expirat
+// (upload lung pe conexiune lentă) — în ambele cazuri, se cere un URL nou și se reia.
 async function uploadToR2Presigned(file, folder, onProgress, _attempt = 1) {
   const MAX_ATTEMPTS = 3;
   try {
     return await uploadToR2PresignedOnce(file, folder, onProgress);
   } catch (e) {
-    const isNetworkErr = /rețea|network/i.test(e.message || '');
-    if (isNetworkErr && _attempt < MAX_ATTEMPTS) {
+    const msg = e.message || '';
+    const isRetryable = /rețea|network|eroare upload r2/i.test(msg);
+    if (isRetryable && _attempt < MAX_ATTEMPTS) {
       if (onProgress) onProgress(0, `Conexiune întreruptă, reîncerc (${_attempt}/${MAX_ATTEMPTS - 1})...`);
       await new Promise(r => setTimeout(r, 1500));
       return uploadToR2Presigned(file, folder, onProgress, _attempt + 1);
     }
-    if (isNetworkErr) {
+    if (isRetryable) {
       throw new Error('Conexiunea s-a întrerupt de mai multe ori la încărcarea videoclipului. Verifică semnalul (WiFi e mai stabil decât datele mobile) și încearcă din nou.');
     }
     throw e;
