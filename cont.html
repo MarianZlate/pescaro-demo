@@ -661,13 +661,15 @@ async function uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts
   try {
     return await uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress);
   } catch (e) {
+    console.error(`[upload video] bucata ${partNumber}/${totalParts}, încercarea ${attempt}/${MAX_ATTEMPTS} a eșuat:`, e);
     if (attempt < MAX_ATTEMPTS) {
       await waitForOnline(60000);
       const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
       await new Promise(r => setTimeout(r, backoffMs));
       return uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts, onChunkProgress, attempt + 1);
     }
-    throw new Error(`Bucata ${partNumber}/${totalParts} tot eșuează după ${MAX_ATTEMPTS} încercări. Progresul e salvat — apasă din nou „Trimite" când ai semnal mai bun, va continua de aici, nu ia totul de la capăt.`);
+    // Păstrăm eroarea REALĂ (nu una generică), ca să știm exact ce s-a întâmplat
+    throw new Error(`Bucata ${partNumber}/${totalParts} tot eșuează după ${MAX_ATTEMPTS} încercări — cauza reală: „${e.message}". Progresul e salvat, apasă din nou „Trimite" să continue de aici.`);
   }
 }
 
@@ -676,8 +678,14 @@ function uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress) {
     try {
 
       const signParams = new URLSearchParams({ action: 'sign-part', key, uploadId, partNumber: String(partNumber) });
-      const signRes = await fetch(`${WORKER_R2_PRESIGN}?${signParams.toString()}`, { method: 'POST' });
-      const signData = await signRes.json();
+      let signRes, signData;
+      try {
+        signRes = await fetch(`${WORKER_R2_PRESIGN}?${signParams.toString()}`, { method: 'POST' });
+        signData = await signRes.json();
+      } catch (fetchErr) {
+        return reject(new Error(`Nu am putut contacta Worker-ul de semnare (${fetchErr.message})`));
+      }
+      if (!signRes.ok) return reject(new Error(`Worker semnare a răspuns cu status ${signRes.status}`));
       if (!signData.uploadUrl) return reject(new Error(signData.error || 'Nu s-a putut semna bucata.'));
 
       const xhr = new XMLHttpRequest();
@@ -686,13 +694,13 @@ function uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress) {
       xhr.onload = () => {
         if (xhr.status === 200 || xhr.status === 204) {
           const etag = xhr.getResponseHeader('ETag');
-          if (!etag) { reject(new Error('R2 nu a returnat ETag pentru bucată (verifică CORS pe bucket: ExposeHeaders trebuie să includă ETag).')); return; }
+          if (!etag) { reject(new Error(`R2 a răspuns ${xhr.status} dar fără ETag (verifică ExposeHeaders pe bucket)`)); return; }
           resolve(etag);
         } else {
-          reject(new Error(`Eroare upload bucată: ${xhr.status}`));
+          reject(new Error(`R2 a respins bucata cu status ${xhr.status}: ${(xhr.responseText || '').slice(0, 150)}`));
         }
       };
-      xhr.onerror = () => reject(new Error('Eroare rețea la upload bucată.'));
+      xhr.onerror = () => reject(new Error(`xhr.onerror (status: ${xhr.status}, readyState: ${xhr.readyState}) — de obicei CORS blocat sau conexiune întreruptă`));
       xhr.send(chunk);
     } catch (e) { reject(e); }
   });
