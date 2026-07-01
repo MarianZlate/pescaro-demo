@@ -483,19 +483,6 @@ nav{display:flex;align-items:center;gap:6px;}
       <div id="balti-list"></div>
     </div>
 
-    <!-- RECLAMA / PROMO CARD -->
-    <div class="promo-card" id="promo-wrap" style="display:none;">
-      <div id="promo-box" onclick="promoItemClick()">
-        <span class="promo-tag">Publicitate</span>
-        <img id="promo-img" src="" alt=""/>
-        <div class="promo-text">
-          <div class="promo-title" id="promo-title"></div>
-          <div class="promo-sub" id="promo-sub"></div>
-        </div>
-      </div>
-      <div id="promo-dots"></div>
-    </div>
-
   </div>
 </div>
 
@@ -3390,50 +3377,63 @@ function closeGuestToast() {
 </script>
 
 
-<!-- ═══════════ RECLAMA / BANNER PUBLICITAR — stil + logică ═══════════ -->
+<!-- ═══════════ RECLAMA / BARĂ FIXĂ JOS PE ECRAN — stil + logică ═══════════ -->
 <style>
-.promo-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;grid-column:1/-1;transition:border-color .2s;}
-.promo-card:hover{border-color:#a3e635;}
-#promo-box{position:relative;display:block;height:100px;cursor:pointer;}
-.promo-tag{position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:#e2e8f0;background:rgba(10,15,26,.7);border:1px solid rgba(255,255,255,.15);padding:2px 7px;border-radius:5px;letter-spacing:.04em;z-index:2;backdrop-filter:blur(2px);}
-#promo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0a0f1a;}
-.promo-text{position:absolute;left:0;right:0;bottom:0;padding:9px 12px 8px;background:linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0));}
-.promo-title{font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6);}
-.promo-sub{font-size:11px;color:#e2e8f0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6);}
-#promo-dots{display:flex;gap:5px;justify-content:center;padding:8px 0;}
-.promo-dot{width:6px;height:6px;border-radius:50%;background:#1e293b;cursor:pointer;transition:background .2s;}
-.promo-dot.active{background:#a3e635;}
+#promo-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:4000;background:#111827;border-top:1px solid #1e293b;box-shadow:0 -6px 24px rgba(0,0,0,.5);align-items:center;gap:8px;padding:8px 10px;transition:bottom .2s;}
+#promo-bar.show{display:flex;}
+#promo-bar-inner{display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;}
+#promo-img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#0a0f1a;}
+.promo-bar-text{min-width:0;flex:1;}
+.promo-bar-tag{font-size:8px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;text-transform:uppercase;}
+.promo-title{font-size:12px;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.promo-sub{font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#promo-bar-close{background:transparent;border:none;color:#4b5563;font-size:18px;line-height:1;cursor:pointer;padding:6px;flex-shrink:0;}
+#promo-bar-close:hover{color:#94a3b8;}
 </style>
+<div id="promo-bar">
+  <div id="promo-bar-inner" onclick="promoItemClick()">
+    <img id="promo-img" src="" alt=""/>
+    <div class="promo-bar-text">
+      <span class="promo-bar-tag">Publicitate</span>
+      <div class="promo-title" id="promo-title"></div>
+      <div class="promo-sub" id="promo-sub"></div>
+    </div>
+  </div>
+  <button id="promo-bar-close" onclick="closePromoBar(event)" aria-label="Închide">✕</button>
+</div>
 <script>
 (function(){
   var PROMO_ITEMS = [];
   var promoIdx = 0;
   var promoTimer = null;
 
-  async function loadPromoItems(){
-    try{
-      var wrap = document.getElementById('promo-wrap');
-      if(!wrap) return;
-      var res = await sb.from('reclame').select('*').order('sort_order', { ascending: true });
-      var data = res.data;
-      if(!data || !data.length){ wrap.style.display = 'none'; return; }
-      PROMO_ITEMS = data;
-      wrap.style.display = 'block';
-      renderPromoDots();
-      showPromoItem(0);
-      if(PROMO_ITEMS.length > 1){
-        promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 6000);
-      }
-    }catch(e){}
+  function repositionPromoBar(){
+    var bar = document.getElementById('promo-bar');
+    var cookie = document.getElementById('cookie-notice');
+    if(!bar) return;
+    if(cookie && cookie.classList.contains('show')){
+      bar.style.bottom = cookie.offsetHeight + 'px';
+    } else {
+      bar.style.bottom = '0';
+    }
   }
 
-  function renderPromoDots(){
-    var wrap = document.getElementById('promo-dots');
-    if(!wrap) return;
-    if(PROMO_ITEMS.length <= 1){ wrap.innerHTML = ''; return; }
-    wrap.innerHTML = PROMO_ITEMS.map(function(b, i){
-      return '<span class="promo-dot' + (i===0?' active':'') + '" onclick="event.stopPropagation();window.__promoGoTo(' + i + ')"></span>';
-    }).join('');
+  async function loadPromoItems(){
+    try{
+      var bar = document.getElementById('promo-bar');
+      if(!bar) return;
+      if(sessionStorage.getItem('zoda_promo_bar_closed')) return; // închis manual în sesiunea asta
+      var res = await sb.from('reclame').select('*').order('sort_order', { ascending: true });
+      var data = res.data;
+      if(!data || !data.length) return;
+      PROMO_ITEMS = data;
+      bar.classList.add('show');
+      repositionPromoBar();
+      showPromoItem(0);
+      if(PROMO_ITEMS.length > 1){
+        promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 7000);
+      }
+    }catch(e){}
   }
 
   function showPromoItem(idx){
@@ -3446,17 +3446,8 @@ function closeGuestToast() {
     if(img) img.src = b.imagine_url || '';
     if(title) title.textContent = b.titlu || '';
     if(sub) sub.textContent = b.subtitlu || '';
-    document.querySelectorAll('.promo-dot').forEach(function(d, i){ d.classList.toggle('active', i === idx); });
     try { Promise.resolve(sb.rpc('increment_reclama_afisare', { reclama_id: b.id })).catch(function(){}); } catch(e) {}
   }
-
-  window.__promoGoTo = function(idx){
-    showPromoItem(idx);
-    if(promoTimer){
-      clearInterval(promoTimer);
-      promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 6000);
-    }
-  };
 
   window.promoItemClick = function(){
     var b = PROMO_ITEMS[promoIdx];
@@ -3464,6 +3455,20 @@ function closeGuestToast() {
     window.open(b.link_destinatie, '_blank', 'noopener');
     try { Promise.resolve(sb.rpc('increment_reclama_click', { reclama_id: b.id })).catch(function(){}); } catch(e) {}
   };
+
+  window.closePromoBar = function(e){
+    if(e) e.stopPropagation();
+    var bar = document.getElementById('promo-bar');
+    if(bar) bar.classList.remove('show');
+    if(promoTimer) clearInterval(promoTimer);
+    try { sessionStorage.setItem('zoda_promo_bar_closed', '1'); } catch(err) {}
+  };
+
+  // Dacă bannerul de cookie-uri apare/dispare, realiniem bara de reclamă deasupra lui
+  if(window.zodaAcceptCookieNotice){
+    var _origAccept = window.zodaAcceptCookieNotice;
+    window.zodaAcceptCookieNotice = function(){ _origAccept(); repositionPromoBar(); };
+  }
 
   if(document.readyState === 'complete') loadPromoItems();
   else window.addEventListener('load', loadPromoItems);
