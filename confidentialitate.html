@@ -14,6 +14,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);}
 #hdr-in{max-width:800px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-img{height:28px;width:auto;display:block;}
 .logo-icon{font-size:22px;}
 .logo-text{font-size:18px;font-weight:900;color:#a3e635;letter-spacing:-.5px;}
 .back-link{font-size:12px;color:#94a3b8;text-decoration:none;border:1px solid #1e293b;padding:6px 12px;border-radius:8px;transition:border-color .2s,color .2s;}
@@ -41,8 +42,7 @@ footer{max-width:800px;margin:0 auto;padding:20px;text-align:center;font-size:11
 <div id="hdr">
   <div id="hdr-in">
     <a class="logo" href="index.html" onclick="try{sessionStorage.removeItem('zoda_index_state');}catch(e){}">
-      <span class="logo-icon">🎣</span>
-      <span class="logo-text">Zoda</span>
+      <img src="zoda-logo.png" alt="Zoda" class="logo-img"/>
     </a>
     <a class="back-link" href="index.html">← Înapoi la Zoda</a>
   </div>
