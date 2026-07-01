@@ -726,9 +726,10 @@ async function loadBalta(id) {
   restoreBaltaState();
 }
 
-// Istoric personal „ultimele bălți vizitate" — strict local (localStorage), fără server,
-// fără contor public. Ține ultimele 10 bălți distincte, cea mai recentă prima.
-function saveVizitaIstoric(id, nume) {
+// Istoric personal „ultimele bălți vizitate":
+// - Mereu local (localStorage) — instant, funcționează și fără cont
+// - + sincronizat pe cont (tabel istoric_vizite), dacă userul e logat — vizibil pe orice dispozitiv
+async function saveVizitaIstoric(id, nume) {
   try {
     var raw = localStorage.getItem('zoda_istoric_balti');
     var istoric = raw ? JSON.parse(raw) : [];
@@ -737,6 +738,16 @@ function saveVizitaIstoric(id, nume) {
     istoric.unshift({ id: id, nume: nume, ts: Date.now() });
     istoric = istoric.slice(0, 10);
     localStorage.setItem('zoda_istoric_balti', JSON.stringify(istoric));
+  } catch (e) {}
+
+  try {
+    var { data: { session } } = await sb.auth.getSession();
+    if (session && session.user) {
+      await sb.from('istoric_vizite').upsert(
+        { user_id: session.user.id, balta_id: id, vizitat_la: new Date().toISOString() },
+        { onConflict: 'user_id,balta_id' }
+      );
+    }
   } catch (e) {}
 }
 
