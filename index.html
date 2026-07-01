@@ -426,18 +426,6 @@ nav{display:flex;align-items:center;gap:6px;}
         <div class="stat-chip"><strong id="stat-useri">—</strong> pescari înregistrați</div>
       </div>
     </div>
-    <!-- RECLAMA / BANNER PUBLICITAR -->
-    <div id="ad-banner-wrap" style="display:none;margin-bottom:10px;">
-      <div id="ad-banner" onclick="adBannerClick()">
-        <span class="ad-banner-tag">Publicitate</span>
-        <img id="ad-banner-img" src="" alt=""/>
-        <div class="ad-banner-text">
-          <div class="ad-banner-title" id="ad-banner-title"></div>
-          <div class="ad-banner-sub" id="ad-banner-sub"></div>
-        </div>
-      </div>
-      <div id="ad-banner-dots"></div>
-    </div>
 
     <div id="map-wrap">
     <div id="map"></div>
@@ -488,6 +476,19 @@ nav{display:flex;align-items:center;gap:6px;}
     </div>
 
   </div>
+</div>
+
+<!-- RECLAMA / BANNER PUBLICITAR -->
+<div id="ad-banner-wrap" style="display:none;max-width:1400px;margin:0 auto 20px;padding:0 8px;">
+  <div id="ad-banner" onclick="adBannerClick()">
+    <span class="ad-banner-tag">Publicitate</span>
+    <img id="ad-banner-img" src="" alt=""/>
+    <div class="ad-banner-text">
+      <div class="ad-banner-title" id="ad-banner-title"></div>
+      <div class="ad-banner-sub" id="ad-banner-sub"></div>
+    </div>
+  </div>
+  <div id="ad-banner-dots"></div>
 </div>
 
 <!-- HALL OF FAME MODAL -->
