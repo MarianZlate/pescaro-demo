@@ -850,13 +850,13 @@ function makeMarker(active) {
 
 function popHtml(b) {
   return `
-    <div class="pop-name">${b.nume}</div>
-    <div class="pop-meta">📍 ${b.judet}</div>
+    <div class="pop-name">${escH(b.nume)}</div>
+    <div class="pop-meta">📍 ${escH(b.judet)}</div>
     <div class="pop-row">
       <span class="pop-tag">🎣 ${b.standuri} standuri</span>
-      <span class="pop-tag">🏆 ${b.rec}</span>
+      <span class="pop-tag">🏆 ${escH(b.rec)}</span>
     </div>
-    <div class="pop-meta" style="margin-bottom:10px;">📞 ${b.telefon}</div>
+    <div class="pop-meta" style="margin-bottom:10px;">📞 ${escH(b.telefon)}</div>
     <button class="pop-btn" onclick="__goToBalta(${b.id})">🗺️ Deschide harta baltii →</button>`;
 }
 
@@ -889,8 +889,8 @@ function onSearch(q) {
   dd.innerHTML = res.map(b => `
     <div class="dd-item" onclick="flyToBalta(${b.id})">
       <div style="flex:1;">
-        <div class="dd-name">${b.nume}</div>
-        <div class="dd-meta">📍 ${b.judet}${b.adresa ? ' · ' + b.adresa : ''} · ${b.standuri} standuri</div>
+        <div class="dd-name">${escH(b.nume)}</div>
+        <div class="dd-meta">📍 ${escH(b.judet)}${b.adresa ? ' · ' + escH(b.adresa) : ''} · ${b.standuri} standuri</div>
       </div>
       <button class="dd-open" onclick="event.stopPropagation();__goToBalta(${b.id})">Deschide →</button>
     </div>`).join('');
@@ -931,9 +931,9 @@ function hofRowHtml(h, extended) {
     : `<div class="hof-avatar-empty"></div>`;
   const nameHtml = h.zodaId
     ? (currentUser
-        ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</a>`
-        : `<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${h.pe}</span>`)
-    : `<span>${h.pe}</span>`;
+        ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${escH(h.pe)}</a>`
+        : `<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${escH(h.pe)}</span>`)
+    : `<span>${escH(h.pe)}</span>`;
   return `<div class="hof-row">
     <div class="hof-loc">${h.loc}</div>
     ${avatarHtml}
@@ -1054,7 +1054,7 @@ async function renderBalti() {
         🎣
       </div>
       <div style="flex:1;min-width:0;">
-        <div class="balta-name">${b.nume}</div>
+        <div class="balta-name">${escH(b.nume)}</div>
       </div>
       <div style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap;flex-shrink:0;">
         ${timeAgo(b.ts)}
@@ -2840,6 +2840,12 @@ function timeAgo(isoStr) {
 
 function escHtmlNotif(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Escapare generică pentru text inserat via innerHTML (previne XSS stocat din
+// câmpuri controlate de utilizatori, ex: username, sau din admin, ex: nume baltă)
+function escH(str) {
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
