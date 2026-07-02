@@ -196,11 +196,6 @@ nav{display:flex;align-items:center;gap:6px;}
 .auth-remember{display:flex;align-items:center;gap:8px;margin:10px 0 14px 0;}
 .auth-remember input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#1a6b3a;flex-shrink:0;}
 .auth-remember label{font-size:12px;color:#64748b;cursor:pointer;user-select:none;}
-#draft-banner{display:none;background:#1c1500;border:1px solid #92400e;border-radius:10px;padding:10px 16px;margin-bottom:0;align-items:center;gap:10px;flex-wrap:wrap;}
-#draft-banner.show{display:flex;}
-.draft-txt{flex:1;font-size:12px;color:#fbbf24;}
-.draft-resume{background:#f59e0b;border:none;color:#000;font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;}
-.draft-discard{background:transparent;border:1px solid #92400e;color:#92400e;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;}
 #edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1700;backdrop-filter:blur(6px);overflow-y:auto;align-items:flex-end;justify-content:center;padding:0;}
 #edit-modal.open{display:flex;}
 .edit-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;margin:0 auto;max-width:100%;border-radius:16px 16px 0 0;margin-top:auto;}
@@ -446,17 +441,6 @@ nav{display:flex;align-items:center;gap:6px;}
 
   <!-- SIDEBAR -->
   <div id="sidebar">
-
-    <!-- DRAFT BANNER -->
-    <div id="draft-banner">
-      <span style="font-size:18px;">📝</span>
-      <div class="draft-txt">
-        <strong>Ai un draft nesalvat!</strong><br/>
-        <span id="draft-name" style="opacity:.8;font-size:11px;">Baltă fără nume</span>
-      </div>
-      <button class="draft-resume" onclick="resumeDraft()">Continuă editarea →</button>
-      <button class="draft-discard" onclick="discardDraft()">✕ Șterge draft</button>
-    </div>
 
     <!-- HALL OF FAME preview -->
     <div class="hof-card">
@@ -1251,7 +1235,6 @@ function renderMapMarkers() {
 
 window.addEventListener('load', () => {
   initMap();
-  checkDraft();
   loadBaltiFromSupabase();
 });
 
