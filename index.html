@@ -963,7 +963,7 @@ async function loadHof() {
 
   const zodaIds = stele.map(s => s.zoda_id);
   const { data: profiles } = await sb
-    .from('user_profiles')
+    .from('user_profiles_public')
     .select('username, zoda_id, avatar_url')
     .in('zoda_id', zodaIds)
     .is('deleted_at', null);
@@ -1173,7 +1173,7 @@ async function loadBaltiFromSupabase() {
   renderBalti();
   loadHof();
   // Număr useri înregistrați activi (fără conturi marcate ca șterse)
-  const { count } = await sb.from('user_profiles')
+  const { count } = await sb.from('user_profiles_public')
     .select('id', { count: 'exact', head: true })
     .is('deleted_at', null);
   const statUseri = document.getElementById('stat-useri');
