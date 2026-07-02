@@ -1167,7 +1167,7 @@ async function selectLunaIstoric(luna) {
   // top10_lunar_istoric nu stochează numele pescarului — îl luăm separat din user_profiles
   var zodaIds = (rows || []).map(function(r) { return r.zoda_id; }).filter(Boolean);
   if (zodaIds.length) {
-    var { data: profiluri } = await sb.from('user_profiles')
+    var { data: profiluri } = await sb.from('user_profiles_public')
       .select('zoda_id, username')
       .in('zoda_id', zodaIds);
     var numeMap = {};
