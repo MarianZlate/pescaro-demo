@@ -574,11 +574,14 @@ async function uploadToR2(file, folder, onProgress) {
 // Dacă o bucată eșuează, se reia DOAR acea bucată (până la 10 încercări, cu pauze
 // tot mai lungi). Dacă TOT eșuează, progresul rămâne salvat — la un nou "Trimite"
 // (fără să schimbi fișierul), continuă de unde a rămas, nu ia totul de la capăt.
-const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB — minimul acceptat de R2/S3 per bucată
+const CHUNK_SIZE = 512 * 1024; // ⚠️ TEMPORAR 512KB pentru diagnostic — sub minimul R2 (5MB), NU lăsa așa în producție
 let _multipartState = null; // { fileRef, key, uploadId, parts, nextPartNumber }
 
 async function uploadToR2Presigned(file, folder, onProgress) {
   // Fișiere mici — nu are rost să complicăm, upload dintr-o bucată
+  // ⚠️ TEMPORAR pentru diagnostic: forțăm mereu upload dintr-o bucată (varianta veche,
+  // simplă), indiferent de mărime, ca să vedem dacă asta funcționează pe acest telefon.
+  return uploadSingleShot(file, folder, onProgress);
   if (file.size <= CHUNK_SIZE) {
     return uploadSingleShot(file, folder, onProgress);
   }
@@ -1006,7 +1009,7 @@ async function searchPescari(q) {
   dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:#4b5563;">Se caută...</div>';
   dd.classList.add('open');
 
-  const { data } = await sb.from('user_profiles')
+  const { data } = await sb.from('user_profiles_public')
     .select('id, username, zoda_id, avatar_url')
     .or(`username.ilike.%${q}%,zoda_id.ilike.%${q}%`)
     .is('deleted_at', null)
