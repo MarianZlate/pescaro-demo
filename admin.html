@@ -511,14 +511,9 @@ th,td{padding:8px 6px;}
   <div id="panel-reclame" style="display:none;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <span>📢 Reclame — bălți, concursuri, magazine</span>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="exportReclameCSV()" style="display:flex;align-items:center;gap:8px;background:#1e293b;border:none;color:#94a3b8;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;">
-          📊 Exportă raport (CSV)
-        </button>
-        <button onclick="openAddReclama()" style="display:flex;align-items:center;gap:8px;background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;">
-          ＋ Adaugă reclamă
-        </button>
-      </div>
+      <button onclick="openAddReclama()" style="display:flex;align-items:center;gap:8px;background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;">
+        ＋ Adaugă reclamă
+      </button>
     </div>
     <div id="reclame-list" style="display:flex;flex-direction:column;gap:10px;">
       <div class="empty-state">Se încarcă...</div>
@@ -565,7 +560,7 @@ th,td{padding:8px 6px;}
       </div>
 
       <div class="fg">
-        <label>IMAGINE BANNER (dreptunghiulară, recomandat 1200×450px)</label>
+        <label>IMAGINE BANNER (16:9, recomandat 1280×720px)</label>
         <div id="rc-img-preview" style="width:100%;height:100px;border-radius:10px;background:#0a0f1a;border:1.5px dashed #1e293b;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#4b5563;font-size:22px;margin-bottom:8px;">📷</div>
         <label for="rc-img-input" style="display:inline-block;background:#1e293b;border:none;color:#94a3b8;font-size:12px;padding:8px 14px;border-radius:7px;cursor:pointer;">Alege imagine</label>
         <input type="file" id="rc-img-input" accept="image/*" style="display:none;" onchange="rcImgSelected(this)"/>
@@ -1261,6 +1256,7 @@ async function loadReclame() {
       <div style="font-size:11px;font-weight:700;color:${statusColor};white-space:nowrap;">${statusTxt}</div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
         <button onclick="openEditReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">✏️</button>
+        <button onclick="exportReclamaRaport(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;" title="Raport pentru această reclamă">📄</button>
         <button onclick="toggleActivReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">${r.activ ? '⏸️' : '▶️'}</button>
         <button onclick="deleteReclama(${r.id})" style="background:#1e293b;border:none;color:#ef4444;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">🗑️</button>
       </div>
@@ -1342,7 +1338,7 @@ async function rcImgSelected(input) {
   const preview = document.getElementById('rc-img-preview');
   try {
     statusEl.textContent = '⏳ Se procesează...';
-    const resized = await resizeImage(file, 1200, 450, 0.85);
+    const resized = await resizeImage(file, 1280, 720, 0.85);
     preview.innerHTML = `<img src="${URL.createObjectURL(resized)}" style="width:100%;height:100%;object-fit:cover;"/>`;
     rcImgFile = resized;
     statusEl.textContent = '✓ Gata — se va încărca la salvare';
@@ -1425,48 +1421,82 @@ async function deleteReclama(id) {
   if(!error) loadReclame();
 }
 
-// ── EXPORT RAPORT RECLAME (CSV) ─────────────────────────────────────────────
-function exportReclameCSV() {
-  if(!RECLAME.length) { alert('Nu există reclame de exportat.'); return; }
+// ── RAPORT INDIVIDUAL RECLAMĂ (needitabil, printabil / salvabil ca PDF) ─────
+function exportReclamaRaport(id) {
+  const r = RECLAME.find(x => x.id === id);
+  if(!r) return;
 
   const today = new Date().toISOString().slice(0, 10);
-  const header = ['Titlu', 'Tip', 'Link destinație', 'Data start', 'Data sfârșit', 'Status', 'Afișări', 'Click-uri', 'CTR (%)'];
+  let status;
+  if(!r.activ)                     status = 'Dezactivată';
+  else if(r.data_sfarsit < today)  status = 'Expirată';
+  else if(r.data_start > today)    status = 'Programată';
+  else                              status = 'Activă';
 
-  const rows = RECLAME.map(r => {
-    let status;
-    if(!r.activ)                     status = 'Dezactivată';
-    else if(r.data_sfarsit < today)  status = 'Expirată';
-    else if(r.data_start > today)    status = 'Programată';
-    else                              status = 'Activă';
+  const afisari  = r.afisari  || 0;
+  const clickuri = r.clickuri || 0;
+  const ctr = afisari > 0 ? ((clickuri / afisari) * 100).toFixed(2) : '0.00';
+  const generatLa = new Date().toLocaleString('ro-RO');
 
-    const afisari = r.afisari || 0;
-    const clickuri = r.clickuri || 0;
-    const ctr = afisari > 0 ? ((clickuri / afisari) * 100).toFixed(2) : '0.00';
+  const rows = [
+    ['Titlu', r.titlu || '—'],
+    ['Tip', RC_TIP_LABEL[r.tip] || r.tip || '—'],
+    ['Link destinație', r.link_destinatie || '—'],
+    ['Data start', r.data_start || '—'],
+    ['Data expirare', r.data_sfarsit || '—'],
+    ['Status', status],
+    ['Afișări', String(afisari)],
+    ['Click-uri', String(clickuri)],
+    ['CTR (rata de click)', ctr + '%'],
+  ];
 
-    return [
-      r.titlu || '', RC_TIP_LABEL[r.tip] || r.tip || '', r.link_destinatie || '',
-      r.data_start || '', r.data_sfarsit || '', status,
-      String(afisari), String(clickuri), ctr,
-    ];
-  });
+  const rowsHtml = rows.map(([k, v]) =>
+    `<tr><td class="k">${escH(k)}</td><td class="v">${escH(v)}</td></tr>`
+  ).join('');
 
-  function csvEscape(val) {
-    const s = String(val);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  }
+  const html = `<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<title>Raport reclamă — ${escH(r.titlu || '')}</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f5;color:#1a1a1a;padding:40px;margin:0;}
+  .sheet{max-width:640px;margin:0 auto;background:#fff;border:1px solid #ddd;border-radius:10px;padding:36px 40px;}
+  .hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a6b3a;padding-bottom:16px;margin-bottom:24px;}
+  .hdr h1{font-size:20px;margin:0;color:#1a6b3a;}
+  .hdr .sub{font-size:12px;color:#666;margin-top:4px;}
+  .meta{font-size:11px;color:#999;text-align:right;}
+  table{width:100%;border-collapse:collapse;}
+  td{padding:11px 8px;border-bottom:1px solid #eee;font-size:14px;}
+  td.k{color:#666;font-weight:600;width:40%;}
+  td.v{color:#111;font-weight:700;word-break:break-word;}
+  .footer{margin-top:28px;text-align:center;font-size:11px;color:#aaa;}
+  .no-print{margin-top:24px;text-align:center;}
+  .no-print button{background:#1a6b3a;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+  @media print{ body{background:#fff;padding:0;} .sheet{border:none;padding:0;} .no-print{display:none;} }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="hdr">
+      <div>
+        <h1>🎣 Zoda — Raport reclamă</h1>
+        <div class="sub">Document generat automat, needitabil</div>
+      </div>
+      <div class="meta">Generat: ${escH(generatLa)}</div>
+    </div>
+    <table>${rowsHtml}</table>
+    <div class="footer">Zoda — platforma bălților de pescuit din România</div>
+    <div class="no-print"><button onclick="window.print()">🖨️ Printează / Salvează ca PDF</button></div>
+  </div>
+</body>
+</html>`;
 
-  const csvLines = [header, ...rows].map(row => row.map(csvEscape).join(','));
-  const csvContent = '\uFEFF' + csvLines.join('\r\n'); // BOM pentru diacritice corecte în Excel
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `zoda-raport-reclame-${today}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const w = window.open('', '_blank');
+  if(!w) { alert('Browserul a blocat deschiderea raportului într-o fereastră nouă. Permite pop-up-uri pentru acest site și încearcă din nou.'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
