@@ -3387,6 +3387,9 @@ function closeGuestToast() {
 .promo-bar-tag{font-size:8px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;text-transform:uppercase;}
 .promo-title{font-size:12px;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .promo-sub{font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#promo-dots{display:flex;gap:4px;margin-top:3px;}
+.promo-dot{width:5px;height:5px;border-radius:50%;background:#334155;cursor:pointer;transition:background .2s,transform .2s;flex-shrink:0;}
+.promo-dot.active{background:#a3e635;transform:scale(1.2);}
 #promo-bar-close{background:transparent;border:none;color:#4b5563;font-size:18px;line-height:1;cursor:pointer;padding:6px;flex-shrink:0;}
 #promo-bar-close:hover{color:#94a3b8;}
 </style>
@@ -3397,6 +3400,7 @@ function closeGuestToast() {
       <span class="promo-bar-tag">Publicitate</span>
       <div class="promo-title" id="promo-title"></div>
       <div class="promo-sub" id="promo-sub"></div>
+      <div id="promo-dots"></div>
     </div>
   </div>
   <button id="promo-bar-close" onclick="closePromoBar(event)" aria-label="Închide">✕</button>
@@ -3418,6 +3422,13 @@ function closeGuestToast() {
     }
   }
 
+  function startPromoTimer(){
+    if(promoTimer) clearInterval(promoTimer);
+    if(PROMO_ITEMS.length > 1){
+      promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 7000);
+    }
+  }
+
   async function loadPromoItems(){
     try{
       var bar = document.getElementById('promo-bar');
@@ -3429,11 +3440,19 @@ function closeGuestToast() {
       PROMO_ITEMS = data;
       bar.classList.add('show');
       repositionPromoBar();
+      renderPromoDots();
       showPromoItem(0);
-      if(PROMO_ITEMS.length > 1){
-        promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 7000);
-      }
+      startPromoTimer();
     }catch(e){}
+  }
+
+  function renderPromoDots(){
+    var wrap = document.getElementById('promo-dots');
+    if(!wrap) return;
+    if(PROMO_ITEMS.length <= 1){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = PROMO_ITEMS.map(function(b, i){
+      return '<span class="promo-dot' + (i===0?' active':'') + '" onclick="event.stopPropagation();window.__promoGoTo(' + i + ')"></span>';
+    }).join('');
   }
 
   function showPromoItem(idx){
@@ -3446,8 +3465,14 @@ function closeGuestToast() {
     if(img) img.src = b.imagine_url || '';
     if(title) title.textContent = b.titlu || '';
     if(sub) sub.textContent = b.subtitlu || '';
+    document.querySelectorAll('.promo-dot').forEach(function(d, i){ d.classList.toggle('active', i === idx); });
     try { Promise.resolve(sb.rpc('increment_reclama_afisare', { reclama_id: b.id })).catch(function(){}); } catch(e) {}
   }
+
+  window.__promoGoTo = function(idx){
+    showPromoItem(idx);
+    startPromoTimer(); // repornim numărătoarea, ca să nu sară imediat după ce ai ales manual
+  };
 
   window.promoItemClick = function(){
     var b = PROMO_ITEMS[promoIdx];
