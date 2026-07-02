@@ -75,7 +75,7 @@ nav{display:flex;align-items:center;gap:6px;}
 .dd-name{font-weight:700;font-size:14px;color:#f1f5f9;}
 .dd-meta{font-size:11px;color:#64748b;margin-top:2px;}
 .dd-open{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-#stats-bar{margin-bottom:10px;padding:0 14px;}
+#stats-bar{display:none;margin-bottom:10px;padding:0 14px;}
 .stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 .stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;color:#64748b;text-align:center;padding:4px 12px;font-size:12px;}
 .stat-chip strong{color:#a3e635;font-size:16px;}
@@ -1154,6 +1154,12 @@ const CACHE = {
   }
 };
 
+// Arată bara de statistici doar când platforma ajunge la 1000 de pescari înregistrați
+function updateStatsBarVisibility(userCount) {
+  const bar = document.getElementById('stats-bar');
+  if (bar) bar.style.display = (userCount >= 1000) ? 'block' : 'none';
+}
+
 // ── BOOT ─────────────────────────────────────────────────────────────────────
 async function loadBaltiFromSupabase() {
   // Încearcă cache primul — TTL 30 minute
@@ -1166,6 +1172,7 @@ async function loadBaltiFromSupabase() {
     const statUseri = document.getElementById('stat-useri');
     const cachedUseri = CACHE.get('stat_useri');
     if (statUseri && cachedUseri !== null) statUseri.textContent = cachedUseri;
+    updateStatsBarVisibility(cachedUseri || 0);
     restoreIndexState();
     // Refresh în background fără să blocheze UI
     refreshBaltiInBackground();
@@ -1192,6 +1199,7 @@ async function loadBaltiFromSupabase() {
     .is('deleted_at', null);
   const statUseri = document.getElementById('stat-useri');
   if (statUseri) statUseri.textContent = count || 0;
+  updateStatsBarVisibility(count || 0);
   CACHE.set('stat_useri', count || 0, 60);
   // Restaurează starea paginii dacă userul vine din altă pagină
   restoreIndexState();
