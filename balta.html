@@ -262,10 +262,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   /* MAP GRID — desktop: hartă pe toată lățimea */
   #map-grid{flex:none;width:100%;}
 
-  /* MAP SIDEBAR — desktop: butoane+legendă (stânga) + video (dreapta), sub hartă */
-  #map-sidebar{flex-direction:row;gap:16px;width:100%;align-items:start;}
-  #map-sidebar-left{flex:1;min-width:0;}
-  #map-sidebar-right{flex:0 0 380px;}
+  /* MAP SIDEBAR — desktop: rămâne 1 singură coloană (ca pe mobil), pe toată lățimea,
+     ca video-ul de prezentare să apară mare, direct sub lista de standuri */
+  #map-sidebar-right{margin-top:6px;}
 
   /* STAND OVERLAY — desktop: centrat peste tot ecranul */
   #stand-overlay{
