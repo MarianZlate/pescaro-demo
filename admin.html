@@ -125,6 +125,23 @@ th,td{padding:8px 6px;}
 /* SECTION */
 .section-title{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 
+/* Card reclamă — pe mobil se așează pe 2 rânduri, pe desktop rămâne pe un singur rând */
+.rc-card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+.rc-top{display:flex;align-items:center;gap:12px;min-width:0;}
+.rc-img{width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#0a0f1a;}
+.rc-titlemeta{flex:1;min-width:0;}
+.rc-title{font-size:13px;font-weight:800;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rc-meta{font-size:11px;color:#4b5563;margin-top:2px;line-height:1.5;}
+.rc-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.rc-status{font-size:11px;font-weight:700;white-space:nowrap;}
+.rc-actions{display:flex;gap:6px;flex-shrink:0;}
+@media(min-width:640px){
+  .rc-card{flex-direction:row;align-items:center;gap:14px;}
+  .rc-top{flex:1;}
+  .rc-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rc-bottom{flex-shrink:0;}
+}
+
 /* BALTI TABLE */
 .table-wrap{width:100%;}
 
@@ -1247,18 +1264,22 @@ async function loadReclame() {
     else if(r.data_start > today)   statusTxt = '🕓 Programată', statusColor = '#f59e0b';
     else                          statusTxt = '✅ Activă',      statusColor = '#a3e635';
 
-    return `<div style="display:flex;align-items:center;gap:14px;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;">
-      <img src="${r.imagine_url}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#0a0f1a;" onerror="this.style.opacity=0.2"/>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${RC_TIP_LABEL[r.tip] || r.tip} · ${escH(r.titlu)}</div>
-        <div style="font-size:11px;color:#4b5563;margin-top:2px;">${r.data_start} → ${r.data_sfarsit} · 👁️ ${r.afisari||0} afișări · 🖱️ ${r.clickuri||0} click-uri</div>
+    return `<div class="rc-card">
+      <div class="rc-top">
+        <img class="rc-img" src="${r.imagine_url}" onerror="this.style.opacity=0.2"/>
+        <div class="rc-titlemeta">
+          <div class="rc-title">${RC_TIP_LABEL[r.tip] || r.tip} · ${escH(r.titlu)}</div>
+          <div class="rc-meta">${r.data_start} → ${r.data_sfarsit} · 👁️ ${r.afisari||0} afișări · 🖱️ ${r.clickuri||0} click-uri</div>
+        </div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:${statusColor};white-space:nowrap;">${statusTxt}</div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="openEditReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">✏️</button>
-        <button onclick="exportReclamaRaport(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;" title="Raport pentru această reclamă">📄</button>
-        <button onclick="toggleActivReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">${r.activ ? '⏸️' : '▶️'}</button>
-        <button onclick="deleteReclama(${r.id})" style="background:#1e293b;border:none;color:#ef4444;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">🗑️</button>
+      <div class="rc-bottom">
+        <span class="rc-status" style="color:${statusColor};">${statusTxt}</span>
+        <div class="rc-actions">
+          <button onclick="openEditReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">✏️</button>
+          <button onclick="exportReclamaRaport(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;" title="Raport pentru această reclamă">📄</button>
+          <button onclick="toggleActivReclama(${r.id})" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">${r.activ ? '⏸️' : '▶️'}</button>
+          <button onclick="deleteReclama(${r.id})" style="background:#1e293b;border:none;color:#ef4444;font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;">🗑️</button>
+        </div>
       </div>
     </div>`;
   }).join('');
