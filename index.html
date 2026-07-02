@@ -338,8 +338,21 @@ nav{display:flex;align-items:center;gap:6px;}
   .fg-row{grid-template-columns:1fr 1fr;}
   .fg-row3{grid-template-columns:1fr 1fr 1fr;}
 }
+
+/* ── FOOTER ────────────────────────────────────────────────────────────── */
+#site-footer{border-top:1px solid #1e293b;background:#0a0f1a;margin-top:32px;}
+#footer-inner{max-width:1100px;margin:0 auto;padding:28px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-logo-img{height:24px;width:auto;display:block;opacity:.85;}
+#footer-links{display:flex;flex-wrap:wrap;gap:20px;}
+#footer-links a{color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:color .2s;}
+#footer-links a:hover{color:#a3e635;}
+#footer-bottom{max-width:1100px;margin:0 auto;padding:0 20px 22px;font-size:11px;color:#334155;}
+@media (max-width:520px){
+  #footer-inner{flex-direction:column;align-items:flex-start;}
+}
 </style>
 </head>
+
 <body>
 
 <!-- HEADER -->
@@ -431,8 +444,47 @@ nav{display:flex;align-items:center;gap:6px;}
   </div>
 </div>
 
+<!-- MODAL CONTACT -->
+<div id="contact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:480px;margin:0 16px;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;background:#0a0f1a;">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:#f1f5f9;">📞 Contact</div>
+        <div style="font-size:12px;color:#4b5563;margin-top:3px;">Suntem aici să te ajutăm</div>
+      </div>
+      <button onclick="closeContactModal()" style="background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div id="contact-email-card" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px;">📧</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">EMAIL</div>
+          <a id="contact-email-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
+        </div>
+      </div>
+      <div id="contact-phone-card" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px;">📞</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">TELEFON</div>
+          <a id="contact-phone-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
+        </div>
+      </div>
+      <a id="contact-wa-link" href="#" target="_blank" style="display:none;align-items:center;gap:14px;background:#25d366;border-radius:12px;padding:16px;text-decoration:none;cursor:pointer;">
+        <div style="font-size:28px;">💬</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:rgba(0,0,0,.5);letter-spacing:.06em;margin-bottom:4px;">WHATSAPP</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">Trimite mesaj pe WhatsApp →</div>
+        </div>
+      </a>
+      <div id="contact-social-row" style="display:none;gap:12px;justify-content:center;padding-top:4px;"></div>
+      <div id="contact-loading" style="text-align:center;color:#4b5563;font-size:13px;padding:8px 0;display:none;">Se încarcă informațiile de contact...</div>
+    </div>
+  </div>
+</div>
+
 <!-- MAIN -->
 <div id="main">
+
 
   <!-- HARTA -->
   <div>
@@ -483,6 +535,19 @@ nav{display:flex;align-items:center;gap:6px;}
 
   </div>
 </div>
+
+<!-- FOOTER -->
+<footer id="site-footer">
+  <div id="footer-inner">
+    <img src="zoda-logo.png" alt="Zoda" class="footer-logo-img"/>
+    <div id="footer-links">
+      <a href="termeni.html">Termeni și Condiții</a>
+      <a href="confidentialitate.html">Politica de Confidențialitate</a>
+      <a onclick="openContactModal();return false;" href="#">Contact</a>
+    </div>
+  </div>
+  <div id="footer-bottom">Zoda © 2026</div>
+</footer>
 
 <!-- HALL OF FAME MODAL -->
 <div id="hof-modal" onclick="if(event.target===this)closeHof()">
@@ -1838,8 +1903,68 @@ function closeRegModal() {
   document.getElementById('reg-modal').style.display = 'none';
 }
 document.addEventListener('keydown', function(e) {
-  if(e.key === 'Escape') closeRegModal();
+  if(e.key === 'Escape') { closeRegModal(); closeContactModal(); }
 });
+
+// ── MODAL CONTACT (footer) ───────────────────────────────────────────────────
+async function openContactModal() {
+  document.getElementById('contact-modal').style.display = 'flex';
+  if(!_platSettings) {
+    document.getElementById('contact-loading').style.display = 'block';
+    const { data } = await sb.from('platform_settings').select('*').eq('id', 1).single();
+    _platSettings = data || {};
+    document.getElementById('contact-loading').style.display = 'none';
+  }
+  renderContactModal(_platSettings);
+}
+
+function closeContactModal() {
+  document.getElementById('contact-modal').style.display = 'none';
+}
+
+function renderContactModal(s) {
+  s = s || {};
+  const email = s.contact_email || 'contact@zoda.ro';
+  const phone = s.contact_phone || '';
+  const wa    = s.contact_whatsapp || '';
+  const fb    = s.social_facebook || '';
+  const ig    = s.social_instagram || '';
+  const yt    = s.social_youtube || '';
+
+  const eEl = document.getElementById('contact-email-link');
+  eEl.textContent = email;
+  eEl.href = 'mailto:' + email;
+
+  const pCard = document.getElementById('contact-phone-card');
+  const pEl = document.getElementById('contact-phone-link');
+  if(phone) {
+    pEl.textContent = phone;
+    pEl.href = 'tel:' + phone.replace(/\s+/g, '');
+    pCard.style.display = 'flex';
+  } else {
+    pCard.style.display = 'none';
+  }
+
+  const wEl = document.getElementById('contact-wa-link');
+  if(wa) {
+    const waMsg = encodeURIComponent('Bună ziua! Am o întrebare despre Zoda.');
+    wEl.href = 'https://wa.me/' + wa.replace(/\D/g, '') + '?text=' + waMsg;
+    wEl.style.display = 'flex';
+  } else {
+    wEl.style.display = 'none';
+  }
+
+  const socialRow = document.getElementById('contact-social-row');
+  let socialHtml = '';
+  const socialBtn = (url, label, icon) =>
+    `<a href="${escH(url)}" target="_blank" rel="noopener" title="${escH(label)}" style="width:44px;height:44px;border-radius:50%;background:#0a0f1a;border:1px solid #1e293b;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;">${icon}</a>`;
+  if(fb) socialHtml += socialBtn(fb, 'Facebook', '📘');
+  if(ig) socialHtml += socialBtn(ig, 'Instagram', '📷');
+  if(yt) socialHtml += socialBtn(yt, 'YouTube', '▶️');
+  socialRow.innerHTML = socialHtml;
+  socialRow.style.display = socialHtml ? 'flex' : 'none';
+}
+
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(msg) {
