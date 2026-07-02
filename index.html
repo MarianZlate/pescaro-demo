@@ -58,10 +58,10 @@ nav{display:flex;align-items:center;gap:6px;}
 .notif-msg{font-size:12px;color:#cbd5e1;line-height:1.5;flex:1;}
 .notif-time{font-size:10px;color:#4b5563;margin-top:3px;}
 .notif-empty{padding:32px 16px;text-align:center;color:#4b5563;font-size:13px;}
-#hero{max-width:1400px;margin:0 auto;text-align:center;padding:28px 14px 20px;}
+#hero{max-width:1400px;margin:0 auto;text-align:center;padding:60px 14px 20px;}
 .hero-title{font-weight:900;line-height:1.15;color:#f8fafc;margin-bottom:14px;font-size:26px;}
-.hero-sub{color:#64748b;margin-bottom:20px;font-size:11px;white-space:nowrap;}
-.hero-sub:first-of-type{margin-bottom:4px;}
+.hero-features{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-width:400px;margin:0 auto 22px;}
+.hero-feat{background:rgba(17,24,39,.62);border:1px solid rgba(148,163,184,.18);border-radius:20px;color:#cbd5e1;font-size:10.5px;font-weight:600;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(3px);text-align:center;}
 #search-wrap{position:relative;max-width:580px;margin:0 auto 10px;padding:0 14px;}
 #search-box{display:flex;align-items:center;gap:10px;background:#111827;border:2px solid #1e293b;border-radius:14px;padding:13px 18px;transition:border-color .2s;}
 #search-box:focus-within{border-color:#1a6b3a;}
@@ -283,7 +283,7 @@ nav{display:flex;align-items:center;gap:6px;}
   .logo-text{font-size:16px;}
   #notif-panel{width:calc(100vw - 24px);right:12px;left:12px;}
   .hero-title{font-size:22px;}
-  .hero-sub{font-size:9.5px;}
+  .hero-feat{font-size:9.5px;padding:5px 6px;}
 }
 
 /* ============================================================
@@ -298,9 +298,10 @@ nav{display:flex;align-items:center;gap:6px;}
   .nav-primary{font-size:13px;padding:8px 18px;}
   .nav-user-name{display:block;}
   .nav-label{display:inline;}
-  #hero{padding:60px 24px 36px;}
+  #hero{padding:96px 24px 36px;}
   .hero-title{font-size:42px;}
-  .hero-sub{font-size:15px;margin-bottom:36px;}
+  .hero-features{grid-template-columns:repeat(4,1fr);max-width:760px;gap:10px;margin-bottom:36px;}
+  .hero-feat{font-size:13px;padding:8px 14px;}
   #search-wrap{padding:0;}
   #search-input{font-size:15px;}
   #stats-bar{padding:0;}
@@ -370,8 +371,16 @@ nav{display:flex;align-items:center;gap:6px;}
 <!-- HERO + SEARCH -->
 <div id="hero">
   <h1 class="hero-title">Pescuiește pregătit,<br/>NU la întâmplare.</h1>
-  <p class="hero-sub">📍 Acces • 🎣 Prezentare Standuri • 🏆 Capturi • 🗺️ Waze &amp; Maps</p>
-  <p class="hero-sub">📞 Contact • 📘 Regulament • 🏆 Clasamente • 👤 Profil Pescar</p>
+  <div class="hero-features">
+    <span class="hero-feat">📍 Acces</span>
+    <span class="hero-feat">🎣 Standuri</span>
+    <span class="hero-feat">🏆 Capturi</span>
+    <span class="hero-feat">🗺️ Waze &amp; Maps</span>
+    <span class="hero-feat">📞 Contact</span>
+    <span class="hero-feat">📘 Regulament</span>
+    <span class="hero-feat">🏆 Clasamente</span>
+    <span class="hero-feat">👤 Profil Pescar</span>
+  </div>
 
   <div id="search-wrap">
     <div id="search-box">
