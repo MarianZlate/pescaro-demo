@@ -270,13 +270,23 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
      se plafonează la ~72% din înălțimea ecranului, rămânând centrat */
   #map-yt-thumb-wrap,#map-yt-iframe-wrap{max-width:calc(72vh * 16 / 9);margin:0 auto;}
 
-  /* STAND OVERLAY — desktop: centrat peste tot ecranul */
+  /* STAND OVERLAY — desktop: centrat peste tot ecranul, mult mai mare decât pe mobil */
   #stand-overlay{
     position:fixed;
     top:50%;left:50%;
     transform:translate(-50%,-50%);
-    width:460px;max-width:95%;
+    width:780px;max-width:92vw;
     max-height:85vh;overflow-y:auto;}
+  #stand-overlay > div:nth-child(2) > div{padding:22px!important;}
+  #stand-overlay .ov-hdr{padding:14px 22px;}
+  #stand-overlay .spnr{font-size:20px;}
+  #stand-overlay .xbtn{font-size:24px;}
+  #stand-overlay .sec-lbl{font-size:12px;margin-bottom:10px;}
+  #stand-overlay .stat-row{padding:9px 12px;}
+  #stand-overlay .stat-lbl{font-size:13px;}
+  #stand-overlay #ov-kg,#stand-overlay #ov-la,#stand-overlay #ov-di{font-size:19px!important;}
+  #stand-overlay #ov-pe,#stand-overlay #ov-da{font-size:14px!important;max-width:170px!important;}
+  #stand-overlay .zoom-hint{font-size:11px;padding:3px 7px;}
 
   /* PILLS */
   .pill,#pill-all,#pill-drum{padding:4px 12px;font-size:12px;}
