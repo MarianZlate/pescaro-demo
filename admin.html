@@ -1655,7 +1655,7 @@ async function loadBalti() {
   tbody.innerHTML = data.map(b => `
     <tr>
       <td class="col-id" style="color:#4b5563;font-size:11px;">#${b.id}</td>
-      <td><strong style="color:#f1f5f9;">${b.nume}</strong></td>
+      <td><strong style="color:#f1f5f9;">${escH(b.nume)}</strong></td>
       <td class="col-judet" style="color:#64748b;">📍 ${b.judet || '—'}</td>
       <td class="col-standuri" style="color:#64748b;">🎣 ${b.standuri || 0}</td>
       <td>
@@ -1728,10 +1728,10 @@ async function loadUsers() {
       : '';
     const nameHtml = u.username
       ? `<a ${nameLink} style="text-decoration:none;${u.zoda_id?'cursor:pointer;':''}">
-           <div class="user-name" style="${u.zoda_id?'color:#a3e635;':''}">${u.username}</div>
-           <div class="user-email">${u.email || ''}</div>
+           <div class="user-name" style="${u.zoda_id?'color:#a3e635;':''}">${escH(u.username)}</div>
+           <div class="user-email">${escH(u.email || '')}</div>
          </a>`
-      : `<div class="user-name">${u.email || '—'}</div>`;
+      : `<div class="user-name">${escH(u.email || '—')}</div>`;
     const createdAt = u.created_at
       ? new Date(u.created_at).toLocaleDateString('ro-RO')
       : '—';
