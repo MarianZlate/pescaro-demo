@@ -222,10 +222,12 @@ th,td{padding:8px 6px;}
 .btn-make-balta-admin:hover{background:#1a2e4a;}
 .btn-revoke-balta-admin{background:#0c1a2e;border:1px solid #1e40af;color:#60a5fa;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;}
 .btn-revoke-balta-admin:hover{background:#1a2e4a;}
-.users-table{table-layout:auto;}
-.users-table .col-email{width:auto;}
-.users-table .col-rol{width:1%;white-space:nowrap;}
-.users-table .col-actiuni{width:1%;white-space:nowrap;}
+@media(min-width:769px){
+  .users-table{table-layout:auto;}
+  .users-table .col-email{width:auto;}
+  .users-table .col-rol{width:1%;white-space:nowrap;}
+  .users-table .col-actiuni{width:1%;}
+}
 .user-name{font-weight:700;color:#f1f5f9;font-size:13px;line-height:1.3;}
 .user-email{font-size:10px;color:#4b5563;margin-top:2px;word-break:break-all;}
 
@@ -1724,15 +1726,17 @@ async function loadUsers() {
     if (rol === 'zoda_admin') {
       actiuni = u.id === SUPREME_ADMIN_UID
         ? '<span style="font-size:11px;color:#4b5563;font-style:italic;">Suprem</span>'
-        : `<button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">Revocă admin</button>`;
+        : `<div class="action-btns"><button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">Revocă admin</button></div>`;
     } else if (rol === 'balta_admin') {
-      actiuni = `
+      actiuni = `<div class="action-btns">
         <button class="btn-make-admin" onclick="setUserRole('${u.id}','zoda_admin')">Fă Zoda Admin</button>
-        <button class="btn-revoke-balta-admin" onclick="setUserRole('${u.id}','user')" style="margin-left:4px;">Revocă baltă</button>`;
+        <button class="btn-revoke-balta-admin" onclick="setUserRole('${u.id}','user')">Revocă baltă</button>
+      </div>`;
     } else {
-      actiuni = `
+      actiuni = `<div class="action-btns">
         <button class="btn-make-admin" onclick="setUserRole('${u.id}','zoda_admin')">Fă Zoda Admin</button>
-        <button class="btn-make-balta-admin" onclick="setUserRole('${u.id}','balta_admin')" style="margin-left:4px;">🏊 Baltă Admin</button>`;
+        <button class="btn-make-balta-admin" onclick="setUserRole('${u.id}','balta_admin')">🏊 Baltă Admin</button>
+      </div>`;
     }
 
     return `
