@@ -245,7 +245,7 @@ function realizareRow(opts) {
 async function loadProfileForBlur(zodaId) {
   try {
     const { data: profile } = await sb
-      .from('user_profiles')
+      .from('user_profiles_public')
       .select('username, avatar_url, zoda_id')
       .eq('zoda_id', zodaId)
       .is('deleted_at', null)
@@ -309,7 +309,7 @@ async function loadPescarWithRetry(zodaId, attempt) {
 async function loadPescarData(zodaId) {
   // 1. Profil pescar
   let { data: profile, error: profErr } = await sb
-    .from('user_profiles')
+    .from('user_profiles_public')
     .select('username, avatar_url, zoda_id, created_at')
     .eq('zoda_id', zodaId)
     .is('deleted_at', null)
