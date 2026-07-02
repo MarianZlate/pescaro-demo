@@ -9,13 +9,18 @@
    RESET & BAZĂ COMUNĂ
    ============================================================ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{
-  background-color:#0a0f1a;
-  background-image:linear-gradient(rgba(10,15,26,.90),rgba(10,15,26,.90)), url('balta-bg.jpg');
+html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;overflow-x:hidden;}
+
+/* FUNDAL DECORATIV — strat separat, înălțime fixă, ancorat la începutul paginii.
+   Folosim un div dedicat (nu background pe html/body) ca să evităm distorsionarea
+   imaginii pe pagini foarte înalte — aici, cu cover, se decupează corect, nu se întinde. */
+#page-bg{
+  position:absolute;top:0;left:0;right:0;height:640px;z-index:-1;
+  background-image:linear-gradient(rgba(10,15,26,.45),rgba(10,15,26,.97)), url('balta-bg.jpg');
+  background-size:cover;
+  background-position:center 68%;
   background-repeat:no-repeat;
-  background-position:top center;
-  background-size:100% 640px;
-  color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;overflow-x:hidden;}
+  pointer-events:none;}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:#0a0f1a;}
 ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
@@ -308,6 +313,7 @@ html,body{
 </style>
 </head>
 <body>
+<div id="page-bg"></div>
 
 <!-- Loading -->
 <div id="loading-screen">
