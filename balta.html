@@ -266,6 +266,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
      ca video-ul de prezentare să apară mare, direct sub lista de standuri */
   #map-sidebar-right{margin-top:6px;}
 
+  /* PLAYER YOUTUBE — desktop: nu mai crește nelimitat cu lățimea coloanei;
+     se plafonează la ~72% din înălțimea ecranului, rămânând centrat */
+  #map-yt-thumb-wrap,#map-yt-iframe-wrap{max-width:calc(72vh * 16 / 9);margin:0 auto;}
+
   /* STAND OVERLAY — desktop: centrat peste tot ecranul */
   #stand-overlay{
     position:fixed;
@@ -434,7 +438,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <!-- YouTube player -->
     <div id="map-yt-bar" style="display:none;">
       <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
-      <div id="map-yt-thumb-wrap" style="position:relative;padding-bottom:56.25%;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;cursor:pointer;" onclick="playMapYT()">
+      <div id="map-yt-thumb-wrap" style="position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;cursor:pointer;" onclick="playMapYT()">
         <img id="map-yt-thumb" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"/>
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);">
           <div style="width:60px;height:60px;border-radius:50%;background:rgba(232,20,42,.92);display:flex;align-items:center;justify-content:center;">
@@ -442,7 +446,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
           </div>
         </div>
       </div>
-      <div id="map-yt-iframe-wrap" style="display:none;position:relative;padding-bottom:56.25%;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+      <div id="map-yt-iframe-wrap" style="display:none;position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
         <iframe id="map-yt-iframe" src="" frameborder="0"
           allow="autoplay;encrypted-media;fullscreen" allowfullscreen
           style="position:absolute;inset:0;width:100%;height:100%;border:none;">
