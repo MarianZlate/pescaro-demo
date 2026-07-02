@@ -109,6 +109,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #map-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;
   /* mobil */
   width:100%;}
+/* Cele 2 grupuri din sidebar (butoane+legendă / video) — pe mobil rămân pur și simplu
+   stivuite unul sub altul, la fel ca înainte de a fi împărțite în wrapper-e */
+#map-sidebar-left,#map-sidebar-right{display:flex;flex-direction:column;gap:10px;min-width:0;}
 
 /* PILLS */
 #pw{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
@@ -133,6 +136,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 /* TOP 10 — mobil: lățime 100% */
 #rc-top10{
+  display:flex;flex-direction:column;gap:10px;
   /* mobil */
   width:100%;}
 .t10c{background:#111827;border:1px solid #1e293b;border-radius:12px;overflow:hidden;}
@@ -252,14 +256,16 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #edit-bar-top{padding:10px 14px;gap:10px;}
   .ebtn{font-size:13px;padding:8px 18px;}
 
-  /* MAIN AREA — desktop: 4 coloane flex */
-  #main-area{flex-direction:row;}
+  /* MAIN AREA — desktop: 3 rânduri stivuite (hartă / butoane+video / top10+HOF) */
+  #main-area{flex-direction:column;}
 
-  /* MAP GRID — desktop: lățime calculată */
-  #map-grid{flex:0 0 min(calc(85vh - 120px), calc(100% - 540px));}
+  /* MAP GRID — desktop: hartă pe toată lățimea */
+  #map-grid{flex:none;width:100%;}
 
-  /* MAP SIDEBAR — desktop: lățime fixă */
-  #map-sidebar{width:240px;flex-shrink:0;}
+  /* MAP SIDEBAR — desktop: butoane+legendă (stânga) + video (dreapta), sub hartă */
+  #map-sidebar{flex-direction:row;gap:16px;width:100%;align-items:start;}
+  #map-sidebar-left{flex:1;min-width:0;}
+  #map-sidebar-right{flex:0 0 380px;}
 
   /* STAND OVERLAY — desktop: centrat peste tot ecranul */
   #stand-overlay{
@@ -273,8 +279,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   .pill,#pill-all,#pill-drum{padding:4px 12px;font-size:12px;}
   #pill-all{padding:4px 14px;}
 
-  /* TOP 10 — desktop: lățime fixă */
-  #rc-top10{width:280px;flex-shrink:0;}
+  /* TOP 10 — desktop: Top 10 Lunar (stânga) + Hall of Fame (dreapta), sub video */
+  #rc-top10{flex-direction:row-reverse;gap:16px;align-items:start;width:100%;}
+  #rc-top10 > .t10c{flex:1;min-width:0;}
 
   /* TABS */
   .t10t{font-size:11px;padding:10px 8px;}
@@ -396,6 +403,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
   <!-- Butoane selectie stand + continut — SUB HARTA (desktop: coloana 2, mobil: sub harta) -->
   <div id="map-sidebar">
+    <div id="map-sidebar-left">
     <div id="pw" style="margin:0;">
       <span class="pl">Selectează rapid:</span>
       <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🛣️ Drum de acces</button>
@@ -421,7 +429,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div class="ct" style="margin-bottom:10px;">🏆 Standuri — Cele mai mari capturi</div>
       <div class="lgd" id="legend-list"></div>
     </div>
+    </div><!-- /#map-sidebar-left -->
 
+    <div id="map-sidebar-right">
     <!-- YouTube player -->
     <div id="map-yt-bar" style="display:none;">
       <div id="map-yt-label" style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;"></div>
@@ -445,6 +455,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <div id="drum-yt-section" style="display:none;">
       <iframe id="drum-yt-iframe" src="" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:100%;border-radius:10px;aspect-ratio:16/9;border:1px solid #1e293b;"></iframe>
     </div>
+    </div><!-- /#map-sidebar-right -->
   </div><!-- /#map-sidebar -->
 
   <!-- Hall of Fame — desktop: coloana 3; mobil: sub map-sidebar (adica sub YT) -->
@@ -468,7 +479,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
 
     <!-- Top 10 Lunar -->
-    <div class="t10c" id="top10-lunar-card" style="display:none;margin-top:10px;">
+    <div class="t10c" id="top10-lunar-card" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #1e293b;">
         <div style="font-weight:800;font-size:12px;color:#a3e635;">📅 <span id="lunar-titlu">Top 10 Lunar</span></div>
         <button id="btn-istoric" onclick="toggleIstoric()" style="background:#1e293b;border:none;color:#94a3b8;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;transition:background .2s,color .2s;" onmouseover="this.style.background='#334155';this.style.color='#f1f5f9'" onmouseout="this.style.background='#1e293b';this.style.color='#94a3b8'">📜 Istoric</button>
