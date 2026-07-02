@@ -138,7 +138,6 @@ th,td{padding:8px 6px;}
 @media(min-width:640px){
   .rc-card{flex-direction:row;align-items:center;gap:14px;}
   .rc-top{flex:1;}
-  .rc-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .rc-bottom{flex-shrink:0;}
 }
 
@@ -1269,7 +1268,10 @@ async function loadReclame() {
         <img class="rc-img" src="${r.imagine_url}" onerror="this.style.opacity=0.2"/>
         <div class="rc-titlemeta">
           <div class="rc-title">${RC_TIP_LABEL[r.tip] || r.tip} · ${escH(r.titlu)}</div>
-          <div class="rc-meta">${r.data_start} → ${r.data_sfarsit} · 👁️ ${r.afisari||0} afișări · 🖱️ ${r.clickuri||0} click-uri</div>
+          <div class="rc-meta">
+            <div>${r.data_start} → ${r.data_sfarsit}</div>
+            <div>👁️ ${r.afisari||0} afișări · 🖱️ ${r.clickuri||0} click-uri</div>
+          </div>
         </div>
       </div>
       <div class="rc-bottom">
