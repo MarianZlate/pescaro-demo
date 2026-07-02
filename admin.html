@@ -511,9 +511,14 @@ th,td{padding:8px 6px;}
   <div id="panel-reclame" style="display:none;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <span>📢 Reclame — bălți, concursuri, magazine</span>
-      <button onclick="openAddReclama()" style="display:flex;align-items:center;gap:8px;background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;">
-        ＋ Adaugă reclamă
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="exportReclameCSV()" style="display:flex;align-items:center;gap:8px;background:#1e293b;border:none;color:#94a3b8;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;">
+          📊 Exportă raport (CSV)
+        </button>
+        <button onclick="openAddReclama()" style="display:flex;align-items:center;gap:8px;background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;">
+          ＋ Adaugă reclamă
+        </button>
+      </div>
     </div>
     <div id="reclame-list" style="display:flex;flex-direction:column;gap:10px;">
       <div class="empty-state">Se încarcă...</div>
@@ -1234,7 +1239,7 @@ const RC_TIP_LABEL = { balta: '🎣 Baltă', concurs: '🏆 Concurs', magazin: '
 async function loadReclame() {
   const wrap = document.getElementById('reclame-list');
   wrap.innerHTML = '<div class="empty-state">Se încarcă...</div>';
-  const { data, error } = await sb.from('reclame').select('*').order('sort_order', { ascending: true });
+  const { data, error } = await sb.from('reclame').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true });
   if(error) { wrap.innerHTML = '<div class="empty-state">Eroare la încărcare: ' + error.message + '</div>'; return; }
   RECLAME = data || [];
   if(!RECLAME.length) { wrap.innerHTML = '<div class="empty-state">Nicio reclamă adăugată încă.</div>'; return; }
@@ -1418,6 +1423,50 @@ async function deleteReclama(id) {
   if(!confirm('Ștergi definitiv această reclamă? Nu se poate anula.')) return;
   const { error } = await sb.from('reclame').delete().eq('id', id);
   if(!error) loadReclame();
+}
+
+// ── EXPORT RAPORT RECLAME (CSV) ─────────────────────────────────────────────
+function exportReclameCSV() {
+  if(!RECLAME.length) { alert('Nu există reclame de exportat.'); return; }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const header = ['Titlu', 'Tip', 'Link destinație', 'Data start', 'Data sfârșit', 'Status', 'Afișări', 'Click-uri', 'CTR (%)'];
+
+  const rows = RECLAME.map(r => {
+    let status;
+    if(!r.activ)                     status = 'Dezactivată';
+    else if(r.data_sfarsit < today)  status = 'Expirată';
+    else if(r.data_start > today)    status = 'Programată';
+    else                              status = 'Activă';
+
+    const afisari = r.afisari || 0;
+    const clickuri = r.clickuri || 0;
+    const ctr = afisari > 0 ? ((clickuri / afisari) * 100).toFixed(2) : '0.00';
+
+    return [
+      r.titlu || '', RC_TIP_LABEL[r.tip] || r.tip || '', r.link_destinatie || '',
+      r.data_start || '', r.data_sfarsit || '', status,
+      String(afisari), String(clickuri), ctr,
+    ];
+  });
+
+  function csvEscape(val) {
+    const s = String(val);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  const csvLines = [header, ...rows].map(row => row.map(csvEscape).join(','));
+  const csvContent = '\uFEFF' + csvLines.join('\r\n'); // BOM pentru diacritice corecte în Excel
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `zoda-raport-reclame-${today}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
