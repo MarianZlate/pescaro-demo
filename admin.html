@@ -121,6 +121,7 @@ th,td{padding:8px 6px;}
 .tabs{display:flex;gap:4px;background:#111827;border:1px solid #1e293b;border-radius:10px;padding:4px;margin-bottom:20px;}
 .tab{background:transparent;border:none;color:#4b5563;font-size:13px;font-weight:600;padding:8px 18px;border-radius:7px;cursor:pointer;transition:all .2s;}
 .tab.active{background:#1e293b;color:#f1f5f9;}
+.tab-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;background:#ef4444;border-radius:9px;font-size:10px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #0a0f1a;line-height:1;pointer-events:none;}
 
 /* SECTION */
 .section-title{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
@@ -432,7 +433,7 @@ th,td{padding:8px 6px;}
   <div class="tabs">
     <button class="tab active" onclick="switchTab('balti')">🎣 Bălți</button>
     <button class="tab" onclick="switchTab('users')">👥 Utilizatori</button>
-    <button class="tab" onclick="switchTab('capturi')">📸 Capturi</button>
+    <button class="tab" onclick="switchTab('capturi')" style="position:relative;">📸 Capturi<span id="capturi-pending-badge" class="tab-badge" style="display:none;"></span></button>
     <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
     <button class="tab" onclick="switchTab('reclame')">📢 Reclame</button>
   </div>
@@ -883,7 +884,24 @@ function switchTab(tab) {
   if(tab==='reclame')  loadReclame();
 }
 
+// ── BADGE CAPTURI ÎN AȘTEPTARE ───────────────────────────────────────────────
+async function updateCapturiPendingBadge() {
+  const badge = document.getElementById('capturi-pending-badge');
+  if (!badge) return;
+  const { count, error } = await sb.from('capturi')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending');
+  if (error) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
 async function loadCapturi() {
+  updateCapturiPendingBadge();
   const listEl = document.getElementById('capturi-list-admin');
   if (!listEl) return;
   listEl.innerHTML = '<div class="empty-state">Se încarcă...</div>';
@@ -1586,6 +1604,7 @@ async function bootAdmin(user) {
   showScreen('dashboard');
   loadBalti();
   loadStats();
+  updateCapturiPendingBadge();
 }
 
 // Pornire la load — citim din localStorage
