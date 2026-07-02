@@ -227,15 +227,20 @@ function switchTab(tab) {
   document.getElementById('tab-trecute').classList.toggle('active', tab === 'trecute');
 }
 
+// Escapare generică pentru text inserat via innerHTML (previne XSS stocat)
+function escH(str) {
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function realizareRow(opts) {
   const { iconWrapClass, icon, title, meta, star, date, trecut, link } = opts;
   const cls = 'rez-row' + (trecut ? ' trecut' : '');
   const inner = `
     <div class="rez-icon-wrap ${iconWrapClass}">${icon}</div>
     <div class="rez-body">
-      <div class="rez-title">${title}</div>
-      <div class="rez-meta">${meta}</div>
-      ${date ? `<div class="rez-date">📅 ${date}</div>` : ''}
+      <div class="rez-title">${escH(title)}</div>
+      <div class="rez-meta">${escH(meta)}</div>
+      ${date ? `<div class="rez-date">📅 ${escH(date)}</div>` : ''}
     </div>
     ${star ? `<div class="rez-star">⭐ +1</div>` : ''}`;
   if (link) return `<a href="${link}" onclick="savePescarState()" class="${cls}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #0f172a;transition:background .15s;">${inner}</a>`;
