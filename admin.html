@@ -2120,8 +2120,9 @@ function addEditStand() {
   const wrap  = document.getElementById('edit-stands-wrap');
   const newId = Date.now();
   const nr    = wrap.querySelectorAll('.se-card').length + 1;
-  wrap.insertAdjacentHTML('beforeend', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_data: '', galerie: [] }));
+  wrap.insertAdjacentHTML('afterbegin', buildStandEditCard({ id: newId, nr, zona: 'Stand nou', ad: '', di: '', la: '', yt: '', rec_foto: '', rec_kg: '', rec_pescar: '', rec_data: '', galerie: [] }));
   toggleEditStand(newId);
+  document.getElementById('se-card-' + newId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 window._galFotoUploading = window._galFotoUploading || new Set();
