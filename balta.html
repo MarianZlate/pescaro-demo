@@ -1479,6 +1479,8 @@ function showAll() {
   document.getElementById('legend-card').style.display = 'block';
   // Dacă suntem în edit mode, activează drag & drop
   if (editMode) initSortableList();
+  var mapWrap = document.getElementById('map-wrap');
+  if (mapWrap) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function showDrumAcces() {
@@ -1496,6 +1498,8 @@ function showDrumAcces() {
   document.getElementById('legend-card').style.display = 'none';
   document.getElementById('spr').style.display = 'none';
   showMapYT(DRUM_ACCES_YT ? null : undefined);
+  var mapWrap = document.getElementById('map-wrap');
+  if (mapWrap) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updatePills() {
