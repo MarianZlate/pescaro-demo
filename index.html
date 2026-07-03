@@ -2755,6 +2755,10 @@ async function doLogin() {
 }
 
 const WORKER_TURNSTILE_VERIFY = 'https://zoda-turnstile-verify.marianzlate90.workers.dev';
+// Versiunea curentă a Termenilor și Politicii de Confidențialitate — trebuie
+// ținută sincronă manual cu "Versiunea X.X" afișată în termeni.html/confidentialitate.html.
+// La fiecare actualizare semnificativă a acelor pagini, crește numărul aici ȘI acolo.
+const TERMS_VERSION = '1.0';
 let _turnstileOk = false;
 function onTurnstileOk(){ _turnstileOk = true; }
 function onTurnstileExpired(){ _turnstileOk = false; }
@@ -2808,7 +2812,11 @@ async function doRegister() {
   if(data.user) {
     const uid = data.user.id;
     await sb.from('user_roles').insert({ id: uid, rol: 'user' });
-    await sb.from('user_profiles').upsert({ id: uid, email, username }, { onConflict: 'id' });
+    await sb.from('user_profiles').upsert({
+      id: uid, email, username,
+      terms_version_accepted: TERMS_VERSION,
+      terms_accepted_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
   }
   authShowOk('Cont creat! Verifică emailul ' + email + ' pentru a confirma înregistrarea.');
 }
@@ -3102,6 +3110,8 @@ sb.auth.onAuthStateChange(async (event, session) => {
         const username = email.split('@')[0];
         await sb.from('user_profiles').upsert({
           id: uid, email, username,
+          terms_version_accepted: TERMS_VERSION,
+          terms_accepted_at: new Date().toISOString(),
         }, { onConflict: 'id' });
         await sb.from('user_roles').upsert({ id: uid, rol: 'user' }, { onConflict: 'id' });
       } else if (profile.deleted_at) {
