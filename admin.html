@@ -277,7 +277,13 @@ th,td{padding:8px 6px;}
 /* Stand edit card */
 .se-card{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:14px;margin-bottom:10px;position:relative;}
 .se-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;}
-.se-nr-badge{width:28px;height:28px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
+.se-drag-handle{color:#334155;font-size:18px;cursor:grab;padding:0 2px;flex-shrink:0;touch-action:none;user-select:none;}
+.se-drag-handle:active{cursor:grabbing;}
+.se-card.drag-over{border-color:#a3e635;background:#0d1f12;}
+.se-card.dragging-item{opacity:.4;}
+.se-sort-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.se-sort-btn{background:#111827;border:1px solid #1e293b;color:#94a3b8;font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.se-sort-btn:hover{border-color:#1a6b3a;color:#a3e635;}
 .se-card-name{font-weight:700;font-size:13px;color:#e2e8f0;flex:1;}
 .se-card-toggle{color:#4b5563;font-size:14px;}
 .se-card-body{display:none;}
@@ -1868,7 +1874,7 @@ async function openEditBalta(id) {
   editVizStatus = b.vizibilitate || 'public';
 
   // 2. Standuri
-  const { data: standuri } = await sb.from('standuri').select('*').eq('balta_id', id).order('id');
+  const { data: standuri } = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true, nullsFirst: false }).order('id');
 
   // 3. Poze (hartă + galerii standuri)
   const { data: poze } = await sb.from('poze').select('*').eq('balta_id', id);
@@ -1924,6 +1930,7 @@ async function openEditBalta(id) {
   document.getElementById('edit-body').innerHTML = buildEditBody(b, ext);
   document.getElementById('edit-save-btn').disabled = false;
   _deletedStandIds = [];
+  initEditStandsDrag();
 }
 
 function closeEditBalta() {
@@ -2014,6 +2021,11 @@ function buildEditBody(b, ext) {
       <span>🎣 STANDURI (${ext.standuri.length})</span>
       <button onclick="addEditStand()" style="background:#1a6b3a;border:none;color:#a3e635;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;">+ Adaugă stand</button>
     </div>
+    <div class="se-sort-bar">
+      <button class="se-sort-btn" onclick="sortEditStands('asc')">🔼 Crescător</button>
+      <button class="se-sort-btn" onclick="sortEditStands('desc')">🔽 Descrescător</button>
+      <span style="font-size:11px;color:#334155;align-self:center;">— sau trage ⠿ ca să ordonezi manual</span>
+    </div>
     <div id="edit-stands-wrap">
       ${ext.standuri.map(s => buildStandEditCard(s)).join('')}
     </div>
@@ -2041,9 +2053,9 @@ function buildStandEditCard(s) {
       <button class="gal-thumb-del" style="top:6px;right:6px;width:22px;height:22px;font-size:15px;" onclick="removeRecFoto(${s.id})" title="Șterge poza record">✕</button>
     </div>` : `<div class="rec-foto-preview rec-foto-empty" id="se-rec-preview-${s.id}"><span style="font-size:28px;">🐟</span><span style="font-size:10px;color:#334155;">Fără fotografie</span></div>`;
 
-  return `<div class="se-card" id="se-card-${s.id}">
-    <div class="se-card-hdr" onclick="toggleEditStand(${s.id})">
-      <div class="se-nr-badge">${s.nr}</div>
+  return `<div class="se-card" id="se-card-${s.id}" draggable="true">
+    <div class="se-card-hdr" onclick="if(!event.target.closest('.se-drag-handle'))toggleEditStand(${s.id})">
+      <span class="se-drag-handle" title="Trage pentru a reordona" onclick="event.stopPropagation()">⠿</span>
       <div class="se-card-name">${escHtml(s.zona || 'Stand ' + s.nr)}</div>
       <span class="se-card-toggle" id="se-arrow-${s.id}">▸</span>
       <button class="se-del-btn" onclick="event.stopPropagation();delEditStand(${s.id})">✕ Șterge</button>
@@ -2114,6 +2126,63 @@ function delEditStand(id) {
   // id-urile standurilor existente (din BD) sunt numere mici (serial); cele noi,
   // nesalvate încă, au id = Date.now() (13 cifre) — pe alea nu are rost să le ștergem din BD
   if(String(id).length <= 10) _deletedStandIds.push(id);
+}
+
+// ── SORTARE / REORDONARE STANDURI ────────────────────────────────────────────
+// Ordinea finală (din DOM, indiferent dacă a fost obținută prin sortare automată
+// sau tras manual) se salvează pe coloana `sort_order` la Salvează modificările —
+// aceeași coloană folosită deja de balta.html pentru ordinea publică a standurilor.
+function sortEditStands(dir) {
+  const wrap  = document.getElementById('edit-stands-wrap');
+  const cards = Array.from(wrap.querySelectorAll('.se-card'));
+  cards.sort((a, b) => {
+    const nameA = a.querySelector('.se-card-name')?.textContent.trim() || '';
+    const nameB = b.querySelector('.se-card-name')?.textContent.trim() || '';
+    const numA = parseFloat(nameA), numB = parseFloat(nameB);
+    let cmp;
+    if(!isNaN(numA) && !isNaN(numB)) cmp = numA - numB;
+    else cmp = nameA.localeCompare(nameB, 'ro', { numeric: true, sensitivity: 'base' });
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  cards.forEach(c => wrap.appendChild(c));
+}
+
+function initEditStandsDrag() {
+  const wrap = document.getElementById('edit-stands-wrap');
+  if(!wrap) return;
+  let dragEl = null;
+
+  wrap.addEventListener('dragstart', function(e) {
+    const card = e.target.closest('.se-card');
+    if(!card) return;
+    dragEl = card;
+    card.classList.add('dragging-item');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+
+  wrap.addEventListener('dragend', function() {
+    if(dragEl) dragEl.classList.remove('dragging-item');
+    wrap.querySelectorAll('.se-card').forEach(c => c.classList.remove('drag-over'));
+    dragEl = null;
+  });
+
+  wrap.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    const card = e.target.closest('.se-card');
+    if(!card || card === dragEl) return;
+    wrap.querySelectorAll('.se-card').forEach(c => c.classList.remove('drag-over'));
+    card.classList.add('drag-over');
+  });
+
+  wrap.addEventListener('drop', function(e) {
+    e.preventDefault();
+    const card = e.target.closest('.se-card');
+    if(!card || !dragEl || card === dragEl) return;
+    card.classList.remove('drag-over');
+    const rect   = card.getBoundingClientRect();
+    const before = (e.clientY - rect.top) < rect.height / 2;
+    wrap.insertBefore(dragEl, before ? card : card.nextSibling);
+  });
 }
 
 function addEditStand() {
@@ -2377,7 +2446,9 @@ async function saveEditBalta() {
 
   // Salvează standuri: update cele existente, insert cele noi
   const cards = document.querySelectorAll('#edit-stands-wrap .se-card');
+  let _standIdx = 0;
   for(const card of cards) {
+    const sortOrder = _standIdx++;
     const sid   = card.id.replace('se-card-', '');
     const isNew = sid.length > 10; // Date.now() are 13 cifre
     const zona  = document.getElementById('se-zona-' + sid)?.value.trim() || 'Stand';
@@ -2396,7 +2467,7 @@ async function saveEditBalta() {
     let standId;
     if(isNew) {
       const { data: newStand, error: newStandErr } = await sb.from('standuri').insert({
-        balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt
+        balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt, sort_order: sortOrder
       }).select('id').single();
       if(newStandErr) {
         showToast('❌ Standul „' + zona + '" nu s-a putut crea: ' + newStandErr.message, true);
@@ -2419,7 +2490,7 @@ async function saveEditBalta() {
       standId = parseInt(sid);
       // Update câmpuri de bază
       const { error: stErr } = await sb.from('standuri').update({
-        nume: zona, adancime: ad, distanta: di, latime: la, yt
+        nume: zona, adancime: ad, distanta: di, latime: la, yt, sort_order: sortOrder
       }).eq('id', standId);
       if(stErr) {
         showToast('❌ Eroare stand ' + standId + ': ' + stErr.message, true);
