@@ -291,7 +291,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div id="pwd-section">
           <div class="fg">
             <label>PAROLĂ NOUĂ</label>
-            <input type="password" id="inp-pwd1" placeholder="Minim 6 caractere"/>
+            <input type="password" id="inp-pwd1" placeholder="Min. 8 caractere, literă + cifră + simbol"/>
           </div>
           <div class="fg">
             <label>CONFIRMĂ PAROLA NOUĂ</label>
@@ -1284,7 +1284,9 @@ async function savePassword() {
 
   if (!p1) { msgEl.textContent = '⚠️ Completează parola nouă'; msgEl.className='save-msg err'; return; }
   if (p1 !== p2) { msgEl.textContent = '⚠️ Parolele nu coincid'; msgEl.className='save-msg err'; return; }
-  if (p1.length < 6) { msgEl.textContent = '⚠️ Minim 6 caractere'; msgEl.className='save-msg err'; return; }
+  if (p1.length < 8) { msgEl.textContent = '⚠️ Parola trebuie să aibă minim 8 caractere'; msgEl.className='save-msg err'; return; }
+  if (!/[a-zA-Z]/.test(p1) || !/[0-9]/.test(p1)) { msgEl.textContent = '⚠️ Parola trebuie să conțină atât litere, cât și cifre'; msgEl.className='save-msg err'; return; }
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p1)) { msgEl.textContent = '⚠️ Parola trebuie să conțină cel puțin un caracter special (ex: ! @ # $)'; msgEl.className='save-msg err'; return; }
 
   btn.disabled = true; btn.textContent = '⏳ Se schimbă...';
   const { error } = await sb.auth.updateUser({ password: p1 });
