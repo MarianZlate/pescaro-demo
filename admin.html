@@ -442,6 +442,7 @@ th,td{padding:8px 6px;}
     <button class="tab" onclick="switchTab('capturi')" style="position:relative;">📸 Capturi<span id="capturi-pending-badge" class="tab-badge" style="display:none;"></span></button>
     <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
     <button class="tab" onclick="switchTab('reclame')">📢 Reclame</button>
+    <button class="tab" onclick="switchTab('mesaje')" style="position:relative;">✉️ Mesaje<span id="mesaje-pending-badge" class="tab-badge" style="display:none;"></span></button>
   </div>
 
   <!-- BALTI PANEL -->
@@ -555,6 +556,16 @@ th,td{padding:8px 6px;}
       </button>
     </div>
     <div id="reclame-list" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="empty-state">Se încarcă...</div>
+    </div>
+  </div>
+
+  <!-- MESAJE PANEL -->
+  <div id="panel-mesaje" style="display:none;">
+    <div class="section-title">
+      <span>✉️ Mesaje din formularul de contact</span>
+    </div>
+    <div id="mesaje-list" style="display:flex;flex-direction:column;gap:10px;">
       <div class="empty-state">Se încarcă...</div>
     </div>
   </div>
@@ -892,16 +903,18 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','capturi','settings','reclame'][i]===tab));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','capturi','settings','reclame','mesaje'][i]===tab));
   const pB = document.getElementById('panel-balti');    if(pB) pB.style.display    = tab==='balti'    ? 'block' : 'none';
   const pU = document.getElementById('panel-users');    if(pU) pU.style.display    = tab==='users'    ? 'block' : 'none';
   const pC = document.getElementById('panel-capturi');  if(pC) pC.style.display    = tab==='capturi'  ? 'block' : 'none';
   const pS = document.getElementById('panel-settings'); if(pS) pS.style.display    = tab==='settings' ? 'block' : 'none';
   const pR = document.getElementById('panel-reclame');  if(pR) pR.style.display    = tab==='reclame'  ? 'block' : 'none';
+  const pM = document.getElementById('panel-mesaje');   if(pM) pM.style.display    = tab==='mesaje'   ? 'block' : 'none';
   if(tab==='users')    loadUsers();
   if(tab==='capturi')  loadCapturi();
   if(tab==='settings') loadSettings();
   if(tab==='reclame')  loadReclame();
+  if(tab==='mesaje')   loadMesaje();
 }
 
 // ── BADGE CAPTURI ÎN AȘTEPTARE ───────────────────────────────────────────────
@@ -918,6 +931,64 @@ async function updateCapturiPendingBadge() {
   } else {
     badge.style.display = 'none';
   }
+}
+
+// ── MESAJE DIN FORMULARUL DE CONTACT ─────────────────────────────────────────
+async function updateMesajePendingBadge() {
+  const badge = document.getElementById('mesaje-pending-badge');
+  if (!badge) return;
+  const { count, error } = await sb.from('contact_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('citit', false);
+  if (error) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function loadMesaje() {
+  updateMesajePendingBadge();
+  const listEl = document.getElementById('mesaje-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+
+  const { data, error } = await sb.from('contact_messages').select('*').order('created_at', { ascending: false });
+  if (error) { listEl.innerHTML = '<div class="empty-state">Eroare: ' + escHtml(error.message) + '</div>'; return; }
+  if (!data || data.length === 0) { listEl.innerHTML = '<div class="empty-state">Niciun mesaj primit încă.</div>'; return; }
+
+  listEl.innerHTML = data.map(m => {
+    const data_ = new Date(m.created_at).toLocaleString('ro-RO', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const necitit = !m.citit;
+    return `
+    <div style="background:#111827;border:1px solid ${necitit ? '#1a6b3a' : '#1e293b'};border-radius:12px;padding:16px;${necitit ? 'box-shadow:0 0 0 1px #1a6b3a inset;' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:700;color:#f1f5f9;font-size:14px;">${escHtml(m.nume)} ${necitit ? '<span style="background:#1a6b3a;color:#a3e635;font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;margin-left:6px;">NOU</span>' : ''}</div>
+          <a href="mailto:${escHtml(m.email)}" style="color:#a3e635;font-size:12px;text-decoration:none;">${escHtml(m.email)}</a>
+        </div>
+        <div style="font-size:11px;color:#4b5563;white-space:nowrap;">${data_}</div>
+      </div>
+      <div style="color:#cbd5e1;font-size:13px;line-height:1.6;white-space:pre-wrap;margin-bottom:12px;">${escHtml(m.mesaj)}</div>
+      <div style="display:flex;gap:8px;">
+        ${necitit ? `<button onclick="markMesajCitit(${m.id})" style="background:#1a6b3a;border:none;color:#a3e635;font-size:11px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;">✓ Marchează citit</button>` : ''}
+        <button onclick="deleteMesaj(${m.id})" style="background:transparent;border:1px solid #334155;color:#64748b;font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer;">✕ Șterge</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markMesajCitit(id) {
+  await sb.from('contact_messages').update({ citit: true }).eq('id', id);
+  loadMesaje();
+}
+
+async function deleteMesaj(id) {
+  if (!confirm('Ștergi acest mesaj definitiv?')) return;
+  await sb.from('contact_messages').delete().eq('id', id);
+  loadMesaje();
 }
 
 async function loadCapturi() {
@@ -1654,6 +1725,7 @@ async function bootAdmin(user) {
   loadBalti();
   loadStats();
   updateCapturiPendingBadge();
+  updateMesajePendingBadge();
 }
 
 // Pornire la load — citim din localStorage
