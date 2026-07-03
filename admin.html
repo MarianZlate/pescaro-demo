@@ -2102,6 +2102,7 @@ function addEditStand() {
   toggleEditStand(newId);
 }
 
+window._galFotoUploading = window._galFotoUploading || new Set();
 function addEditGalerie(standId) {
   // Creează un input file invizibil și îl triggăm
   const input = document.createElement('input');
@@ -2126,6 +2127,8 @@ function addEditGalerie(standId) {
     loadDiv.innerHTML = '<div style="font-size:18px;animation:spin .8s linear infinite;">⏳</div>';
     wrap.insertBefore(loadDiv, addBtn);
 
+    const uploadKey = standId + ':' + Date.now();
+    window._galFotoUploading.add(uploadKey);
     try {
       const url = await uploadToR2(file, 'standuri');
       loadDiv.className = 'gal-thumb-edit';
@@ -2136,6 +2139,7 @@ function addEditGalerie(standId) {
       loadDiv.remove();
       showToast('❌ Eroare upload: ' + e.message, true);
     }
+    window._galFotoUploading.delete(uploadKey);
     input.remove();
   });
 
@@ -2218,6 +2222,10 @@ function setEditViz(status) {
 async function saveEditBalta() {
   const b = editBaltaData;
   if(!b) return;
+  if(window._galFotoUploading && window._galFotoUploading.size > 0) {
+    showToast('⏳ Așteaptă să se termine încărcarea pozelor din galerie, apoi apasă din nou Salvează.', true);
+    return;
+  }
   const saveBtn = document.getElementById('edit-save-btn');
   saveBtn.disabled = true; saveBtn.textContent = '⏳ Se salvează...';
 
@@ -2303,9 +2311,17 @@ async function saveEditBalta() {
     window._editHartaRemoved = false;
   }
 
-  // Standuri șterse de admin (delEditStand) — le ștergem acum efectiv din BD,
-  // împreună cu pozele lor din galerie, ca să nu rămână date orfane
+  // Standuri șterse de admin (delEditStand) — le ștergem acum efectiv din BD.
+  // Standul poate avea capturi aprobate care îl referențiază (constrângere FK) — le "dezlegăm"
+  // (stand_id = null) în loc să le ștergem, ca să nu pierdem istoricul de capturi din cauza
+  // ștergerii unui stand. Apoi ștergem pozele din galerie și, la final, standul.
   for(const delId of _deletedStandIds) {
+    const { error: capErr } = await sb.from('capturi').update({ stand_id: null }).eq('stand_id', delId);
+    if(capErr) {
+      showToast('❌ Standul ' + delId + ' are capturi asociate ce nu au putut fi dezlegate: ' + capErr.message, true);
+      saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
+      return;
+    }
     await sb.from('poze').delete().eq('stand_id', delId);
     const { error: delErr } = await sb.from('standuri').delete().eq('id', delId);
     if(delErr) {
@@ -2336,9 +2352,14 @@ async function saveEditBalta() {
 
     let standId;
     if(isNew) {
-      const { data: newStand } = await sb.from('standuri').insert({
+      const { data: newStand, error: newStandErr } = await sb.from('standuri').insert({
         balta_id: editBaltaId, nume: zona, adancime: ad, distanta: di, latime: la, yt
       }).select('id').single();
+      if(newStandErr) {
+        showToast('❌ Standul „' + zona + '" nu s-a putut crea: ' + newStandErr.message, true);
+        saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
+        return;
+      }
       standId = newStand?.id;
       if(standId) {
         const recPayload = {};
@@ -2397,7 +2418,8 @@ async function saveEditBalta() {
         }
         // Inserteaza pozele noi
         for(const url of newUrls) {
-          await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
+          const { error: pozeErr } = await sb.from('poze').insert({ balta_id: editBaltaId, stand_id: standId, url });
+          if(pozeErr) showToast('⚠️ O poză din galeria standului „' + zona + '" nu s-a salvat: ' + pozeErr.message, true);
         }
       }
     }
