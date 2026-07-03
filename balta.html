@@ -760,8 +760,8 @@ async function loadBalta(id) {
     return {
       id: s.id,
       nr: i + 1,
-      x: pozitie.x != null ? pozitie.x : (30 + (i % 5) * 10),
-      y: pozitie.y != null ? pozitie.y : (30 + Math.floor(i / 5) * 20),
+      x: pozitie.x != null ? pozitie.x : Math.min(96, 4 + i * 4),
+      y: pozitie.y != null ? pozitie.y : 6,
       z: s.nume || ('Stand ' + (i+1)),
       ad: s.adancime || 0,
       di: s.distanta || 0,
@@ -850,8 +850,8 @@ async function refreshBaltaInBackground(id, cacheKey) {
       var pozeFotou = poze.filter(function(p){ return p.stand_id === s.id; }).map(function(p){ return {u: p.url, c: s.nume}; });
       return {
         id: s.id, nr: i+1,
-        x: pozitie.x != null ? pozitie.x : (30 + (i%5)*10),
-        y: pozitie.y != null ? pozitie.y : (30 + Math.floor(i/5)*20),
+        x: pozitie.x != null ? pozitie.x : Math.min(96, 4 + i * 4),
+        y: pozitie.y != null ? pozitie.y : 6,
         z: s.nume || ('Stand '+(i+1)),
         ad: s.adancime||0, di: s.distanta||0, la: s.latime||0, yt: s.yt||'',
         r: { kg: s.rec_kg!=null?String(s.rec_kg):'', pe: s.rec_pescar||'', pid: s.rec_pescar_id||'', da: s.rec_data||'', foto: s.rec_foto||'' },
