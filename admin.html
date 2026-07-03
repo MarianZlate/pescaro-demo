@@ -1018,6 +1018,28 @@ async function loadCapturi() {
 }
 
 // ── RESIZE IMAGE (Canvas API) ─────────────────────────────────────────────────
+// ── CONVERSIE HEIC → JPEG ────────────────────────────────────────────────────
+// HEIC (format implicit poze iPhone) nu poate fi afișat de niciun browser în afară
+// de Safari — nici măcar Canvas API nu-l poate decoda. Îl convertim automat în JPEG
+// înainte de upload, cu o librărie WASM dedicată, încărcată o singură dată la nevoie.
+function isHeicFile(file) {
+  return /^image\/hei[cf]/i.test(file.type || '') || /\.hei[cf]$/i.test(file.name || '');
+}
+async function ensureNotHeic(file) {
+  if (!isHeicFile(file)) return file;
+  if (!window.heic2any) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+      s.onload = resolve; s.onerror = () => reject(new Error('nu s-a putut încărca librăria de conversie'));
+      document.head.appendChild(s);
+    });
+  }
+  const converted = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+  const blob = Array.isArray(converted) ? converted[0] : converted;
+  return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+}
+
 function resizeImage(file, maxWidth, maxHeight, quality) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -2130,7 +2152,8 @@ function addEditGalerie(standId) {
     const uploadKey = standId + ':' + Date.now();
     window._galFotoUploading.add(uploadKey);
     try {
-      const url = await uploadToR2(file, 'standuri');
+      const readyFile = await ensureNotHeic(file);
+      const url = await uploadToR2(readyFile, 'standuri');
       loadDiv.className = 'gal-thumb-edit';
       loadDiv.style.cssText = '';
       loadDiv.innerHTML = `<img src="${escHtml(url)}" loading="lazy"/><button class="gal-thumb-del" onclick="this.parentElement.remove()" title="Șterge">✕</button>`;
@@ -2147,9 +2170,20 @@ function addEditGalerie(standId) {
 }
 
 // ── POZA RECORD STAND ────────────────────────────────────────────────────────
-function onRecFotoFile(input, standId) {
-  const file = input.files[0];
+async function onRecFotoFile(input, standId) {
+  let file = input.files[0];
   if(!file) return;
+
+  if(isHeicFile(file)) {
+    const status = document.getElementById('se-rec-status-' + standId);
+    if(status) { status.textContent = '⏳ Se convertește din HEIC...'; status.className = 'rec-upload-status uploading'; }
+    try { file = await ensureNotHeic(file); }
+    catch(e) {
+      if(status) { status.textContent = '❌ ' + e.message; status.className = 'rec-upload-status err'; }
+      showToast('❌ Poza e în format HEIC (iPhone) și nu s-a putut converti automat. Alege o poză JPG/PNG, sau schimbă din Setări iPhone → Cameră → Formate → „Cel mai compatibil".', true);
+      return;
+    }
+  }
 
   // Preview local imediat
   const reader = new FileReader();
@@ -2798,10 +2832,19 @@ document.addEventListener('click',e=>{const w=document.getElementById('ab-judet-
 
 // ── STANDURI ──────────────────────────────────────────────────────────────────
 window._standFotoUploading = new Set();
-function previewStandFoto(nr,input){
+async function previewStandFoto(nr,input){
   var file=input.files[0];if(!file)return;
   var prev=document.getElementById('s'+nr+'-foto-preview');
   var cb=document.getElementById('s'+nr+'-foto-clear');
+  if(isHeicFile(file)){
+    prev.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#4b5563;"><span style="font-size:18px;">⏳</span>Conversie HEIC...</div>';
+    try { file = await ensureNotHeic(file); }
+    catch(e){
+      prev.innerHTML='<span style="font-size:24px;">📷</span><span>Adaugă poză</span>';
+      showToast('❌ Poza e în format HEIC (iPhone) și nu s-a putut converti automat. Alege o poză JPG/PNG, sau schimbă din Setări iPhone → Cameră → Formate → „Cel mai compatibil".', true);
+      return;
+    }
+  }
   var r=new FileReader();
   r.onload=function(e){
     prev.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:7px;"/><div style="position:absolute;inset:0;background:rgba(10,15,26,.55);display:flex;align-items:center;justify-content:center;font-size:16px;" id="s'+nr+'-foto-spin">⏳</div>';
