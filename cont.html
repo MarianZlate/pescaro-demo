@@ -160,11 +160,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .pescar-opt-name{font-size:12px;font-weight:700;color:#f1f5f9;}
 .pescar-opt-zoda{font-size:10px;color:#4b5563;}
 
-/* Video upload */
-.video-zone{border:2px dashed #1e293b;border-radius:12px;padding:20px 16px;text-align:center;cursor:pointer;background:#0d1014;transition:border-color .2s;}
-.video-zone:hover{border-color:#7c3aed;}
-.video-zone.has-file{border-color:#7c3aed;background:#0d0a1a;}
-
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
 .toast.show{opacity:1;transform:translateY(0);}
@@ -510,17 +505,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <input type="file" id="mc-foto-input" accept="image/*" style="display:none;" onchange="onFotoSelect(this)" />
       </div>
 
-      <!-- Upload video dovadă -->
-      <div class="fg">
-        <label>VIDEOCLIP DOVADĂ *</label>
-        <div class="video-zone" id="zona-video" onclick="document.getElementById('mc-video-input').click()">
-          <div style="font-size:24px;margin-bottom:6px;">🎬</div>
-          <div style="font-size:12px;font-weight:700;color:#64748b;" id="video-zone-text">Click sau trage videoclipul aici</div>
-          <div style="font-size:10px;color:#334155;margin-top:3px;">MP4, MOV — fără limită de dimensiune — arhivat 15 zile, accesat doar de admini</div>
-        </div>
-        <input type="file" id="mc-video-input" accept="video/*" style="display:none;" onchange="onVideoSelect(this)" />
-      </div>
-
       <!-- Progress upload -->
       <div id="mc-progress" style="display:none;margin-bottom:14px;">
         <div style="font-size:11px;color:#64748b;margin-bottom:6px;" id="mc-progress-text">Se uploadează...</div>
@@ -548,7 +532,6 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 
 // ── Cloudflare Workers endpoints ──────────────────────────────────────────────
 const WORKER_R2_UPLOAD     = 'https://zoda-r2-upload.marianzlate90.workers.dev';
-const WORKER_R2_PRESIGN    = 'https://zoda-r2-presign.marianzlate90.workers.dev';
 // ── Cloudinary eliminat — upload via Cloudflare R2 ──────────────────────────
 // Funcție centralizată cu progress pentru R2
 async function uploadToR2(file, folder, onProgress) {
@@ -570,162 +553,6 @@ async function uploadToR2(file, folder, onProgress) {
   });
 }
 
-// Upload video pe bucăți (multipart) — rezistent la conexiuni instabile/semnal slab.
-// Dacă o bucată eșuează, se reia DOAR acea bucată (până la 10 încercări, cu pauze
-// tot mai lungi). Dacă TOT eșuează, progresul rămâne salvat — la un nou "Trimite"
-// (fără să schimbi fișierul), continuă de unde a rămas, nu ia totul de la capăt.
-const CHUNK_SIZE = 512 * 1024; // ⚠️ TEMPORAR 512KB pentru diagnostic — sub minimul R2 (5MB), NU lăsa așa în producție
-let _multipartState = null; // { fileRef, key, uploadId, parts, nextPartNumber }
-
-async function uploadToR2Presigned(file, folder, onProgress) {
-  // Fișiere mici — nu are rost să complicăm, upload dintr-o bucată
-  // ⚠️ TEMPORAR pentru diagnostic: forțăm mereu upload dintr-o bucată (varianta veche,
-  // simplă), indiferent de mărime, ca să vedem dacă asta funcționează pe acest telefon.
-  return uploadSingleShot(file, folder, onProgress);
-  if (file.size <= CHUNK_SIZE) {
-    return uploadSingleShot(file, folder, onProgress);
-  }
-
-  const totalParts = Math.ceil(file.size / CHUNK_SIZE);
-  let key, uploadId, parts, startPart;
-
-  // Reluăm un upload neterminat pentru ACELAȘI fișier, dacă a mai fost încercat
-  if (_multipartState && _multipartState.fileRef === file) {
-    ({ key, uploadId, parts } = _multipartState);
-    startPart = _multipartState.nextPartNumber;
-    if (onProgress) onProgress(Math.round(((startPart - 1) / totalParts) * 100), `Reluăm de la bucata ${startPart}/${totalParts}...`);
-  } else {
-    const createParams = new URLSearchParams({
-      action: 'create', folder, filename: file.name || 'file', contentType: file.type || 'application/octet-stream',
-    });
-    const createRes = await fetch(`${WORKER_R2_PRESIGN}?${createParams.toString()}`, { method: 'POST' });
-    const createData = await createRes.json();
-    if (!createData.uploadId) throw new Error(createData.error || 'Nu s-a putut iniția upload-ul.');
-    key = createData.key; uploadId = createData.uploadId;
-    parts = [];
-    startPart = 1;
-    _multipartState = { fileRef: file, key, uploadId, parts, nextPartNumber: 1, publicUrl: createData.publicUrl };
-  }
-
-  let uploadedBytes = (startPart - 1) * CHUNK_SIZE;
-
-  for (let partNumber = startPart; partNumber <= totalParts; partNumber++) {
-    const start = (partNumber - 1) * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE, file.size);
-    const chunk = file.slice(start, end);
-
-    let etag;
-    try {
-      etag = await uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts, (chunkLoaded) => {
-        if (onProgress) {
-          const pct = Math.round(((uploadedBytes + chunkLoaded) / file.size) * 100);
-          onProgress(pct, `Video: ${pct}% (bucata ${partNumber}/${totalParts})`);
-        }
-      });
-    } catch (e) {
-      // NU anulăm uploadul pe R2 — rămâne salvat, ca să putem relua la următoarea încercare
-      throw e;
-    }
-
-    parts.push({ partNumber, etag });
-    uploadedBytes += chunk.size;
-    _multipartState.nextPartNumber = partNumber + 1;
-  }
-
-  // Toate bucățile au reușit — finalizăm
-  const completeRes = await fetch(`${WORKER_R2_PRESIGN}?action=complete`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key, uploadId, parts }),
-  });
-  const completeData = await completeRes.json();
-  if (!completeData.success) throw new Error(completeData.error || 'Finalizare upload eșuată.');
-
-  const publicUrl = _multipartState.publicUrl;
-  _multipartState = null; // gata, curățăm starea
-  return publicUrl;
-}
-
-// Așteaptă să revină conexiunea, dacă browserul o detectează ca fiind offline chiar acum
-function waitForOnline(maxWaitMs) {
-  return new Promise(resolve => {
-    if (navigator.onLine !== false) return resolve();
-    const timer = setTimeout(() => { window.removeEventListener('online', onOnline); resolve(); }, maxWaitMs);
-    function onOnline() { clearTimeout(timer); window.removeEventListener('online', onOnline); resolve(); }
-    window.addEventListener('online', onOnline);
-  });
-}
-
-// O bucată, cu reîncercare proprie — până la 10 încercări, cu pauze exponențiale
-// (1s, 2s, 4s, 8s, 16s, 30s, 30s...) și așteptare activă dacă telefonul chiar
-// și-a pierdut semnalul complet (nu doar e lent).
-async function uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts, onChunkProgress, attempt = 1) {
-  const MAX_ATTEMPTS = 10;
-  try {
-    return await uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress);
-  } catch (e) {
-    console.error(`[upload video] bucata ${partNumber}/${totalParts}, încercarea ${attempt}/${MAX_ATTEMPTS} a eșuat:`, e);
-    if (attempt < MAX_ATTEMPTS) {
-      await waitForOnline(60000);
-      const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
-      await new Promise(r => setTimeout(r, backoffMs));
-      return uploadChunkWithRetry(key, uploadId, partNumber, chunk, totalParts, onChunkProgress, attempt + 1);
-    }
-    // Păstrăm eroarea REALĂ (nu una generică), ca să știm exact ce s-a întâmplat
-    throw new Error(`Bucata ${partNumber}/${totalParts} tot eșuează după ${MAX_ATTEMPTS} încercări — cauza reală: „${e.message}". Progresul e salvat, apasă din nou „Trimite" să continue de aici.`);
-  }
-}
-
-function uploadChunkOnce(key, uploadId, partNumber, chunk, onChunkProgress) {
-  return new Promise((resolve, reject) => {
-    // Bucata trece prin Worker-ul nostru (nu direct browser → R2) — evită orice
-    // blocaj de rețea/telefon specific domeniului R2; browserul vorbește doar
-    // cu domeniul nostru workers.dev, care s-a dovedit accesibil.
-    const params = new URLSearchParams({ action: 'upload-part', key, uploadId, partNumber: String(partNumber) });
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${WORKER_R2_PRESIGN}?${params.toString()}`);
-    xhr.upload.onprogress = e => { if (e.lengthComputable && onChunkProgress) onChunkProgress(e.loaded); };
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          if (data.etag) resolve(data.etag);
-          else reject(new Error(data.error || 'Worker nu a returnat ETag.'));
-        } catch (parseErr) {
-          reject(new Error(`Răspuns invalid de la worker: ${(xhr.responseText || '').slice(0, 150)}`));
-        }
-      } else {
-        reject(new Error(`Worker a respins bucata cu status ${xhr.status}: ${(xhr.responseText || '').slice(0, 150)}`));
-      }
-    };
-    xhr.onerror = () => reject(new Error(`xhr.onerror (status: ${xhr.status}, readyState: ${xhr.readyState}) la upload către worker`));
-    xhr.send(chunk);
-  });
-}
-
-// Upload dintr-o bucată — folosit doar pentru fișiere sub 8MB (nu justifică multipart)
-async function uploadSingleShot(file, folder, onProgress) {
-  const params = new URLSearchParams({
-    folder, filename: file.name || 'file', contentType: file.type || 'application/octet-stream',
-  });
-  const presignRes = await fetch(`${WORKER_R2_PRESIGN}?${params.toString()}`, { method: 'POST' });
-  const presignData = await presignRes.json();
-  if (!presignData.uploadUrl) throw new Error(presignData.error || 'Nu s-a putut genera URL de upload.');
-
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('PUT', presignData.uploadUrl);
-    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
-    xhr.onload = () => {
-      if (xhr.status === 200 || xhr.status === 204) resolve(presignData.publicUrl);
-      else reject(new Error(`Eroare upload R2: ${xhr.status}`));
-    };
-    xhr.onerror = () => reject(new Error('Eroare rețea la upload video.'));
-    xhr.send(file);
-  });
-}
-
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, storageKey: 'zoda-auth' }
 });
@@ -737,7 +564,6 @@ let _baltaAdminId = null; // balta_id curentă pentru modal captură
 let _baltaAdminNume = '';
 let _pescarSelectat = null; // { id, zoda_id, username, avatar_url }
 let _fotoFile = null;
-let _videoFile = null;
 let _pescarSearchTimer = null;
 
 // ── TOAST ────────────────────────────────────────────────────────────────────
@@ -898,8 +724,6 @@ async function openCaptura(baltaId, baltaNume) {
   _baltaAdminNume = baltaNume;
   _pescarSelectat = null;
   _fotoFile = null;
-  _videoFile = null;
-  _multipartState = null;
   document.getElementById('mc-stand').innerHTML = '<option value="">Selectează standul...</option>';
   document.getElementById('mc-kg').value = '';
   document.getElementById('mc-data').value = new Date().toISOString().split('T')[0];
@@ -912,14 +736,11 @@ async function openCaptura(baltaId, baltaNume) {
   document.getElementById('pescar-selectat').style.display = 'none';
   document.getElementById('pescar-dropdown').classList.remove('open');
   document.getElementById('zona-foto').classList.remove('has-file');
-  document.getElementById('zona-video').classList.remove('has-file');
   document.getElementById('foto-preview').style.display = 'none';
-  document.getElementById('video-zone-text').textContent = 'Click sau trage videoclipul aici';
   document.getElementById('mc-err').style.display = 'none';
   document.getElementById('mc-progress').style.display = 'none';
   document.getElementById('mc-balta-name').textContent = baltaNume;
   document.getElementById('mc-foto-input').value = '';
-  document.getElementById('mc-video-input').value = '';
 
   // Reset buton submit
   const btn = document.getElementById('mc-submit-btn');
@@ -947,8 +768,6 @@ function closeCaptura() {
   document.getElementById('modal-captura').classList.remove('open');
   // Resetăm fișierele și formularul complet
   _fotoFile  = null;
-  _videoFile = null;
-  _multipartState = null;
   document.getElementById('mc-kg').value = '';
   document.getElementById('mc-data').value = '';
   document.getElementById('mc-stand').innerHTML = '<option value="">Selectează standul...</option>';
@@ -959,11 +778,8 @@ function closeCaptura() {
   document.getElementById('pescar-manual-wrap').style.display = 'none';
   document.getElementById('pescar-selectat').style.display = 'none';
   document.getElementById('zona-foto').classList.remove('has-file');
-  document.getElementById('zona-video').classList.remove('has-file');
   const fotoPreview = document.getElementById('foto-preview');
   if (fotoPreview) fotoPreview.style.display = 'none';
-  const videoText = document.getElementById('video-zone-text');
-  if (videoText) videoText.textContent = 'Click sau trage videoclipul aici';
   document.getElementById('mc-err').style.display = 'none';
   document.getElementById('mc-progress').style.display = 'none';
   checkFormValid();
@@ -1107,23 +923,6 @@ function onFotoSelect(input) {
   });
 }
 
-// Video select
-const MAX_VIDEO_MB = 2000; // 2GB — reîncercarea automată la eroare de rețea se ocupă de restul
-function onVideoSelect(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const sizeMB = file.size / 1024 / 1024;
-  if (sizeMB > MAX_VIDEO_MB) {
-    showErr(`Videoclipul e prea mare (${sizeMB.toFixed(0)} MB). Maxim ${MAX_VIDEO_MB} MB — filmează mai scurt sau la o calitate mai mică.`);
-    input.value = '';
-    return;
-  }
-  _videoFile = file;
-  document.getElementById('zona-video').classList.add('has-file');
-  document.getElementById('video-zone-text').textContent = `✓ ${file.name} (${sizeMB.toFixed(1)} MB)`;
-  checkFormValid();
-}
-
 // ── VALIDARE FORMULAR MODAL ───────────────────────────────────────────────────
 function checkFormValid() {
   const standId   = document.getElementById('mc-stand').value;
@@ -1138,8 +937,7 @@ function checkFormValid() {
     (kg > 0 && !isNaN(kg)) &&
     !!data &&
     (faraCont ? !!pescarMan : !!pescarId) &&
-    !!_fotoFile &&
-    !!_videoFile;
+    !!_fotoFile;
 
   const btn = document.getElementById('mc-submit-btn');
   if (!btn) return;
@@ -1153,7 +951,7 @@ function checkFormValid() {
     btn.style.background = '#1e293b';
     btn.style.color      = '#4b5563';
     btn.style.cursor     = 'not-allowed';
-    btn.title            = 'Completează toate câmpurile, adaugă fotografie și videoclip';
+    btn.title            = 'Completează toate câmpurile și adaugă o fotografie';
   }
 }
 
@@ -1199,18 +997,11 @@ async function submitCaptura() {
   try {
     // 1. Upload foto
     setProgress(5, 'Se uploadează fotografia...');
-    const fotoUrl = await uploadToR2(_fotoFile, 'capturi', pct => setProgress(5 + pct * 0.6, `Foto: ${pct}%`));
-
-    // 2. Upload video dovadă captură direct pe R2 prin presigned URL (dacă există)
-    let videoUrl = null;
-    if (_videoFile) {
-      setProgress(60, 'Se uploadează videoclipul...');
-      videoUrl = await uploadToR2Presigned(_videoFile, 'video-capturi', (pct, msg) => setProgress(60 + pct * 0.35, msg || `Video: ${pct}%`));
-    }
+    const fotoUrl = await uploadToR2(_fotoFile, 'capturi', pct => setProgress(5 + pct * 0.95, `Foto: ${pct}%`));
 
     setProgress(96, 'Se salvează cererea...');
 
-    // 3. Insert în capturi
+    // 2. Insert în capturi
     const { error } = await sb.from('capturi').insert({
       balta_id:     _baltaAdminId,
       stand_id:     parseInt(standId),
@@ -1219,7 +1010,6 @@ async function submitCaptura() {
       kg:           kg,
       data_captura: data,
       foto_url:     fotoUrl,
-      video_url:    videoUrl,
       status:       'pending',
       submitted_by: currentUser.id,
     });
