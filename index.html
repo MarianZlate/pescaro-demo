@@ -457,8 +457,8 @@ nav{display:flex;align-items:center;gap:6px;}
 
 <!-- MODAL CONTACT -->
 <div id="contact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-  <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:480px;margin:0 16px;overflow:hidden;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;background:#0a0f1a;">
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:480px;margin:0 16px;max-height:88vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;background:#0a0f1a;position:sticky;top:0;">
       <div>
         <div style="font-size:18px;font-weight:900;color:#f1f5f9;">📞 Contact</div>
         <div style="font-size:12px;color:#4b5563;margin-top:3px;">Suntem aici să te ajutăm</div>
@@ -466,13 +466,6 @@ nav{display:flex;align-items:center;gap:6px;}
       <button onclick="closeContactModal()" style="background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;">✕</button>
     </div>
     <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
-      <div id="contact-email-card" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
-        <div style="font-size:28px;">📧</div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">EMAIL</div>
-          <a id="contact-email-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
-        </div>
-      </div>
       <div id="contact-phone-card" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
         <div style="font-size:28px;">📞</div>
         <div>
@@ -488,6 +481,21 @@ nav{display:flex;align-items:center;gap:6px;}
         </div>
       </a>
       <div id="contact-social-row" style="display:none;gap:12px;justify-content:center;padding-top:4px;"></div>
+
+      <div style="border-top:1px solid #1e293b;margin:2px 0;"></div>
+
+      <div id="contact-form-wrap" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;">✉️ SAU SCRIE-NE UN MESAJ</div>
+        <input type="text" id="cf-nume" placeholder="Numele tău" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
+        <input type="email" id="cf-email" placeholder="Emailul tău" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
+        <textarea id="cf-mesaj" placeholder="Mesajul tău..." rows="3" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;resize:vertical;font-family:inherit;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"></textarea>
+        <div style="display:flex;justify-content:center;">
+          <div id="turnstile-contact" class="cf-turnstile" data-sitekey="0x4AAAAAADvJsgO0e3tWAKX2" data-theme="dark" data-callback="onContactTurnstileOk" data-expired-callback="onContactTurnstileExpired"></div>
+        </div>
+        <button onclick="submitContactForm()" id="cf-submit-btn" style="background:#1a6b3a;border:none;color:#a3e635;font-weight:700;padding:11px;border-radius:8px;cursor:pointer;font-size:13px;">Trimite mesajul</button>
+        <div id="cf-status" style="font-size:12px;text-align:center;min-height:16px;"></div>
+      </div>
+
       <div id="contact-loading" style="text-align:center;color:#4b5563;font-size:13px;padding:8px 0;display:none;">Se încarcă informațiile de contact...</div>
     </div>
   </div>
@@ -1945,16 +1953,11 @@ function closeContactModal() {
 
 function renderContactModal(s) {
   s = s || {};
-  const email = s.contact_email || 'contact@zoda.ro';
   const phone = s.contact_phone || '';
   const wa    = s.contact_whatsapp || '';
   const fb    = s.social_facebook || '';
   const ig    = s.social_instagram || '';
   const yt    = s.social_youtube || '';
-
-  const eEl = document.getElementById('contact-email-link');
-  eEl.textContent = email;
-  eEl.href = 'mailto:' + email;
 
   const pCard = document.getElementById('contact-phone-card');
   const pEl = document.getElementById('contact-phone-link');
@@ -1986,6 +1989,64 @@ function renderContactModal(s) {
   socialRow.style.display = socialHtml ? 'flex' : 'none';
 }
 
+// ── FORMULAR DE CONTACT ───────────────────────────────────────────────────────
+let _contactTurnstileOk = false;
+function onContactTurnstileOk(){ _contactTurnstileOk = true; }
+function onContactTurnstileExpired(){ _contactTurnstileOk = false; }
+
+async function submitContactForm() {
+  const nume  = document.getElementById('cf-nume').value.trim();
+  const email = document.getElementById('cf-email').value.trim();
+  const mesaj = document.getElementById('cf-mesaj').value.trim();
+  const statusEl = document.getElementById('cf-status');
+  const btn = document.getElementById('cf-submit-btn');
+
+  statusEl.style.color = '#ef4444';
+  if(!nume)  { statusEl.textContent = 'Completează numele.'; return; }
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { statusEl.textContent = 'Completează un email valid.'; return; }
+  if(!mesaj || mesaj.length < 10) { statusEl.textContent = 'Scrie un mesaj de minim 10 caractere.'; return; }
+
+  const token = (typeof turnstile !== 'undefined') ? turnstile.getResponse('turnstile-contact') : '';
+  if(!_contactTurnstileOk || !token) { statusEl.textContent = 'Te rugăm să confirmi că nu ești un robot.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Se verifică...';
+  statusEl.style.color = '#64748b'; statusEl.textContent = '';
+
+  try {
+    const verifyRes = await fetch(WORKER_TURNSTILE_VERIFY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const verifyData = await verifyRes.json();
+    if(!verifyData.success) {
+      statusEl.style.color = '#ef4444'; statusEl.textContent = 'Verificarea anti-robot a eșuat. Reîncearcă.';
+      btn.disabled = false; btn.textContent = 'Trimite mesajul';
+      if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-contact');
+      _contactTurnstileOk = false;
+      return;
+    }
+  } catch(e) {
+    statusEl.style.color = '#ef4444'; statusEl.textContent = 'Eroare de conexiune. Reîncearcă.';
+    btn.disabled = false; btn.textContent = 'Trimite mesajul';
+    return;
+  }
+
+  btn.textContent = 'Se trimite...';
+  const { error } = await sb.from('contact_messages').insert({ nume, email, mesaj });
+  btn.disabled = false; btn.textContent = 'Trimite mesajul';
+  if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-contact');
+  _contactTurnstileOk = false;
+
+  if(error) {
+    statusEl.style.color = '#ef4444'; statusEl.textContent = 'Nu s-a putut trimite: ' + error.message;
+    return;
+  }
+  document.getElementById('cf-nume').value = '';
+  document.getElementById('cf-email').value = '';
+  document.getElementById('cf-mesaj').value = '';
+  statusEl.style.color = '#a3e635'; statusEl.textContent = '✓ Mesaj trimis! Îți răspundem cât mai curând.';
+}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(msg) {
@@ -2681,7 +2742,7 @@ function getStanduriData() {
         <label for="reg-terms" style="font-size:11px;color:#94a3b8;line-height:1.5;cursor:pointer;">Sunt de acord cu <a href="termeni.html" target="_blank" style="color:#a3e635;">Termenii și Condițiile</a> și <a href="confidentialitate.html" target="_blank" style="color:#a3e635;">Politica de Confidențialitate</a></label>
       </div>
       <div style="margin-bottom:14px;display:flex;justify-content:center;">
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAADvJsgO0e3tWAKX2" data-theme="dark" data-callback="onTurnstileOk" data-expired-callback="onTurnstileExpired"></div>
+        <div id="turnstile-register" class="cf-turnstile" data-sitekey="0x4AAAAAADvJsgO0e3tWAKX2" data-theme="dark" data-callback="onTurnstileOk" data-expired-callback="onTurnstileExpired"></div>
       </div>
       <button class="auth-btn" id="reg-btn" onclick="doRegister()">Creează cont</button>
       <div class="auth-divider">sau</div>
@@ -2777,7 +2838,7 @@ async function doRegister() {
   if(!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pass)) { authShowErr('Parola trebuie să conțină cel puțin un caracter special (ex: ! @ # $).'); return; }
   if(!document.getElementById('reg-terms').checked) { authShowErr('Trebuie să fii de acord cu Termenii și Politica de Confidențialitate.'); return; }
 
-  const turnstileToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse() : '';
+  const turnstileToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse('turnstile-register') : '';
   if(!_turnstileOk || !turnstileToken) { authShowErr('Te rugăm să confirmi că nu ești un robot.'); return; }
 
   const btn = document.getElementById('reg-btn');
@@ -2793,7 +2854,7 @@ async function doRegister() {
     if(!verifyData.success) {
       authShowErr('Verificarea anti-robot a eșuat. Reîncearcă.');
       btn.disabled = false; btn.textContent = 'Creează cont';
-      if(typeof turnstile !== 'undefined') turnstile.reset();
+      if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-register');
       _turnstileOk = false;
       return;
     }
@@ -2806,7 +2867,7 @@ async function doRegister() {
   btn.textContent = 'Se creează contul...';
   const { data, error } = await sb.auth.signUp({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Creează cont';
-  if(typeof turnstile !== 'undefined') turnstile.reset();
+  if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-register');
   _turnstileOk = false;
   if(error) { authShowErr(error.message); return; }
   if(data.user) {
