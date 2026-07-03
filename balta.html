@@ -452,9 +452,11 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   <div id="map-sidebar">
     <div id="map-sidebar-left">
     <div id="pw" style="margin:0;">
-      <span class="pl">Selectează rapid:</span>
-      <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🛣️ Drum de acces</button>
-      <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;">
+        <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🛣️ Drum de acces</button>
+        <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
+      </div>
+      <div style="width:100%;font-size:11px;color:#4b5563;margin-top:2px;">👆 Apasă de două ori pe un stand ca să-i vezi poza și detaliile</div>
       <div id="pills"></div>
     </div><!-- /#pw -->
 
