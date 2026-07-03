@@ -1901,6 +1901,7 @@ async function openEditBalta(id) {
   document.getElementById('edit-modal-sub').textContent   = '📍 ' + (b.judet || '') + ' · Modifică informațiile, standurile și media';
   document.getElementById('edit-body').innerHTML = buildEditBody(b, ext);
   document.getElementById('edit-save-btn').disabled = false;
+  _deletedStandIds = [];
 }
 
 function closeEditBalta() {
@@ -2084,9 +2085,13 @@ function toggleEditStand(id) {
   arrow.textContent = open ? '▾' : '▸';
 }
 
+let _deletedStandIds = [];
 function delEditStand(id) {
   if(!confirm('Ștergi standul? Această acțiune este ireversibilă.')) return;
   document.getElementById('se-card-' + id)?.remove();
+  // id-urile standurilor existente (din BD) sunt numere mici (serial); cele noi,
+  // nesalvate încă, au id = Date.now() (13 cifre) — pe alea nu are rost să le ștergem din BD
+  if(String(id).length <= 10) _deletedStandIds.push(id);
 }
 
 function addEditStand() {
@@ -2297,6 +2302,19 @@ async function saveEditBalta() {
     await sb.from('poze').delete().eq('balta_id', editBaltaId).is('stand_id', null);
     window._editHartaRemoved = false;
   }
+
+  // Standuri șterse de admin (delEditStand) — le ștergem acum efectiv din BD,
+  // împreună cu pozele lor din galerie, ca să nu rămână date orfane
+  for(const delId of _deletedStandIds) {
+    await sb.from('poze').delete().eq('stand_id', delId);
+    const { error: delErr } = await sb.from('standuri').delete().eq('id', delId);
+    if(delErr) {
+      showToast('❌ Nu s-a putut șterge standul ' + delId + ': ' + delErr.message, true);
+      saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
+      return;
+    }
+  }
+  _deletedStandIds = [];
 
   // Salvează standuri: update cele existente, insert cele noi
   const cards = document.querySelectorAll('#edit-stands-wrap .se-card');
@@ -2590,6 +2608,11 @@ async function abSubmit() {
   const submitBtn = document.getElementById('ab-submit-btn');
   submitBtn.disabled=true; submitBtn.textContent='⏳ Se salvează...';
   const standuriData = getStanduriData();
+  if(window._standFotoUploading && window._standFotoUploading.size > 0) {
+    showToast('⏳ Așteaptă să se termine încărcarea pozelor de stand, apoi apasă din nou Salvează.', true);
+    submitBtn.disabled=false; submitBtn.textContent='✓ Salvează balta';
+    return;
+  }
   const {data:baltaSaved, error:baltaErr} = await sb.from('balti').insert({
     nume, judet:document.getElementById('ab-judet').value||'—',
     adresa:document.getElementById('ab-adresa').value.trim(),
@@ -2610,7 +2633,10 @@ async function abSubmit() {
     const { data: profil } = await sb.from('user_profiles').select('id').eq('zoda_id', adminZodaId).single();
     if (profil?.id) await sb.from('user_roles').upsert({ id: profil.id, rol: 'balta_admin' }, { onConflict: 'id' });
   }
-  if(standuriData.length>0) await sb.from('standuri').insert(standuriData.map(s=>({balta_id:baltaId,nume:s.nume,adancime:s.adancime||null,distanta:s.distanta||null,latime:s.latime||null,yt:s.yt||''})));
+  if(standuriData.length>0) {
+    const { error: standInsErr } = await sb.from('standuri').insert(standuriData.map(s=>({balta_id:baltaId,nume:s.nume,adancime:s.adancime||null,distanta:s.distanta||null,latime:s.latime||null,yt:s.yt||'',rec_foto:s.foto||null})));
+    if(standInsErr) showToast('⚠️ Standurile nu s-au salvat complet: '+standInsErr.message, true);
+  }
   // Upload hartă
   const hartaUrl=window._hartaUrl, hartaFile=window._hartaFile;
   if(hartaUrl){
@@ -2741,8 +2767,34 @@ function judetKeydown(e){
 document.addEventListener('click',e=>{const w=document.getElementById('ab-judet-search')?.closest('.fg');if(w&&!w.contains(e.target))judetClose();});
 
 // ── STANDURI ──────────────────────────────────────────────────────────────────
-function previewStandFoto(nr,input){var file=input.files[0];if(!file)return;var prev=document.getElementById('s'+nr+'-foto-preview');var cb=document.getElementById('s'+nr+'-foto-clear');var r=new FileReader();r.onload=function(e){prev.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:7px;"/>';prev.style.border='1.5px solid #1a6b3a';if(cb)cb.style.display='block';};r.readAsDataURL(file);}
-function clearStandFoto(nr){var i=document.getElementById('s'+nr+'-foto');var p=document.getElementById('s'+nr+'-foto-preview');var c=document.getElementById('s'+nr+'-foto-clear');if(i)i.value='';if(p){p.innerHTML='<span style="font-size:24px;">📷</span><span>Adaugă poză</span>';p.style.border='1.5px dashed #1e293b';}if(c)c.style.display='none';}
+window._standFotoUploading = new Set();
+function previewStandFoto(nr,input){
+  var file=input.files[0];if(!file)return;
+  var prev=document.getElementById('s'+nr+'-foto-preview');
+  var cb=document.getElementById('s'+nr+'-foto-clear');
+  var r=new FileReader();
+  r.onload=function(e){
+    prev.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:7px;"/><div style="position:absolute;inset:0;background:rgba(10,15,26,.55);display:flex;align-items:center;justify-content:center;font-size:16px;" id="s'+nr+'-foto-spin">⏳</div>';
+    prev.style.position='relative';
+    prev.style.border='1.5px solid #1a6b3a';
+    delete prev.dataset.url;
+    if(cb)cb.style.display='block';
+    window._standFotoUploading.add(nr);
+    uploadToR2(file,'standuri').then(function(url){
+      prev.dataset.url=url;
+      var spin=document.getElementById('s'+nr+'-foto-spin');
+      if(spin)spin.remove();
+      window._standFotoUploading.delete(nr);
+    }).catch(function(err){
+      var spin=document.getElementById('s'+nr+'-foto-spin');
+      if(spin)spin.remove();
+      window._standFotoUploading.delete(nr);
+      showToast('❌ Poza standului '+nr+' nu s-a putut încărca: '+err.message,true);
+    });
+  };
+  r.readAsDataURL(file);
+}
+function clearStandFoto(nr){var i=document.getElementById('s'+nr+'-foto');var p=document.getElementById('s'+nr+'-foto-preview');var c=document.getElementById('s'+nr+'-foto-clear');if(i)i.value='';if(p){p.innerHTML='<span style="font-size:24px;">📷</span><span>Adaugă poză</span>';p.style.border='1.5px dashed #1e293b';delete p.dataset.url;}if(c)c.style.display='none';window._standFotoUploading.delete(nr);}
 function addStand(){
   abStandCount++;const nr=abStandCount;const container=document.getElementById('stands-container');const div=document.createElement('div');div.className='stand-item';div.id='stand-'+nr;
   div.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:28px;height:28px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;">${nr}</div><input type="text" id="s${nr}-nume" value="Stand ${nr}" style="flex:1;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:6px 10px;color:#f1f5f9;font-size:13px;font-weight:700;outline:none;" placeholder="Denumire stand" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/><button class="stand-del" onclick="delStand(${nr})">✕</button></div>
@@ -2756,7 +2808,7 @@ function addStand(){
   container.appendChild(div);
 }
 function delStand(nr){const el=document.getElementById('stand-'+nr);if(el)el.remove();}
-function getStanduriData(){return Array.from(document.querySelectorAll('.stand-item')).map((item,i)=>{const nr=i+1;const pfx=item.id.replace('stand-','s');const pi=document.querySelector('#'+pfx+'-foto-preview img');return{nr,nume:document.getElementById(pfx+'-nume')?.value||('Stand '+nr),adancime:parseFloat(document.getElementById(pfx+'-ad')?.value)||0,distanta:parseInt(document.getElementById(pfx+'-di')?.value)||0,latime:parseInt(document.getElementById(pfx+'-la')?.value)||0,yt:document.getElementById(pfx+'-yt')?.value||'',foto:pi?pi.src:''};});}
+function getStanduriData(){return Array.from(document.querySelectorAll('.stand-item')).map((item,i)=>{const nr=i+1;const pfx=item.id.replace('stand-','s');const pv=document.getElementById(pfx+'-foto-preview');return{nr,nume:document.getElementById(pfx+'-nume')?.value||('Stand '+nr),adancime:parseFloat(document.getElementById(pfx+'-ad')?.value)||0,distanta:parseInt(document.getElementById(pfx+'-di')?.value)||0,latime:parseInt(document.getElementById(pfx+'-la')?.value)||0,yt:document.getElementById(pfx+'-yt')?.value||'',foto:pv?.dataset.url||''};});}
 
 // ── HARTĂ CANVAS ADD-BALTA ────────────────────────────────────────────────────
 (function(){
