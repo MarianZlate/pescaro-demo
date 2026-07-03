@@ -2316,9 +2316,17 @@ async function saveEditBalta() {
   // (stand_id = null) în loc să le ștergem, ca să nu pierdem istoricul de capturi din cauza
   // ștergerii unui stand. Apoi ștergem pozele din galerie și, la final, standul.
   for(const delId of _deletedStandIds) {
-    const { error: capErr } = await sb.from('capturi').update({ stand_id: null }).eq('stand_id', delId);
+    const { error: capErr } = await sb.rpc('unlink_stand_capturi', { p_stand_id: delId });
     if(capErr) {
-      showToast('❌ Standul ' + delId + ' are capturi asociate ce nu au putut fi dezlegate: ' + capErr.message, true);
+      showToast('❌ Standul ' + delId + ' are capturi asociate ce nu au putut fi dezlegate: ' + capErr.message + ' — rulează SQL-ul de configurare (vezi mesajul din chat).', true);
+      saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
+      return;
+    }
+    // Verificare suplimentară: dacă funcția RPC nu există încă în BD sau nu a prins toate rândurile,
+    // nu continuăm orbește către DELETE (ar da din nou eroare de foreign key) — verificăm explicit.
+    const { count: rmnCount } = await sb.from('capturi').select('id', { count: 'exact', head: true }).eq('stand_id', delId);
+    if(rmnCount && rmnCount > 0) {
+      showToast('❌ Standul ' + delId + ' tot are ' + rmnCount + ' capturi legate — rulează SQL-ul de configurare (vezi mesajul din chat) și încearcă din nou.', true);
       saveBtn.disabled = false; saveBtn.textContent = '💾 Salvează modificările';
       return;
     }
