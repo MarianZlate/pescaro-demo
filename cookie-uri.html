@@ -1,1 +1,86 @@
 
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Politica Cookie-uri — Zoda</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;line-height:1.7;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:#0a0f1a;}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
+
+#hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);}
+#hdr-in{max-width:800px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-img{height:28px;width:auto;display:block;}
+.back-link{font-size:12px;color:#94a3b8;text-decoration:none;border:1px solid #1e293b;padding:6px 12px;border-radius:8px;transition:border-color .2s,color .2s;}
+.back-link:hover{border-color:#a3e635;color:#a3e635;}
+
+main{max-width:800px;margin:0 auto;padding:32px 20px 80px;}
+h1{font-size:24px;font-weight:900;color:#f1f5f9;margin-bottom:6px;}
+.updated{font-size:12px;color:#4b5563;margin-bottom:28px;}
+h2{font-size:16px;font-weight:800;color:#a3e635;margin:28px 0 10px;}
+p{color:#cbd5e1;margin-bottom:12px;}
+ul{color:#cbd5e1;margin:0 0 12px 20px;}
+li{margin-bottom:6px;}
+strong{color:#f1f5f9;}
+a{color:#a3e635;}
+.box{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px 18px;margin:16px 0;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #1e293b;color:#cbd5e1;}
+th{color:#94a3b8;font-weight:700;}
+footer{max-width:800px;margin:0 auto;padding:20px;text-align:center;font-size:11px;color:#334155;}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div id="hdr-in">
+    <a class="logo" href="index.html" onclick="try{sessionStorage.removeItem('zoda_index_state');}catch(e){}">
+      <img src="zoda-logo.png" alt="Zoda" class="logo-img"/>
+    </a>
+    <a class="back-link" href="index.html">← Înapoi la Zoda</a>
+  </div>
+</div>
+
+<main>
+  <h1>🍪 Politica Cookie-uri</h1>
+  <div class="updated">Ultima actualizare: iulie 2026</div>
+
+  <p>Această pagină explică ce fișiere cookie și ce tehnologii similare de stocare locală folosește platforma Zoda (denumită în continuare „Platforma"), și de ce.</p>
+
+  <h2>1. Ce folosim de fapt</h2>
+  <div class="box">
+    <p><strong>Zoda nu folosește cookie-uri de tracking, publicitate sau analiză a comportamentului (ex. Google Analytics, pixeli Facebook).</strong></p>
+    <p>Folosim exclusiv stocare strict necesară funcționării site-ului — tehnic, majoritatea acestor date sunt păstrate prin <code>localStorage</code>/<code>sessionStorage</code> ale browserului, nu prin cookie-uri clasice trimise către server la fiecare cerere.</p>
+  </div>
+
+  <table>
+    <tr><th>Nume</th><th>Scop</th><th>Durată</th></tr>
+    <tr><td><code>zoda-auth</code></td><td>Menține sesiunea de autentificare (ești logat sau nu)</td><td>Până la deconectare</td></tr>
+    <tr><td><code>zoda_cookie_notice_seen</code></td><td>Reține că ai văzut bannerul de informare despre cookie-uri, ca să nu-ți mai apară</td><td>Permanent, până ștergi datele browserului</td></tr>
+    <tr><td>Cache local pentru bălți/hartă</td><td>Încărcare mai rapidă la revizitare, nu se trimite către niciun server</td><td>Câteva ore</td></tr>
+  </table>
+
+  <p>Dacă infrastructura noastră de găzduire (Cloudflare) setează cookie-uri tehnice proprii, strict necesare pentru rutare, balansare de trafic sau securitate (ex. protecție anti-DDoS), acestea nu sunt controlate direct de noi și cad sub incidența politicii de confidențialitate a furnizorului — vezi <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">politica Cloudflare</a>.</p>
+
+  <h2>2. De ce nu cerem consimțământ separat</h2>
+  <p>Conform legislației, cookie-urile <strong>strict necesare</strong> funcționării unui serviciu (autentificare, coș/preferințe, securitate) nu necesită consimțământul explicit al utilizatorului — doar informare. De aceea afișăm un banner informativ la prima vizită, nu un formular de acceptare cu opțiuni multiple.</p>
+
+  <h2>3. Cum le poți controla</h2>
+  <p>Poți șterge oricând aceste date din setările browserului tău (de obicei: Setări → Confidențialitate → Șterge date de navigare). Reține că ștergerea <code>zoda-auth</code> te va deconecta din cont, iar site-ul va trebui să reîncarce anumite informații de la zero.</p>
+
+  <h2>4. Modificări</h2>
+  <p>Dacă vom introduce în viitor instrumente de analiză a traficului sau alte tehnologii care necesită consimțământ, vom actualiza această pagină și vom afișa un nou banner de consimțământ, distinct de cel actual.</p>
+
+  <h2>5. Contact</h2>
+  <p>Pentru întrebări legate de această politică: <a href="mailto:contact@zoda.ro">contact@zoda.ro</a></p>
+</main>
+
+<footer>Zoda © 2026 · <a href="termeni.html" style="color:#4b5563;">Termeni și Condiții</a> · <a href="confidentialitate.html" style="color:#4b5563;">Confidențialitate</a></footer>
+
+</body>
+</html>
