@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 /* ============================================================
    RESET & BAZĂ COMUNĂ
@@ -2679,6 +2680,9 @@ function getStanduriData() {
         <input type="checkbox" id="reg-terms"/>
         <label for="reg-terms" style="font-size:11px;color:#94a3b8;line-height:1.5;cursor:pointer;">Sunt de acord cu <a href="termeni.html" target="_blank" style="color:#a3e635;">Termenii și Condițiile</a> și <a href="confidentialitate.html" target="_blank" style="color:#a3e635;">Politica de Confidențialitate</a></label>
       </div>
+      <div style="margin-bottom:14px;display:flex;justify-content:center;">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAADvJsgO0e3tWAKX2" data-theme="dark" data-callback="onTurnstileOk" data-expired-callback="onTurnstileExpired"></div>
+      </div>
       <button class="auth-btn" id="reg-btn" onclick="doRegister()">Creează cont</button>
       <div class="auth-divider">sau</div>
       <button class="auth-google" onclick="doGoogleLogin()">
@@ -2750,6 +2754,11 @@ async function doLogin() {
   // closeAuthModal() va fi chemat de onAuthStateChange SIGNED_IN
 }
 
+const WORKER_TURNSTILE_VERIFY = 'https://zoda-turnstile-verify.marianzlate90.workers.dev';
+let _turnstileOk = false;
+function onTurnstileOk(){ _turnstileOk = true; }
+function onTurnstileExpired(){ _turnstileOk = false; }
+
 async function doRegister() {
   const username = document.getElementById('reg-username').value.trim();
   const email = document.getElementById('reg-email').value.trim();
@@ -2763,10 +2772,38 @@ async function doRegister() {
   if(!/[a-zA-Z]/.test(pass) || !/[0-9]/.test(pass)) { authShowErr('Parola trebuie să conțină atât litere, cât și cifre.'); return; }
   if(!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pass)) { authShowErr('Parola trebuie să conțină cel puțin un caracter special (ex: ! @ # $).'); return; }
   if(!document.getElementById('reg-terms').checked) { authShowErr('Trebuie să fii de acord cu Termenii și Politica de Confidențialitate.'); return; }
+
+  const turnstileToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse() : '';
+  if(!_turnstileOk || !turnstileToken) { authShowErr('Te rugăm să confirmi că nu ești un robot.'); return; }
+
   const btn = document.getElementById('reg-btn');
-  btn.disabled = true; btn.textContent = 'Se creează contul...';
+  btn.disabled = true; btn.textContent = 'Se verifică...';
+
+  try {
+    const verifyRes = await fetch(WORKER_TURNSTILE_VERIFY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: turnstileToken }),
+    });
+    const verifyData = await verifyRes.json();
+    if(!verifyData.success) {
+      authShowErr('Verificarea anti-robot a eșuat. Reîncearcă.');
+      btn.disabled = false; btn.textContent = 'Creează cont';
+      if(typeof turnstile !== 'undefined') turnstile.reset();
+      _turnstileOk = false;
+      return;
+    }
+  } catch(e) {
+    authShowErr('Nu am putut verifica anti-robot — verifică conexiunea și reîncearcă.');
+    btn.disabled = false; btn.textContent = 'Creează cont';
+    return;
+  }
+
+  btn.textContent = 'Se creează contul...';
   const { data, error } = await sb.auth.signUp({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Creează cont';
+  if(typeof turnstile !== 'undefined') turnstile.reset();
+  _turnstileOk = false;
   if(error) { authShowErr(error.message); return; }
   if(data.user) {
     const uid = data.user.id;
