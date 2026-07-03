@@ -760,8 +760,8 @@ async function loadBalta(id) {
     return {
       id: s.id,
       nr: i + 1,
-      x: pozitie.x != null ? pozitie.x : Math.min(96, 4 + i * 4),
-      y: pozitie.y != null ? pozitie.y : 6,
+      x: pozitie.x != null ? pozitie.x : (4 + (i % 23) * 4),
+      y: pozitie.y != null ? pozitie.y : (6 + Math.floor(i / 23) * 10),
       z: s.nume || ('Stand ' + (i+1)),
       ad: s.adancime || 0,
       di: s.distanta || 0,
@@ -850,8 +850,8 @@ async function refreshBaltaInBackground(id, cacheKey) {
       var pozeFotou = poze.filter(function(p){ return p.stand_id === s.id; }).map(function(p){ return {u: p.url, c: s.nume}; });
       return {
         id: s.id, nr: i+1,
-        x: pozitie.x != null ? pozitie.x : Math.min(96, 4 + i * 4),
-        y: pozitie.y != null ? pozitie.y : 6,
+        x: pozitie.x != null ? pozitie.x : (4 + (i % 23) * 4),
+        y: pozitie.y != null ? pozitie.y : (6 + Math.floor(i / 23) * 10),
         z: s.nume || ('Stand '+(i+1)),
         ad: s.adancime||0, di: s.distanta||0, la: s.latime||0, yt: s.yt||'',
         r: { kg: s.rec_kg!=null?String(s.rec_kg):'', pe: s.rec_pescar||'', pid: s.rec_pescar_id||'', da: s.rec_data||'', foto: s.rec_foto||'' },
@@ -1265,6 +1265,16 @@ function showError(msg) {
 }
 
 // ─── PINS ──────────────────────────────────────────────────────────────────
+function pinScale() {
+  // Cu mai multe standuri pe hartă, pin-urile se micșorează treptat — la fel de
+  // multe, dar mai puțin loc ocupat fiecare, ca să nu se contopească într-o pată.
+  var n = ST.length;
+  if (n <= 15) return 1;
+  if (n <= 25) return 0.85;
+  if (n <= 40) return 0.72;
+  return 0.6;
+}
+
 function pinSVG(label, active, editing) {
   var glow       = editing ? 'drop-shadow(0 0 4px rgba(124,58,237,.7))' : 'drop-shadow(0 1px 4px rgba(0,0,0,.9))';
   var ballCol    = active ? '#f59e0b' : editing ? '#a78bfa' : '#e8142a';
@@ -1275,7 +1285,13 @@ function pinSVG(label, active, editing) {
   var isMobile = window.innerWidth <= 768;
   var tailY2   = isMobile ? 22 : 27;
   var svgH     = isMobile ? 23 : 28;
-  return '<svg width="20" height="'+svgH+'" viewBox="0 0 20 '+svgH+'" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;overflow:visible;">'
+  var scale    = pinScale();
+  var w        = (20 * scale).toFixed(2);
+  var h        = (svgH * scale).toFixed(2);
+  // viewBox rămâne neschimbat — doar dimensiunea randată (width/height) se micșorează,
+  // deci tot desenul (bilă + text + coadă) se scalează uniform, iar poziționarea
+  // (translate(-50%,-100%) din CSS) rămâne corectă automat, pe noua mărime.
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 20 '+svgH+'" xmlns="http://www.w3.org/2000/svg" style="filter:'+glow+';display:block;overflow:visible;">'
     +'<circle cx="10" cy="9" r="8" fill="rgba(0,0,0,.3)" transform="translate(1,1)"/>'
     +'<circle cx="10" cy="9" r="8" fill="'+ballCol+'" stroke="'+ballStroke+'" stroke-width="1.2"/>'
     +'<ellipse cx="6.5" cy="5.5" rx="3" ry="2" fill="rgba(255,255,255,.35)" transform="rotate(-30,6.5,5.5)"/>'
