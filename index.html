@@ -2006,7 +2006,7 @@ async function submitContactForm() {
   if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { statusEl.textContent = 'Completează un email valid.'; return; }
   if(!mesaj || mesaj.length < 10) { statusEl.textContent = 'Scrie un mesaj de minim 10 caractere.'; return; }
 
-  const token = (typeof turnstile !== 'undefined') ? turnstile.getResponse('turnstile-contact') : '';
+  const token = (typeof turnstile !== 'undefined') ? turnstile.getResponse(document.getElementById('turnstile-contact')) : '';
   if(!_contactTurnstileOk || !token) { statusEl.textContent = 'Te rugăm să confirmi că nu ești un robot.'; return; }
 
   btn.disabled = true; btn.textContent = 'Se verifică...';
@@ -2022,7 +2022,7 @@ async function submitContactForm() {
     if(!verifyData.success) {
       statusEl.style.color = '#ef4444'; statusEl.textContent = 'Verificarea anti-robot a eșuat. Reîncearcă.';
       btn.disabled = false; btn.textContent = 'Trimite mesajul';
-      if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-contact');
+      if(typeof turnstile !== 'undefined') turnstile.reset(document.getElementById('turnstile-contact'));
       _contactTurnstileOk = false;
       return;
     }
@@ -2035,7 +2035,7 @@ async function submitContactForm() {
   btn.textContent = 'Se trimite...';
   const { error } = await sb.from('contact_messages').insert({ nume, email, mesaj });
   btn.disabled = false; btn.textContent = 'Trimite mesajul';
-  if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-contact');
+  if(typeof turnstile !== 'undefined') turnstile.reset(document.getElementById('turnstile-contact'));
   _contactTurnstileOk = false;
 
   if(error) {
@@ -2838,7 +2838,7 @@ async function doRegister() {
   if(!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pass)) { authShowErr('Parola trebuie să conțină cel puțin un caracter special (ex: ! @ # $).'); return; }
   if(!document.getElementById('reg-terms').checked) { authShowErr('Trebuie să fii de acord cu Termenii și Politica de Confidențialitate.'); return; }
 
-  const turnstileToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse('turnstile-register') : '';
+  const turnstileToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse(document.getElementById('turnstile-register')) : '';
   if(!_turnstileOk || !turnstileToken) { authShowErr('Te rugăm să confirmi că nu ești un robot.'); return; }
 
   const btn = document.getElementById('reg-btn');
@@ -2854,7 +2854,7 @@ async function doRegister() {
     if(!verifyData.success) {
       authShowErr('Verificarea anti-robot a eșuat. Reîncearcă.');
       btn.disabled = false; btn.textContent = 'Creează cont';
-      if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-register');
+      if(typeof turnstile !== 'undefined') turnstile.reset(document.getElementById('turnstile-register'));
       _turnstileOk = false;
       return;
     }
@@ -2867,7 +2867,7 @@ async function doRegister() {
   btn.textContent = 'Se creează contul...';
   const { data, error } = await sb.auth.signUp({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Creează cont';
-  if(typeof turnstile !== 'undefined') turnstile.reset('turnstile-register');
+  if(typeof turnstile !== 'undefined') turnstile.reset(document.getElementById('turnstile-register'));
   _turnstileOk = false;
   if(error) { authShowErr(error.message); return; }
   if(data.user) {
