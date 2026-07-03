@@ -1351,6 +1351,8 @@ function selStand(id) {
   document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
   var selectedStand = ST.find(function(x) { return x.id === id; });
   showMapYT(selectedStand);
+  var mapWrap = document.getElementById('map-wrap');
+  if (mapWrap) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function openOverlay(id) {
