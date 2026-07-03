@@ -1269,10 +1269,15 @@ function pinScale() {
   // Cu mai multe standuri pe hartă, pin-urile se micșorează treptat — la fel de
   // multe, dar mai puțin loc ocupat fiecare, ca să nu se contopească într-o pată.
   var n = ST.length;
-  if (n <= 15) return 1;
-  if (n <= 25) return 0.85;
-  if (n <= 40) return 0.72;
-  return 0.6;
+  var base;
+  if (n <= 15) base = 1;
+  else if (n <= 25) base = 0.85;
+  else if (n <= 40) base = 0.72;
+  else base = 0.6;
+  // Pe mobil, harta e mult mai îngustă — același procent de distanță între
+  // standuri înseamnă mult mai puțini pixeli reali, deci micșorăm suplimentar.
+  if (window.innerWidth <= 768) base = Math.max(0.38, base * 0.55);
+  return base;
 }
 
 function pinSVG(label, active, editing) {
