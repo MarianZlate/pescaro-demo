@@ -347,6 +347,16 @@ nav{display:flex;align-items:center;gap:6px;}
 #footer-links a{color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:color .2s;}
 #footer-links a:hover{color:#a3e635;}
 #footer-bottom{max-width:1100px;margin:0 auto;padding:0 20px 22px;font-size:11px;color:#334155;}
+#footer-legal{max-width:1100px;margin:0 auto;padding:0 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-top:1px solid #1e293b;padding-top:18px;}
+#footer-company{font-size:11px;color:#4b5563;line-height:1.6;}
+#footer-company strong{color:#64748b;}
+#footer-sal{display:flex;flex-direction:column;align-items:center;justify-content:center;width:250px;height:50px;border-radius:8px;background:#111827;border:1px solid #1e293b;text-decoration:none;flex-shrink:0;transition:border-color .2s;}
+#footer-sal:hover{border-color:#a3e635;}
+.sal-badge-txt{font-size:14px;font-weight:900;color:#a3e635;letter-spacing:.05em;line-height:1.2;}
+.sal-badge-sub{font-size:9px;color:#64748b;line-height:1.2;text-align:center;padding:0 8px;}
+@media (max-width:600px){
+  #footer-legal{flex-direction:column;align-items:flex-start;}
+}
 @media (max-width:520px){
   #footer-inner{flex-direction:column;align-items:flex-start;}
 }
@@ -543,8 +553,18 @@ nav{display:flex;align-items:center;gap:6px;}
     <div id="footer-links">
       <a href="termeni.html">Termeni și Condiții</a>
       <a href="confidentialitate.html">Politica de Confidențialitate</a>
+      <a href="cookie-uri.html">Politica Cookie-uri</a>
       <a onclick="openContactModal();return false;" href="#">Contact</a>
     </div>
+  </div>
+  <div id="footer-legal">
+    <div id="footer-company">
+      <strong>[Denumire firmă — DE COMPLETAT]</strong> · CUI [DE COMPLETAT] · Reg. Com. [DE COMPLETAT] · Sediu: [DE COMPLETAT]
+    </div>
+    <a href="https://reclamatiisal.anpc.ro/" target="_blank" rel="noopener" id="footer-sal" title="Soluționarea Alternativă a Litigiilor — ANPC">
+      <span class="sal-badge-txt">SAL</span>
+      <span class="sal-badge-sub">Soluționarea Alternativă a Litigiilor</span>
+    </a>
   </div>
   <div id="footer-bottom">Zoda © 2026</div>
 </footer>
@@ -2739,7 +2759,9 @@ async function doRegister() {
   if(username.length < 2) { authShowErr('Numele trebuie să aibă minim 2 caractere.'); return; }
   if(!email || !pass)     { authShowErr('Completează toate câmpurile.'); return; }
   if(pass !== pass2)      { authShowErr('Parolele nu coincid.'); return; }
-  if(pass.length < 6)     { authShowErr('Parola trebuie să aibă minim 6 caractere.'); return; }
+  if(pass.length < 8)     { authShowErr('Parola trebuie să aibă minim 8 caractere.'); return; }
+  if(!/[a-zA-Z]/.test(pass) || !/[0-9]/.test(pass)) { authShowErr('Parola trebuie să conțină atât litere, cât și cifre.'); return; }
+  if(!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pass)) { authShowErr('Parola trebuie să conțină cel puțin un caracter special (ex: ! @ # $).'); return; }
   if(!document.getElementById('reg-terms').checked) { authShowErr('Trebuie să fii de acord cu Termenii și Politica de Confidențialitate.'); return; }
   const btn = document.getElementById('reg-btn');
   btn.disabled = true; btn.textContent = 'Se creează contul...';
@@ -3499,6 +3521,13 @@ function closeGuestToast() {
       if(!localStorage.getItem('zoda_cookie_notice_seen')){
         var el = document.getElementById('cookie-notice');
         if(el) el.classList.add('show');
+        // Dispare automat la primul click sau scroll de pe site (după o mică
+        // întârziere, ca să nu dispară instant pe click-ul care a încărcat pagina)
+        setTimeout(function(){
+          window.addEventListener('scroll', zodaAcceptCookieNotice, { once: true, passive: true });
+          window.addEventListener('click',  zodaAcceptCookieNotice, { once: true });
+          window.addEventListener('touchstart', zodaAcceptCookieNotice, { once: true, passive: true });
+        }, 1200);
       }
     }catch(e){}
   }
