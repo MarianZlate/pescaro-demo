@@ -192,6 +192,28 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   #avatar-img,.avatar-initials{width:88px;height:88px;font-size:30px;}
   .avatar-edit-btn{width:28px;height:28px;font-size:13px;}
 }
+
+/* ── FOOTER ────────────────────────────────────────────────────────────── */
+#site-footer{border-top:1px solid #1e293b;background:#0a0f1a;margin-top:32px;}
+#footer-inner{max-width:1100px;margin:0 auto;padding:28px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-logo-img{height:24px;width:auto;display:block;opacity:.85;}
+#footer-links{display:flex;flex-wrap:wrap;gap:20px;}
+#footer-links a{color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:color .2s;}
+#footer-links a:hover{color:#a3e635;}
+#footer-bottom{max-width:1100px;margin:0 auto;padding:0 20px 22px;font-size:11px;color:#334155;}
+#footer-legal{max-width:1100px;margin:0 auto;padding:0 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-top:1px solid #1e293b;padding-top:18px;}
+#footer-company{font-size:11px;color:#4b5563;line-height:1.6;}
+#footer-company strong{color:#64748b;}
+#footer-sal{display:flex;flex-direction:column;align-items:center;justify-content:center;width:250px;height:50px;border-radius:8px;background:#111827;border:1px solid #1e293b;text-decoration:none;flex-shrink:0;transition:border-color .2s;}
+#footer-sal:hover{border-color:#a3e635;}
+.sal-badge-txt{font-size:14px;font-weight:900;color:#a3e635;letter-spacing:.05em;line-height:1.2;}
+.sal-badge-sub{font-size:9px;color:#64748b;line-height:1.2;text-align:center;padding:0 8px;}
+@media (max-width:600px){
+  #footer-legal{flex-direction:column;align-items:flex-start;}
+}
+@media (max-width:520px){
+  #footer-inner{flex-direction:column;align-items:flex-start;}
+}
 </style>
 </head>
 <body>
@@ -418,6 +440,29 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   </div>
 
 </div><!-- /#page -->
+
+<!-- FOOTER -->
+<footer id="site-footer">
+  <div id="footer-inner">
+    <img src="zoda-logo.png" alt="Zoda" class="footer-logo-img"/>
+    <div id="footer-links">
+      <a href="termeni.html">Termeni și Condiții</a>
+      <a href="confidentialitate.html">Politica de Confidențialitate</a>
+      <a href="cookie-uri.html">Politica Cookie-uri</a>
+      <a href="index.html?contact=1">Contact</a>
+    </div>
+  </div>
+  <div id="footer-legal">
+    <div id="footer-company">
+      <strong>[Denumire firmă — DE COMPLETAT]</strong> · CUI [DE COMPLETAT] · Reg. Com. [DE COMPLETAT] · Sediu: [DE COMPLETAT]
+    </div>
+    <a href="https://reclamatiisal.anpc.ro/" target="_blank" rel="noopener" id="footer-sal" title="Soluționarea Alternativă a Litigiilor — ANPC">
+      <span class="sal-badge-txt">SAL</span>
+      <span class="sal-badge-sub">Soluționarea Alternativă a Litigiilor</span>
+    </a>
+  </div>
+  <div id="footer-bottom">Zoda © 2026</div>
+</footer>
 
 <!-- ── MODAL ADAUGĂ CAPTURĂ ── -->
 <div id="modal-captura">
