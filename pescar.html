@@ -32,11 +32,27 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 #page{display:none;max-width:900px;margin:0 auto;padding:24px 14px 60px;}
 
 /* HERO CARD */
-.hero-card{background:#111827;border:1px solid #1e293b;border-radius:18px;padding:28px 24px;margin-bottom:20px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden;}
+.hero-card{background:#111827;border:1px solid #1e293b;border-radius:18px;padding:28px 24px;margin-bottom:20px;display:flex;align-items:center;flex-wrap:wrap;gap:20px;position:relative;overflow:hidden;}
 .hero-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(163,230,53,.04) 0%,transparent 60%);pointer-events:none;}
 .hero-avatar{width:80px;height:80px;border-radius:50%;background:#1a6b3a;border:3px solid #166534;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#a3e635;flex-shrink:0;overflow:hidden;}
 .hero-avatar img{width:100%;height:100%;object-fit:cover;}
 .hero-info{flex:1;min-width:0;}
+.hero-share-row{width:100%;position:relative;z-index:2;}
+.hero-share-btn{
+  background:#0a0f1a;border:1px solid #1e293b;color:#94a3b8;
+  font-size:11px;font-weight:600;padding:7px 12px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;
+  transition:border-color .2s,color .2s;width:100%;
+}
+.hero-share-btn:hover{border-color:#a3e635;color:#a3e635;}
+.hero-share-toast{
+  display:none;background:#1a6b3a;border:1px solid #a3e635;color:#a3e635;
+  font-size:12px;font-weight:700;padding:7px 14px;border-radius:8px;text-align:center;width:100%;
+}
+@media(min-width:481px){
+  .hero-share-row{width:auto;margin-left:auto;}
+  .hero-share-btn,.hero-share-toast{width:auto;}
+}
 .hero-name{font-size:22px;font-weight:900;color:#f1f5f9;margin-bottom:4px;}
 .hero-zoda{font-size:12px;color:#4b5563;font-family:monospace;margin-bottom:10px;}
 .hero-stele{display:flex;align-items:center;gap:8px;}
@@ -199,6 +215,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div class="stele-breakdown" id="hero-stele-breakdown"></div>
       </div>
     </div>
+    <div class="hero-share-row">
+      <button onclick="shareProfile()" id="share-profile-btn" title="Distribuie profilul" class="hero-share-btn">
+        🔗 <span>Distribuie profilul</span>
+      </button>
+      <div id="share-toast" class="hero-share-toast">✓ Link copiat!</div>
+    </div>
   </div>
 
   <!-- TABS -->
@@ -275,6 +297,36 @@ function switchTab(tab) {
 // Escapare generică pentru text inserat via innerHTML (previne XSS stocat)
 function escH(str) {
   return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── DISTRIBUIE PROFIL ────────────────────────────────────────────────────────
+function shareProfile() {
+  const zodaId = document.getElementById('hero-zoda')?.textContent;
+  if (!zodaId || zodaId === '—') return;
+  const url = window.location.origin + '/pescar.html?id=' + zodaId;
+  const username = document.getElementById('hero-name')?.textContent || 'Pescar Zoda';
+  const text = `Profilul lui ${username} pe Zoda (${zodaId})`;
+
+  // Web Share API — pe mobil deschide meniul nativ (WhatsApp, Facebook, etc.)
+  if (navigator.share) {
+    navigator.share({ title: 'Zoda — ' + username, text, url })
+      .catch(() => {}); // userul a anulat
+    return;
+  }
+
+  // Fallback desktop — copiază linkul
+  navigator.clipboard.writeText(url).then(() => {
+    const toast = document.getElementById('share-toast');
+    const btn = document.getElementById('share-profile-btn');
+    if (toast && btn) {
+      btn.style.display = 'none';
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+        btn.style.display = 'flex';
+      }, 2000);
+    }
+  });
 }
 
 function realizareRow(opts) {
