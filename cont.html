@@ -956,6 +956,7 @@ let _notifPage = 1;
 function notifUrl(n) {
   const meta = n.meta || {};
   if (n.tip === 'captura_respinsa' && meta.captura_id) return `cont.html?captura_respinsa=${meta.captura_id}`;
+  if ((n.tip === 'record_stand_nou' || n.tip === 'record_doborat') && meta.balta_id && meta.stand_id) return `balta.html?id=${meta.balta_id}&stand=${meta.stand_id}`;
   if (meta.balta_id) return `balta.html?id=${meta.balta_id}`;
   return null;
 }
