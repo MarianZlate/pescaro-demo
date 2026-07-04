@@ -455,6 +455,12 @@ th,td{padding:8px 6px;}
         ＋ Adaugă baltă nouă
       </button>
     </div>
+    <div style="position:relative;margin-bottom:10px;">
+      <input type="text" id="balti-search" oninput="renderBaltiTable()" placeholder="🔍 Caută după nume sau județ..."
+        style="width:100%;background:#111827;border:1px solid #1e293b;color:#f1f5f9;font-size:13px;padding:10px 36px 10px 14px;border-radius:9px;outline:none;"/>
+      <button id="balti-search-clear" onclick="document.getElementById('balti-search').value='';renderBaltiTable();" title="Șterge căutarea"
+        style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#4b5563;font-size:16px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+    </div>
     <div class="se-sort-bar" style="align-items:center;">
       <label style="font-size:11px;color:#4b5563;font-weight:700;letter-spacing:.04em;align-self:center;margin-right:2px;">SORTEAZĂ:</label>
       <select id="balti-sort-field" onchange="renderBaltiTable()" style="background:#111827;border:1px solid #1e293b;color:#e2e8f0;font-size:12px;font-weight:600;padding:7px 10px;border-radius:8px;cursor:pointer;outline:none;">
@@ -1831,7 +1837,19 @@ function renderBaltiTable() {
   const standuriCount = _baltiStanduriCount;
   const hasHarta = _baltiHasHarta;
 
-  const sorted = [..._baltiCache].sort((a, b) => {
+  const query = (document.getElementById('balti-search')?.value || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('balti-search-clear');
+  if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+
+  let filtered = _baltiCache;
+  if (query) {
+    filtered = _baltiCache.filter(b =>
+      (b.nume || '').toLowerCase().includes(query) ||
+      (b.judet || '').toLowerCase().includes(query)
+    );
+  }
+
+  const sorted = [...filtered].sort((a, b) => {
     let va, vb;
     if (field === 'nume') { va = a.nume || ''; vb = b.nume || ''; }
     else if (field === 'judet') { va = a.judet || 'zzz'; vb = b.judet || 'zzz'; }
@@ -1842,6 +1860,11 @@ function renderBaltiTable() {
     if (typeof va === 'number') return (va - vb) * dir;
     return va.localeCompare(vb, 'ro', { sensitivity: 'base' }) * dir;
   });
+
+  if (!sorted.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nicio baltă nu corespunde căutării.</td></tr>';
+    return;
+  }
 
   tbody.innerHTML = sorted.map(b => `
     <tr>
