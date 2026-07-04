@@ -972,16 +972,61 @@ function flyToBalta(id) {
 }
 
 // ── SEARCH ────────────────────────────────────────────────────────────────────
+
+// Normalizează diacriticele (ă/â→a, î→i, ș/ş→s, ț/ţ→t) ca să nu conteze la căutare
+function normStr(s) {
+  return (s || '').toLowerCase()
+    .replace(/[ăâ]/g, 'a').replace(/î/g, 'i').replace(/[șş]/g, 's').replace(/[țţ]/g, 't');
+}
+
+// Distanța de editare (Levenshtein) — câte litere trebuie schimbate/adăugate/șterse
+// ca un cuvânt să devină celălalt. Ex: "ilwana" -> "ileana" = 1.
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = new Array(n + 1);
+  let curr = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      curr[j] = a[i - 1] === b[j - 1]
+        ? prev[j - 1]
+        : 1 + Math.min(prev[j - 1], prev[j], curr[j - 1]);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
+}
+
+// Verifică dacă textul căutat "sună similar" cu vreun cuvânt din text, tolerând
+// greșeli de scriere (litere lipsă/în plus/greșite). Prag mai permisiv pentru
+// cuvinte mai lungi, ca să nu prindă potriviri accidentale pe cuvinte scurte.
+function fuzzyWordMatch(queryNorm, textNorm) {
+  if (queryNorm.length < 3) return false;
+  const words = textNorm.split(/[\s\-'"]+/).filter(w => w.length >= 3);
+  for (const w of words) {
+    const threshold = w.length <= 5 ? 1 : (w.length <= 8 ? 2 : 3);
+    if (Math.abs(w.length - queryNorm.length) > threshold) continue;
+    if (levenshtein(queryNorm, w) <= threshold) return true;
+  }
+  return false;
+}
+
 function onSearch(q) {
   document.getElementById('clear-btn').style.display = q ? 'block' : 'none';
   const dd = document.getElementById('dropdown');
   if (!q.trim()) { dd.style.display = 'none'; return; }
   const isAdmin = currentRole === 'zoda_admin';
-  const res = BALTI.filter(b =>
-    (isAdmin || b.vizibilitate === 'public') &&
-    (b.nume.toLowerCase().includes(q.toLowerCase()) ||
-     b.judet.toLowerCase().includes(q.toLowerCase()))
-  );
+  const qn = normStr(q);
+  const res = BALTI.filter(b => {
+    if (!(isAdmin || b.vizibilitate === 'public')) return false;
+    const nameN = normStr(b.nume);
+    const judetN = normStr(b.judet);
+    if (nameN.includes(qn) || judetN.includes(qn)) return true;
+    return fuzzyWordMatch(qn, nameN) || fuzzyWordMatch(qn, judetN);
+  });
   if (!res.length) {
     dd.innerHTML = '<div style="padding:14px 16px;color:#4b5563;font-size:13px;">Nicio baltă găsită</div>';
     dd.style.display = 'block';
