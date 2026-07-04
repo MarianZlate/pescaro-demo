@@ -3015,7 +3015,9 @@ async function loadNotifPanel() {
     const unread = !n.citita;
     const time   = timeAgo(n.created_at);
     const meta   = n.meta || {};
-    const url    = meta.balta_id ? `balta.html?id=${meta.balta_id}` : null;
+    const url    = (n.tip === 'captura_respinsa' && meta.captura_id)
+      ? `cont.html?captura_respinsa=${meta.captura_id}`
+      : (meta.balta_id ? `balta.html?id=${meta.balta_id}` : null);
     const clickFn = url
       ? `markNotifRead('${n.id}', this); window.location.href='${url}';`
       : `markNotifRead('${n.id}', this)`;
