@@ -420,15 +420,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       </div>
       <div id="stand-overlay-backdrop" onclick="closeOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1999;"></div>
 
-      <!-- OVERLAY GENERIC — TARIFE / REGULAMENT -->
-      <div id="info-overlay-backdrop" onclick="closeInfoOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2099;"></div>
-      <div id="info-overlay" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2100;background:#111827;border:1px solid #1e293b;border-radius:14px;width:calc(100% - 24px);max-width:480px;max-height:80vh;overflow:hidden;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.85);">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #1e293b;flex-shrink:0;">
-          <span id="info-overlay-title" style="font-weight:800;font-size:14px;color:#f1f5f9;">—</span>
-          <button onclick="closeInfoOverlay()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">✕</button>
-        </div>
-        <div id="info-overlay-body" class="info-overlay-body"></div>
-      </div>
       <div id="stand-overlay">
       <div class="ov-hdr">
         <div class="spnr" id="ov-nr">Stand 1</div>
@@ -596,6 +587,16 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   </div>
   <div id="footer-bottom">Zoda © 2026</div>
 </footer>
+
+<!-- OVERLAY GENERIC — TARIFE / REGULAMENT (in afara #map-wrap, ca sa functioneze si pt balti fara harta) -->
+<div id="info-overlay-backdrop" onclick="closeInfoOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2099;"></div>
+<div id="info-overlay" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2100;background:#111827;border:1px solid #1e293b;border-radius:14px;width:calc(100% - 24px);max-width:480px;max-height:80vh;overflow:hidden;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.85);">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #1e293b;flex-shrink:0;">
+    <span id="info-overlay-title" style="font-weight:800;font-size:14px;color:#f1f5f9;">—</span>
+    <button onclick="closeInfoOverlay()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">✕</button>
+  </div>
+  <div id="info-overlay-body" class="info-overlay-body"></div>
+</div>
 
 <!-- FULLSCREEN MODAL -->
 <div id="fs-modal" onclick="closeFS()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
