@@ -887,6 +887,9 @@ async function boot() {
   if (currentRole === 'balta_admin') {
     await loadBaltiAdmin();
     document.getElementById('section-balta-admin').style.display = 'block';
+  } else if (currentRole === 'zoda_admin') {
+    const nrBalti = await loadBaltiAdmin();
+    if (nrBalti > 0) document.getElementById('section-balta-admin').style.display = 'block';
   }
 
   document.getElementById('loading-screen').style.display = 'none';
@@ -1036,7 +1039,7 @@ function escH(str) {
 async function loadBaltiAdmin() {
   const listEl = document.getElementById('balti-admin-list');
   const zodaId = currentProfile?.zoda_id;
-  if (!zodaId) { listEl.innerHTML = '<div style="color:#334155;font-size:13px;text-align:center;padding:20px;">Nu ești asociat cu nicio baltă.</div>'; return; }
+  if (!zodaId) { listEl.innerHTML = '<div style="color:#334155;font-size:13px;text-align:center;padding:20px;">Nu ești asociat cu nicio baltă.</div>'; return 0; }
 
   const { data: balti, error } = await sb.from('balti')
     .select('id, nume, judet, vizibilitate')
@@ -1045,7 +1048,7 @@ async function loadBaltiAdmin() {
 
   if (error || !balti?.length) {
     listEl.innerHTML = '<div style="color:#334155;font-size:13px;text-align:center;padding:20px;">Nu ești asociat cu nicio baltă momentan.</div>';
-    return;
+    return 0;
   }
 
   listEl.innerHTML = balti.map(b => `
@@ -1059,6 +1062,7 @@ async function loadBaltiAdmin() {
         <a href="balta.html?id=${b.id}" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:border-color .2s;" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">↗ Vezi balta</a>
       </div>
     </div>`).join('');
+  return balti.length;
 }
 
 // ── MODAL CAPTURĂ ─────────────────────────────────────────────────────────────
