@@ -161,6 +161,7 @@ th,td{padding:8px 6px;}
 .balti-table .col-id,
 .balti-table .col-judet,
 .balti-table .col-standuri,
+.balti-table .col-harta,
 .users-table .col-data{display:none;}
 
 /* users-table: email, rol, actiuni mereu vizibile */
@@ -178,7 +179,8 @@ th,td{padding:8px 6px;}
 }
 @media(min-width:769px){
   .balti-table .col-id,
-  .balti-table .col-standuri{display:table-cell;}
+  .balti-table .col-standuri,
+  .balti-table .col-harta{display:table-cell;}
   .balti-table td,
   .users-table td{padding:12px 14px;}
 }
@@ -461,12 +463,13 @@ th,td{padding:8px 6px;}
             <th>Nume baltă</th>
             <th class="col-judet">Județ</th>
             <th class="col-standuri">Standuri</th>
+            <th class="col-harta">Hartă</th>
             <th>Status</th>
             <th>Acțiuni</th>
           </tr>
         </thead>
         <tbody id="balti-tbody">
-          <tr><td colspan="6" class="empty-state">Se încarcă...</td></tr>
+          <tr><td colspan="7" class="empty-state">Se încarcă...</td></tr>
         </tbody>
       </table>
     </div>
@@ -1766,10 +1769,10 @@ function invalidateCache(baltaId) {
 
 async function loadBalti() {
   const tbody = document.getElementById('balti-tbody');
-  tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Se încarcă...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Se încarcă...</td></tr>';
   const { data, error } = await sb.from('balti').select('*').order('created_at', { ascending: false });
   if(error || !data?.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nicio baltă înregistrată.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nicio baltă înregistrată.</td></tr>';
     return;
   }
 
@@ -1782,12 +1785,17 @@ async function loadBalti() {
     standuriCount[s.balta_id] = (standuriCount[s.balta_id] || 0) + 1;
   });
 
+  // Harta băltii = un rând în `poze` cu stand_id NULL (vezi openEditBalta).
+  const { data: hartaRows } = await sb.from('poze').select('balta_id').is('stand_id', null);
+  const hasHarta = new Set((hartaRows || []).map(p => p.balta_id));
+
   tbody.innerHTML = data.map(b => `
     <tr>
       <td class="col-id" style="color:#4b5563;font-size:11px;">#${b.id}</td>
       <td><strong style="color:#f1f5f9;">${escH(b.nume)}</strong></td>
       <td class="col-judet" style="color:#64748b;">📍 ${b.judet || '—'}</td>
       <td class="col-standuri" style="color:#64748b;">🎣 ${standuriCount[b.id] || 0}</td>
+      <td class="col-harta" style="${hasHarta.has(b.id) ? 'color:#a3e635;font-weight:700;' : 'color:#ef4444;'}">${hasHarta.has(b.id) ? 'Da' : 'Nu'}</td>
       <td>
         ${b.vizibilitate === 'public'
           ? '<span class="vis-badge vis-public">🌍 Publică</span>'
