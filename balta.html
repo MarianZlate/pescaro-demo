@@ -245,12 +245,16 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 /* ============================================================
    DESKTOP (min-width: 769px) — adăugăm peste baza mobilă
    ============================================================ */
+.info-overlay-body{padding:18px;overflow-y:auto;font-size:15.5px;color:#cbd5e1;line-height:1.8;white-space:pre-wrap;}
+
 @media(min-width:769px){
   /* HEADER */
   #hdr-in{padding:0 20px;height:52px;gap:12px;}
   #hdr-balta-name{font-size:15px;}
   #hdr-balta-loc{display:block;}
   .back-btn{padding:6px 12px;font-size:12px;}
+
+  .info-overlay-body{font-size:13px;line-height:1.7;}
 
   /* LAYOUT */
   #layout{max-width:1300px;padding:150px 20px 50px;}
@@ -423,7 +427,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
           <span id="info-overlay-title" style="font-weight:800;font-size:14px;color:#f1f5f9;">—</span>
           <button onclick="closeInfoOverlay()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">✕</button>
         </div>
-        <div id="info-overlay-body" style="padding:18px;overflow-y:auto;font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;"></div>
+        <div id="info-overlay-body" class="info-overlay-body"></div>
       </div>
       <div id="stand-overlay">
       <div class="ov-hdr">
