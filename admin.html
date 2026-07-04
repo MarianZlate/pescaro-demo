@@ -1773,12 +1773,21 @@ async function loadBalti() {
     return;
   }
 
+  // Numărul real de standuri per baltă — NU coloana `balti.standuri` (contor
+  // denormalizat care rămâne desincronizat când se adaugă/șterg standuri prin
+  // alte fluxuri, ex. wizard-ul de editare). Numărăm direct din `standuri`.
+  const { data: standuriRows } = await sb.from('standuri').select('balta_id');
+  const standuriCount = {};
+  (standuriRows || []).forEach(s => {
+    standuriCount[s.balta_id] = (standuriCount[s.balta_id] || 0) + 1;
+  });
+
   tbody.innerHTML = data.map(b => `
     <tr>
       <td class="col-id" style="color:#4b5563;font-size:11px;">#${b.id}</td>
       <td><strong style="color:#f1f5f9;">${escH(b.nume)}</strong></td>
       <td class="col-judet" style="color:#64748b;">📍 ${b.judet || '—'}</td>
-      <td class="col-standuri" style="color:#64748b;">🎣 ${b.standuri || 0}</td>
+      <td class="col-standuri" style="color:#64748b;">🎣 ${standuriCount[b.id] || 0}</td>
       <td>
         ${b.vizibilitate === 'public'
           ? '<span class="vis-badge vis-public">🌍 Publică</span>'
