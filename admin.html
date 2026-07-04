@@ -455,6 +455,17 @@ th,td{padding:8px 6px;}
         ＋ Adaugă baltă nouă
       </button>
     </div>
+    <div class="se-sort-bar" style="align-items:center;">
+      <label style="font-size:11px;color:#4b5563;font-weight:700;letter-spacing:.04em;align-self:center;margin-right:2px;">SORTEAZĂ:</label>
+      <select id="balti-sort-field" onchange="renderBaltiTable()" style="background:#111827;border:1px solid #1e293b;color:#e2e8f0;font-size:12px;font-weight:600;padding:7px 10px;border-radius:8px;cursor:pointer;outline:none;">
+        <option value="nume">Alfabetic (nume)</option>
+        <option value="judet">Județ</option>
+        <option value="vizibilitate">Listed / Public</option>
+        <option value="harta">Hartă (Da/Nu)</option>
+      </select>
+      <button class="se-sort-btn" onclick="setBaltiSortDir('asc')" id="balti-sort-asc" style="border-color:#a3e635;color:#a3e635;">🔼 Crescător</button>
+      <button class="se-sort-btn" onclick="setBaltiSortDir('desc')" id="balti-sort-desc">🔽 Descrescător</button>
+    </div>
     <div class="table-wrap">
       <table class="balti-table">
         <thead>
@@ -1769,6 +1780,11 @@ function invalidateCache(baltaId) {
   } catch(e) {}
 }
 
+let _baltiCache = [];
+let _baltiStanduriCount = {};
+let _baltiHasHarta = new Set();
+let _baltiSortDir = 'asc';
+
 async function loadBalti() {
   const tbody = document.getElementById('balti-tbody');
   tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Se încarcă...</td></tr>';
@@ -1791,7 +1807,43 @@ async function loadBalti() {
   const { data: hartaRows } = await sb.from('poze').select('balta_id').is('stand_id', null);
   const hasHarta = new Set((hartaRows || []).map(p => p.balta_id));
 
-  tbody.innerHTML = data.map(b => `
+  _baltiCache = data;
+  _baltiStanduriCount = standuriCount;
+  _baltiHasHarta = hasHarta;
+  renderBaltiTable();
+}
+
+function setBaltiSortDir(dir) {
+  _baltiSortDir = dir;
+  document.getElementById('balti-sort-asc').style.borderColor = dir === 'asc' ? '#a3e635' : '#1e293b';
+  document.getElementById('balti-sort-asc').style.color = dir === 'asc' ? '#a3e635' : '#94a3b8';
+  document.getElementById('balti-sort-desc').style.borderColor = dir === 'desc' ? '#a3e635' : '#1e293b';
+  document.getElementById('balti-sort-desc').style.color = dir === 'desc' ? '#a3e635' : '#94a3b8';
+  renderBaltiTable();
+}
+
+function renderBaltiTable() {
+  const tbody = document.getElementById('balti-tbody');
+  if (!_baltiCache.length) return;
+
+  const field = document.getElementById('balti-sort-field')?.value || 'nume';
+  const dir = _baltiSortDir === 'desc' ? -1 : 1;
+  const standuriCount = _baltiStanduriCount;
+  const hasHarta = _baltiHasHarta;
+
+  const sorted = [..._baltiCache].sort((a, b) => {
+    let va, vb;
+    if (field === 'nume') { va = a.nume || ''; vb = b.nume || ''; }
+    else if (field === 'judet') { va = a.judet || 'zzz'; vb = b.judet || 'zzz'; }
+    else if (field === 'vizibilitate') { va = a.vizibilitate || ''; vb = b.vizibilitate || ''; }
+    else if (field === 'harta') { va = hasHarta.has(a.id) ? 1 : 0; vb = hasHarta.has(b.id) ? 1 : 0; }
+    else { va = a.nume || ''; vb = b.nume || ''; }
+
+    if (typeof va === 'number') return (va - vb) * dir;
+    return va.localeCompare(vb, 'ro', { sensitivity: 'base' }) * dir;
+  });
+
+  tbody.innerHTML = sorted.map(b => `
     <tr>
       <td class="col-id" style="color:#4b5563;font-size:11px;">#${b.id}</td>
       <td><strong style="color:#f1f5f9;">${escH(b.nume)}</strong></td>
@@ -1810,7 +1862,7 @@ async function loadBalti() {
             : `<button class="btn-unlist" onclick="setBaltaVis(${b.id},'unlisted')">🔒 Unlisted</button>`}
           <button class="btn-edit" onclick="openEditBalta(${b.id})">✏️ Editează</button>
           <a class="btn-view" href="balta.html?id=${b.id}&edit=1">👁️ Vezi</a>
-          <button class="btn-del" onclick="confirmDeleteBalta(${b.id},'${b.nume.replace(/'/g,"\\'")}'">🗑️</button>
+          <button class="btn-del" onclick="confirmDeleteBalta(${b.id},'${b.nume.replace(/'/g,"\\'")}')">🗑️</button>
         </div>
       </td>
     </tr>`).join('');
