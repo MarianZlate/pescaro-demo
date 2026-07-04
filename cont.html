@@ -160,21 +160,31 @@ button{font-family:inherit;}
   transition:background .18s,transform .18s;
 }
 .avatar-edit-btn:hover{background:var(--forest-2);transform:scale(1.07);}
-.avatar-info{flex:1;min-width:160px;padding-right:40px;}
+.avatar-info{flex:1;min-width:160px;}
 .avatar-name{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--text);margin-bottom:3px;letter-spacing:-.01em;}
 .avatar-email{font-size:12px;color:var(--text-faint);}
 .avatar-member{font-size:11px;color:var(--text-ghost);margin-top:5px;}
 
 .btn-share{
   background:var(--panel-raised);border:1px solid var(--border);color:var(--text-dim);
-  font-size:13px;padding:7px;width:30px;height:30px;border-radius:var(--r-sm);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:border-color .18s,color .18s,background .18s;
+  font-size:11px;font-weight:600;padding:6px 10px;border-radius:var(--r-sm);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;
+  transition:border-color .18s,color .18s,background .18s;
+  width:100%;margin-top:12px;
 }
 .btn-share:hover{border-color:var(--lime);color:var(--lime);}
+@media(min-width:641px){
+  .btn-share{position:absolute;top:0;right:0;width:auto;margin-top:0;}
+  .avatar-info{padding-right:170px;}
+}
 .share-toast-pop{
   background:linear-gradient(135deg,var(--forest),var(--forest-2));border:1px solid var(--lime);
   color:#eafccb;font-size:12px;font-weight:700;padding:8px 14px;border-radius:var(--r-sm);
   box-shadow:var(--shadow-pop);
+  width:100%;margin-top:12px;text-align:center;
+}
+@media(min-width:641px){
+  .share-toast-pop{position:absolute;top:0;right:0;width:auto;margin-top:0;text-align:left;}
 }
 
 .edit-account-row{display:flex;justify-content:flex-end;}
@@ -487,10 +497,10 @@ button{font-family:inherit;}
           <div class="avatar-email" id="display-email">—</div>
           <div class="avatar-member" id="display-member"></div>
         </div>
-        <button onclick="shareProfile()" id="share-profile-btn" title="Distribuie profilul" class="btn-share" style="position:absolute;top:0;right:0;">
-          🔗
+        <button onclick="shareProfile()" id="share-profile-btn" title="Distribuie profilul" class="btn-share">
+          🔗 <span>Distribuie profilul</span>
         </button>
-        <div id="share-toast" style="display:none;position:absolute;top:0;right:0;" class="share-toast-pop">✓ Link copiat!</div>
+        <div id="share-toast" style="display:none;" class="share-toast-pop">✓ Link copiat!</div>
       </div>
 
       <div class="edit-account-row">
