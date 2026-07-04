@@ -508,10 +508,12 @@ button{font-family:inherit;}
         <div class="section-title">Notificările mele</div>
         <div class="section-sub" id="notif-count-sub">Actualizări despre capturi, recorduri și clasamente</div>
       </div>
-      <button class="mark-all-btn" onclick="event.stopPropagation();markAllRead()">Marchează toate citite</button>
       <span class="notif-chevron" id="notif-chevron">▾</span>
     </div>
     <div class="section-body" id="notif-body" style="display:none;padding-top:6px;padding-bottom:14px;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <button class="mark-all-btn" onclick="markAllRead()">Marchează toate citite</button>
+      </div>
       <div id="notif-list-cont"><div class="notif-empty-msg">Se încarcă...</div></div>
       <div id="notif-pager" class="notif-pager"></div>
     </div>
