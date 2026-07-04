@@ -225,19 +225,15 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 /* INFO BAR — mobil mic: numele e deja în header, ascundem aici; 2 rânduri de butoane */
 @media(max-width:480px){
-  .info-bar{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-areas:"tel tel wa" "fb waze gmaps";gap:6px;align-items:stretch;}
+  .info-bar{gap:6px;}
   .info-bar > div:first-child{display:none!important;} /* numele băltii — deja vizibil în header */
-  #btn-tel{grid-area:tel;width:100%;justify-content:center;padding:8px 6px;}
-  #btn-wa{grid-area:wa;width:100%;justify-content:center;padding:8px 4px;font-size:12px;gap:4px;}
-  #btn-fb{grid-area:fb;width:100%;justify-content:center;padding:5px 4px!important;font-size:11px;gap:3px;}
-  #btn-waze{grid-area:waze;width:100%;justify-content:center;padding:5px 2px!important;font-size:11px;gap:3px;}
-  #btn-gmaps{grid-area:gmaps;width:100%;justify-content:center;padding:5px 2px!important;font-size:11px;gap:3px;}
-  /* Când Facebook (regulament) lipsește, Waze+GMaps ocupă tot rândul 2 */
-  .info-bar:has(#btn-fb[style*="display: none"]){grid-template-columns:1fr 1fr;grid-template-areas:"tel wa" "waze gmaps";}
+  #btn-tel,#btn-waze,#btn-gmaps,#btn-tarife,#btn-regulament{flex:1 1 calc(33% - 6px);justify-content:center;padding:7px 4px;font-size:11px;gap:3px;}
+  #btn-fb,#btn-wa{flex:0 0 auto;padding:7px 10px;}
   .ebtn{flex:1;text-align:center;}
 }
 @media(max-width:360px){
-  #btn-fb,#btn-waze,#btn-gmaps{font-size:10px;padding:5px 1px!important;gap:2px;}
+  #btn-tel,#btn-waze,#btn-gmaps,#btn-tarife,#btn-regulament{font-size:10px;padding:6px 2px;gap:2px;}
+  #btn-fb,#btn-wa{padding:6px 8px;}
 }
 
 /* LOADING & ERROR */
@@ -261,7 +257,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
   /* INFO BAR */
   .info-bar{padding:10px 14px;gap:10px;}
-  #btn-tel,#btn-fb,#btn-wa,#btn-waze,#btn-gmaps{padding:7px 12px;font-size:13px;}
+  #btn-tel,#btn-fb,#btn-wa,#btn-waze,#btn-gmaps,#btn-tarife,#btn-regulament{padding:7px 12px;font-size:13px;}
 
   /* EDIT BAR */
   #edit-bar-top{padding:10px 14px;gap:10px;}
@@ -377,14 +373,14 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       </div>
     </div>
     <a id="btn-tel" href="#" style="display:none;align-items:center;gap:7px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:7px 12px;text-decoration:none;color:#f1f5f9;font-size:13px;font-weight:600;white-space:nowrap;">📞 <span id="tel-txt"></span></a>
-    <a id="btn-fb" href="#" target="_blank" style="display:none;align-items:center;gap:7px;background:#1877f2;border-radius:8px;padding:7px 12px;text-decoration:none;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      Regulament
+    <a id="btn-fb" href="#" target="_blank" title="Pagina de Facebook" style="display:none;align-items:center;justify-content:center;background:#1877f2;border-radius:8px;padding:7px 12px;text-decoration:none;color:#fff;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
     </a>
-    <a id="btn-wa" href="#" target="_blank" style="display:none;align-items:center;gap:7px;background:#25d366;border-radius:8px;padding:7px 12px;text-decoration:none;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      WhatsApp
+    <a id="btn-wa" href="#" target="_blank" title="WhatsApp" style="display:none;align-items:center;justify-content:center;background:#25d366;border-radius:8px;padding:7px 12px;text-decoration:none;color:#fff;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
+    <button id="btn-tarife" onclick="openInfoOverlay('tarife')" style="display:none;align-items:center;gap:7px;background:rgba(163,230,53,.08);border:1px solid rgba(163,230,53,.25);border-radius:8px;padding:7px 12px;color:#a3e635;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">💰 Tarife</button>
+    <button id="btn-regulament" onclick="openInfoOverlay('regulament')" style="display:none;align-items:center;gap:7px;background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.25);border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">📋 Regulament</button>
     <button id="btn-waze" onclick="" style="display:none;align-items:center;gap:7px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🚗 Waze</button>
     <button id="btn-gmaps" onclick="" style="display:none;align-items:center;gap:7px;background:rgba(66,133,244,.08);border:1px solid rgba(66,133,244,.25);border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🗺️ Google Maps</button>
   </div>
@@ -419,6 +415,16 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div id="pins-layer"></div>
       </div>
       <div id="stand-overlay-backdrop" onclick="closeOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1999;"></div>
+
+      <!-- OVERLAY GENERIC — TARIFE / REGULAMENT -->
+      <div id="info-overlay-backdrop" onclick="closeInfoOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2099;"></div>
+      <div id="info-overlay" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2100;background:#111827;border:1px solid #1e293b;border-radius:14px;width:calc(100% - 24px);max-width:480px;max-height:80vh;overflow:hidden;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.85);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #1e293b;flex-shrink:0;">
+          <span id="info-overlay-title" style="font-weight:800;font-size:14px;color:#f1f5f9;">—</span>
+          <button onclick="closeInfoOverlay()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">✕</button>
+        </div>
+        <div id="info-overlay-body" style="padding:18px;overflow-y:auto;font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;"></div>
+      </div>
       <div id="stand-overlay">
       <div class="ov-hdr">
         <div class="spnr" id="ov-nr">Stand 1</div>
@@ -899,6 +905,12 @@ function renderPage(hartaUrl) {
     var btnWa = document.getElementById('btn-wa');
     btnWa.href = 'https://wa.me/' + b.whatsapp.replace(/\D/g,'');
     btnWa.style.display = 'flex';
+  }
+  if (b.tarife && b.tarife.trim()) {
+    document.getElementById('btn-tarife').style.display = 'flex';
+  }
+  if (b.regulament && b.regulament.trim()) {
+    document.getElementById('btn-regulament').style.display = 'flex';
   }
 
   // Navigare GPS
@@ -1460,6 +1472,22 @@ function openOverlay(id) {
 function closeOverlay() {
   document.getElementById('stand-overlay').style.display = 'none';
   document.getElementById('stand-overlay-backdrop').style.display = 'none';
+}
+
+// ── OVERLAY GENERIC — TARIFE / REGULAMENT ──────────────────────────────────────
+function openInfoOverlay(tip) {
+  if (!BALTA) return;
+  const titluri = { tarife: '💰 Tarife', regulament: '📋 Regulament' };
+  const text = tip === 'tarife' ? BALTA.tarife : BALTA.regulament;
+  if (!text || !text.trim()) return;
+  document.getElementById('info-overlay-title').textContent = titluri[tip] || '';
+  document.getElementById('info-overlay-body').textContent = text;
+  document.getElementById('info-overlay').style.display = 'flex';
+  document.getElementById('info-overlay-backdrop').style.display = 'block';
+}
+function closeInfoOverlay() {
+  document.getElementById('info-overlay').style.display = 'none';
+  document.getElementById('info-overlay-backdrop').style.display = 'none';
 }
 
 function deselectStand() {
