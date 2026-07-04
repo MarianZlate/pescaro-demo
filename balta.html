@@ -639,6 +639,13 @@ window.addEventListener('load', async function() {
     await loadBaltaWithRetry(baltaId);
   } catch(e) {
     showError(e.message || 'Eroare la încărcarea datelor.');
+    return;
+  }
+
+  // Deep-link dintr-o notificare de record nou — deschide direct overlay-ul standului
+  var standId = parseInt(params.get('stand'));
+  if (standId && !isNaN(standId) && ST.some(function(s) { return s.id === standId; })) {
+    openOverlay(standId);
   }
 });
 
