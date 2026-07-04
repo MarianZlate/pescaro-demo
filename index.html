@@ -1014,6 +1014,23 @@ function fuzzyWordMatch(queryNorm, textNorm) {
   return false;
 }
 
+// La fel ca mai sus, dar compară query-ul cu ÎNCEPUTUL fiecărui cuvânt, nu cu
+// cuvântul întreg — ca sugestiile să apară din primele 3 litere scrise, chiar
+// dacă acele 3 litere conțin o greșeală (ex: "ilw" -> prinde "ileana").
+function fuzzyPrefixMatch(queryNorm, textNorm) {
+  if (queryNorm.length < 3) return false;
+  const words = textNorm.split(/[\s\-'"]+/).filter(w => w.length >= 3);
+  const threshold = queryNorm.length <= 4 ? 1 : 2;
+  for (const w of words) {
+    const minLen = Math.max(1, queryNorm.length - 1);
+    const maxLen = Math.min(w.length, queryNorm.length + 1);
+    for (let len = minLen; len <= maxLen; len++) {
+      if (levenshtein(queryNorm, w.slice(0, len)) <= threshold) return true;
+    }
+  }
+  return false;
+}
+
 function onSearch(q) {
   document.getElementById('clear-btn').style.display = q ? 'block' : 'none';
   const dd = document.getElementById('dropdown');
@@ -1025,7 +1042,8 @@ function onSearch(q) {
     const nameN = normStr(b.nume);
     const judetN = normStr(b.judet);
     if (nameN.includes(qn) || judetN.includes(qn)) return true;
-    return fuzzyWordMatch(qn, nameN) || fuzzyWordMatch(qn, judetN);
+    return fuzzyWordMatch(qn, nameN) || fuzzyWordMatch(qn, judetN) ||
+           fuzzyPrefixMatch(qn, nameN) || fuzzyPrefixMatch(qn, judetN);
   });
   if (!res.length) {
     dd.innerHTML = '<div style="padding:14px 16px;color:#4b5563;font-size:13px;">Nicio baltă găsită</div>';
