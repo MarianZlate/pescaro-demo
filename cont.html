@@ -164,6 +164,9 @@ button{font-family:inherit;}
 .avatar-name{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--text);margin-bottom:3px;letter-spacing:-.01em;}
 .avatar-email{font-size:12px;color:var(--text-faint);}
 .avatar-member{font-size:11px;color:var(--text-ghost);margin-top:5px;}
+.zoda-id-row{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.zoda-id-chip{font-family:monospace;font-size:11.5px;color:var(--lime);letter-spacing:.04em;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r-xs);padding:4px 9px;}
+.icon-btn-sm{padding:5px 8px;font-size:11px;}
 
 .btn-share{
   background:var(--panel-raised);border:1px solid var(--border);color:var(--text-dim);
@@ -492,6 +495,11 @@ button{font-family:inherit;}
           <div class="avatar-name" id="display-name">—</div>
           <div class="avatar-email" id="display-email">—</div>
           <div class="avatar-member" id="display-member"></div>
+          <div class="zoda-id-row">
+            <span class="zoda-id-chip" id="display-zoda-id">—</span>
+            <button onclick="copyZodaId()" title="Copiază ID" class="icon-btn icon-btn-sm">📋</button>
+            <button onclick="viewPublicProfile()" title="Profil public" class="icon-btn icon-btn-sm">👁️</button>
+          </div>
         </div>
         <button onclick="shareProfile()" id="share-profile-btn" title="Distribuie profilul" class="btn-share">
           🔗 <span>Distribuie profilul</span>
@@ -1451,6 +1459,7 @@ function renderProfile() {
   const created = new Date(u.created_at);
   document.getElementById('display-member').textContent =
     'Membru din ' + created.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
+  document.getElementById('display-zoda-id').textContent = zodaId;
 
   // Inputs
   document.getElementById('inp-username').value = username;
