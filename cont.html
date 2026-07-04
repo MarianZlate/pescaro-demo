@@ -160,15 +160,15 @@ button{font-family:inherit;}
   transition:background .18s,transform .18s;
 }
 .avatar-edit-btn:hover{background:var(--forest-2);transform:scale(1.07);}
-.avatar-info{flex:1;min-width:160px;}
+.avatar-info{flex:1;min-width:160px;padding-right:40px;}
 .avatar-name{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--text);margin-bottom:3px;letter-spacing:-.01em;}
 .avatar-email{font-size:12px;color:var(--text-faint);}
 .avatar-member{font-size:11px;color:var(--text-ghost);margin-top:5px;}
 
 .btn-share{
   background:var(--panel-raised);border:1px solid var(--border);color:var(--text-dim);
-  font-size:12px;font-weight:600;padding:8px 14px;border-radius:var(--r-sm);cursor:pointer;
-  display:flex;align-items:center;gap:6px;transition:border-color .18s,color .18s,background .18s;
+  font-size:13px;padding:7px;width:30px;height:30px;border-radius:var(--r-sm);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:border-color .18s,color .18s,background .18s;
 }
 .btn-share:hover{border-color:var(--lime);color:var(--lime);}
 .share-toast-pop{
@@ -488,7 +488,7 @@ button{font-family:inherit;}
           <div class="avatar-member" id="display-member"></div>
         </div>
         <button onclick="shareProfile()" id="share-profile-btn" title="Distribuie profilul" class="btn-share" style="position:absolute;top:0;right:0;">
-          🔗 <span>Distribuie</span>
+          🔗
         </button>
         <div id="share-toast" style="display:none;position:absolute;top:0;right:0;" class="share-toast-pop">✓ Link copiat!</div>
       </div>
