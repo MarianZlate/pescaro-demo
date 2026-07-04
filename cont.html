@@ -291,6 +291,16 @@ button{font-family:inherit;}
 .capture-data{font-size:10.5px;color:var(--text-ghost);margin-top:2px;}
 .capture-kg{font-family:var(--font-display);font-size:17px;font-weight:800;color:var(--lime);flex-shrink:0;}
 
+/* ── CAPTURI RESPINSE ── */
+.cr-row{padding:12px 10px;border-bottom:1px solid var(--line);border-radius:var(--r-sm);transition:background .6s,box-shadow .3s;}
+.cr-row:last-child{border-bottom:none;}
+.cr-row-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.cr-pescar{font-size:12.5px;font-weight:700;color:var(--text);}
+.cr-kg{font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--text-faint);flex-shrink:0;}
+.cr-meta{font-size:10.5px;color:var(--text-faint);margin-top:3px;}
+.cr-motiv{font-size:11.5px;color:#fca5a5;background:var(--danger-glow);border:1px solid rgba(239,68,68,.3);border-radius:var(--r-xs);padding:6px 10px;margin-top:7px;}
+.cr-row.cr-highlight{background:rgba(163,230,53,.08);box-shadow:inset 0 0 0 1px rgba(163,230,53,.3);}
+
 /* ============================================================
    LOGOUT / DANGER ZONE
    ============================================================ */
@@ -597,6 +607,21 @@ button{font-family:inherit;}
     </div>
   </div>
 
+  <!-- ── CAPTURI RESPINSE (balta_admin) ── -->
+  <div class="section" id="section-capturi-respinse" style="display:none;">
+    <div class="section-hdr notif-hdr" onclick="toggleCapturiRespinsePanel()">
+      <span class="section-icon">❌</span>
+      <div style="flex:1;">
+        <div class="section-title">Capturi respinse</div>
+        <div class="section-sub" id="cr-count-sub">Capturi respinse la bălțile tale, cu motiv</div>
+      </div>
+      <span class="notif-chevron" id="cr-chevron">▾</span>
+    </div>
+    <div class="section-body" id="cr-body" style="display:none;padding-top:6px;padding-bottom:14px;">
+      <div id="capturi-respinse-list"><div class="notif-empty-msg">Se încarcă...</div></div>
+    </div>
+  </div>
+
   <!-- ── LOGOUT ── -->
   <div class="section quiet">
     <div class="section-hdr">
@@ -895,15 +920,32 @@ async function boot() {
   if (currentRole === 'balta_admin') {
     await loadBaltiAdmin();
     document.getElementById('section-balta-admin').style.display = 'block';
+    await loadCapturiRespinse();
   } else if (currentRole === 'zoda_admin') {
     const nrBalti = await loadBaltiAdmin();
-    if (nrBalti > 0) document.getElementById('section-balta-admin').style.display = 'block';
+    if (nrBalti > 0) {
+      document.getElementById('section-balta-admin').style.display = 'block';
+      await loadCapturiRespinse();
+    }
   }
 
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
   document.getElementById('page').style.display = 'block';
   restoreContState();
+
+  // Deep-link dintr-o notificare de captură respinsă
+  const capturaRespinsaId = new URLSearchParams(location.search).get('captura_respinsa');
+  if (capturaRespinsaId) {
+    const row = document.getElementById('cr-' + capturaRespinsaId);
+    if (row) {
+      toggleCapturiRespinsePanel();
+      setTimeout(() => {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.classList.add('cr-highlight');
+      }, 300);
+    }
+  }
 }
 
 // ── NOTIFICĂRI ────────────────────────────────────────────────────────────────
@@ -913,6 +955,7 @@ let _notifPage = 1;
 
 function notifUrl(n) {
   const meta = n.meta || {};
+  if (n.tip === 'captura_respinsa' && meta.captura_id) return `cont.html?captura_respinsa=${meta.captura_id}`;
   if (meta.balta_id) return `balta.html?id=${meta.balta_id}`;
   return null;
 }
@@ -1059,6 +1102,8 @@ async function loadBaltiAdmin() {
     return 0;
   }
 
+  _baltiAdminIds = balti.map(b => b.id);
+
   listEl.innerHTML = balti.map(b => `
     <div class="balta-admin-card">
       <div class="balta-admin-info">
@@ -1073,7 +1118,52 @@ async function loadBaltiAdmin() {
   return balti.length;
 }
 
-// ── MODAL CAPTURĂ ─────────────────────────────────────────────────────────────
+// ── CAPTURI RESPINSE (balta_admin) ─────────────────────────────────────────────
+let _baltiAdminIds = [];
+
+function toggleCapturiRespinsePanel() {
+  const body = document.getElementById('cr-body');
+  const chevron = document.getElementById('cr-chevron');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  chevron.classList.toggle('open', !isOpen);
+}
+
+async function loadCapturiRespinse() {
+  const section = document.getElementById('section-capturi-respinse');
+  const listEl  = document.getElementById('capturi-respinse-list');
+  if (!_baltiAdminIds.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const { data, error } = await sb.from('capturi')
+    .select('id, pescar_nume, kg, data_captura, rejected_reason, reviewed_at, balta_id, balti(nume)')
+    .in('balta_id', _baltiAdminIds)
+    .eq('status', 'rejected')
+    .order('reviewed_at', { ascending: false })
+    .limit(30);
+
+  if (error || !data?.length) {
+    listEl.innerHTML = '<div class="notif-empty-msg">Nicio captură respinsă momentan.</div>';
+    document.getElementById('cr-count-sub').textContent = 'Nicio captură respinsă';
+    return;
+  }
+
+  document.getElementById('cr-count-sub').textContent = `${data.length} respinse`;
+
+  listEl.innerHTML = data.map(c => `
+    <div class="cr-row" id="cr-${c.id}">
+      <div class="cr-row-top">
+        <div class="cr-pescar">${escH(c.pescar_nume || '—')}</div>
+        <div class="cr-kg">${c.kg ? parseFloat(c.kg).toFixed(1) + ' kg' : ''}</div>
+      </div>
+      <div class="cr-meta">${escH(c.balti?.nume || '—')} · ${c.data_captura ? fmtDataRo(c.data_captura) : ''}</div>
+      ${c.rejected_reason ? `<div class="cr-motiv">Motiv: ${escH(c.rejected_reason)}</div>` : ''}
+    </div>`).join('');
+}
+
+function fmtDataRo(dataStr) {
+  try { return new Date(dataStr).toLocaleDateString('ro-RO'); } catch(e) { return dataStr; }
+}
 async function openCaptura(baltaId, baltaNume) {
   _baltaAdminId   = baltaId;
   _baltaAdminNume = baltaNume;
