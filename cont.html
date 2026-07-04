@@ -884,7 +884,7 @@ async function boot() {
   await Promise.all([loadCapturi(), loadStele(), loadNotificari()]);
 
   // Secțiune balta_admin
-  if (currentRole === 'balta_admin' || currentRole === 'zoda_admin') {
+  if (currentRole === 'balta_admin') {
     await loadBaltiAdmin();
     document.getElementById('section-balta-admin').style.display = 'block';
   }
