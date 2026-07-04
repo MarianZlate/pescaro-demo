@@ -702,6 +702,8 @@ th,td{padding:8px 6px;}
         <div class="fg"><label>TELEFON CONTACT *</label><input type="tel" id="ab-tel" placeholder="+40 7xx xxx xxx"/></div>
         <div class="fg"><label>LINK FACEBOOK</label><input type="url" id="ab-fb" placeholder="https://facebook.com/baltadumneavoastra"/></div>
         <div class="fg"><label>NUMĂR WHATSAPP ADMINISTRATOR</label><input type="tel" id="ab-wa" placeholder="+40 7xx xxx xxx"/></div>
+        <div class="fg"><label>💰 TARIFE</label><textarea id="ab-tarife" rows="4" placeholder="ex: 12h - 50 lei&#10;24h - 90 lei&#10;Copii sub 12 ani - gratuit" style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;font-family:inherit;resize:vertical;"></textarea><div style="font-size:10px;color:#4b5563;margin-top:4px;">Apare pe pagina bălții, într-un buton dedicat „Tarife"</div></div>
+        <div class="fg"><label>📋 REGULAMENT</label><textarea id="ab-regulament" rows="4" placeholder="ex: Este interzisă păstrarea crapilor peste 10 kg.&#10;Programul de pescuit este 06:00 - 22:00." style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;font-family:inherit;resize:vertical;"></textarea><div style="font-size:10px;color:#4b5563;margin-top:4px;">Apare pe pagina bălții, într-un buton dedicat „Regulament"</div></div>
         <div class="fg"><label>ADMINISTRATOR BALTĂ (ZODA-ID)</label><input type="text" id="ab-admin-zoda-id" placeholder="ex: ZODA-1042" style="font-family:monospace;" /><div style="font-size:10px;color:#334155;margin-top:4px;">ZODA-ID-ul utilizatorului care va administra balta (rol balta_admin).</div></div>
         <div class="fg">
           <label>🎬 LINK YOUTUBE — VIDEO DRUM DE ACCES</label>
@@ -1997,6 +1999,8 @@ async function openEditBalta(id) {
     whatsapp:  b.whatsapp  || '',
     adresa:    b.adresa    || '',
     drum_yt:   b.drum_yt   || '',
+    tarife:    b.tarife    || '',
+    regulament:b.regulament|| '',
     harta_url: hartaUrl,
     standuri: (standuri || []).map((s, i) => ({
       id:         s.id,
@@ -2041,7 +2045,11 @@ function buildEditBody(b, ext) {
   return `
   <!-- INFORMAȚII GENERALE -->
   <div class="edit-section">
-    <div class="edit-section-title"><span>📋 INFORMAȚII GENERALE</span></div>
+    <div class="edit-section-title se-card-hdr" onclick="toggleEditStand('info-generale')" style="margin-bottom:0;padding-bottom:14px;">
+      <span>📋 INFORMAȚII GENERALE</span>
+      <span class="se-card-toggle" id="se-arrow-info-generale">▾</span>
+    </div>
+    <div class="se-card-body open" id="se-body-info-generale">
     <div class="fg"><label>NUMELE BALTII</label><input type="text" id="e-nume" value="${escHtml(b.nume)}" /></div>
     <div class="fg-row">
       <div class="fg"><label>JUDEȚ</label><input type="text" id="e-judet" value="${escHtml(b.judet||'')}" /></div>
@@ -2052,7 +2060,10 @@ function buildEditBody(b, ext) {
       <div class="fg"><label>LINK FACEBOOK</label><input type="url" id="e-fb" value="${escHtml(ext.facebook||'')}" placeholder="https://facebook.com/..." /></div>
       <div class="fg"><label>WHATSAPP ADMIN</label><input type="tel" id="e-wa" value="${escHtml(ext.whatsapp||'')}" /></div>
     </div>
+    <div class="fg"><label>💰 TARIFE</label><textarea id="e-tarife" rows="4" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;font-family:inherit;resize:vertical;">${escHtml(ext.tarife||'')}</textarea></div>
+    <div class="fg"><label>📋 REGULAMENT</label><textarea id="e-regulament" rows="4" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;font-family:inherit;resize:vertical;">${escHtml(ext.regulament||'')}</textarea></div>
     <div class="fg"><label>ADMINISTRATOR BALTĂ (ZODA-ID)</label><input type="text" id="e-admin-zoda-id" value="${escHtml(b.admin_zoda_id||'')}" placeholder="ex: ZODA-1042" style="font-family:monospace;" /><div style="font-size:10px;color:#4b5563;margin-top:4px;">Setând acest câmp, utilizatorul cu ZODA-ID-ul respectiv primește rolul de administrator al acestei bălți și poate trimite cereri de capturi.</div></div>
+    </div>
   </div>
 
   <!-- MEDIA -->
@@ -2429,6 +2440,8 @@ async function saveEditBalta() {
     adresa:         document.getElementById('e-adresa')?.value.trim()         || '',
     facebook:       document.getElementById('e-fb')?.value.trim()             || '',
     whatsapp:       document.getElementById('e-wa')?.value.trim()             || '',
+    tarife:         document.getElementById('e-tarife')?.value.trim()         || '',
+    regulament:     document.getElementById('e-regulament')?.value.trim()     || '',
     drum_yt:        document.getElementById('e-drum-yt')?.value.trim()        || '',
     admin_zoda_id:  document.getElementById('e-admin-zoda-id')?.value.trim() || null,
     vizibilitate:   editVizStatus,
@@ -2780,7 +2793,7 @@ function openAddBalta() {
   window._hartaFile = null; window._hartaUrl = null;
   hartaRemove();
   document.getElementById('stands-container').innerHTML = '';
-  ['ab-nume','ab-adresa','ab-tel','ab-fb','ab-wa','ab-drum-yt'].forEach(id => {
+  ['ab-nume','ab-adresa','ab-tel','ab-fb','ab-wa','ab-drum-yt','ab-tarife','ab-regulament'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
   const js = document.getElementById('ab-judet-search'); if(js) js.value = '';
@@ -2844,6 +2857,8 @@ async function abSubmit() {
     telefon:document.getElementById('ab-tel').value.trim()||'—',
     facebook:document.getElementById('ab-fb').value.trim(),
     whatsapp:document.getElementById('ab-wa').value.trim(),
+    tarife:document.getElementById('ab-tarife').value.trim(),
+    regulament:document.getElementById('ab-regulament').value.trim(),
     drum_yt:document.getElementById('ab-drum-yt').value.trim()||'',
     admin_zoda_id:document.getElementById('ab-admin-zoda-id')?.value.trim()||null,
     lat:abCoords?abCoords.lat:null, lng:abCoords?abCoords.lng:null,
@@ -2889,6 +2904,7 @@ function collectWizardData(){
   return {step:abStep,nume:document.getElementById('ab-nume')?.value||'',judet:document.getElementById('ab-judet')?.value||'',
     adresa:document.getElementById('ab-adresa')?.value||'',tel:document.getElementById('ab-tel')?.value||'',
     fb:document.getElementById('ab-fb')?.value||'',wa:document.getElementById('ab-wa')?.value||'',
+    tarife:document.getElementById('ab-tarife')?.value||'',regulament:document.getElementById('ab-regulament')?.value||'',
     lat:abCoords?.lat||null,lng:abCoords?.lng||null,standuri:getStanduriData(),savedAt:new Date().toLocaleString('ro-RO')};
 }
 function saveDraft(){try{localStorage.setItem(DRAFT_KEY,JSON.stringify(collectWizardData()));}catch(e){}showToast('📝 Draft salvat!');closeAddBalta();checkDraft();}
@@ -2909,6 +2925,8 @@ function resumeDraft(){
       if(d.tel) document.getElementById('ab-tel').value=d.tel;
       if(d.fb) document.getElementById('ab-fb').value=d.fb;
       if(d.wa) document.getElementById('ab-wa').value=d.wa;
+      if(d.tarife) document.getElementById('ab-tarife').value=d.tarife;
+      if(d.regulament) document.getElementById('ab-regulament').value=d.regulament;
       if(d.lat&&d.lng){abCoords={lat:d.lat,lng:d.lng};document.getElementById('ab-coord-display').textContent='✓ Marcat: '+d.lat.toFixed(5)+'°N, '+d.lng.toFixed(5)+'°E';document.getElementById('ab-coord-display').style.color='#a3e635';document.getElementById('ab-coord-clear').style.display='inline';}
       if(d.standuri?.length){d.standuri.forEach((s,i)=>{addStand();const idx=i+1;setTimeout(()=>{const nu=document.getElementById('s'+idx+'-nume');if(nu)nu.value=s.nume||('Stand '+idx);},50);});}
       if(d.step&&d.step>1){abStep=d.step;updateAbUI();}
