@@ -1113,7 +1113,7 @@ async function loadBaltiAdmin() {
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn-add-captura" onclick="openCaptura(${b.id}, '${escH(b.nume).replace(/'/g,"\\'")}')">+ Adaugă captură</button>
-        <a href="balta.html?id=${b.id}" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:border-color .2s;" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">↗ Vezi balta</a>
+        <a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:border-color .2s;" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">↗ Vezi balta</a>
       </div>
     </div>`).join('');
   return balti.length;
