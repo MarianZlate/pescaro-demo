@@ -447,13 +447,13 @@ th,td{padding:8px 6px;}
   <!-- TABS -->
   <div class="tabs">
     <button class="tab active" onclick="switchTab('balti')">🎣 Bălți</button>
-    <button class="tab" onclick="switchTab('statistici')">📊 Statistici</button>
-    <button class="tab" onclick="switchTab('aprobari')" style="position:relative;">🚀 Aprobări<span id="aprobari-pending-badge" class="tab-badge" style="display:none;"></span></button>
     <button class="tab" onclick="switchTab('users')">👥 Utilizatori</button>
-    <button class="tab" onclick="switchTab('capturi')" style="position:relative;">📸 Capturi<span id="capturi-pending-badge" class="tab-badge" style="display:none;"></span></button>
-    <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
-    <button class="tab" onclick="switchTab('reclame')">📢 Reclame</button>
     <button class="tab" onclick="switchTab('mesaje')" style="position:relative;">✉️ Mesaje<span id="mesaje-pending-badge" class="tab-badge" style="display:none;"></span></button>
+    <button class="tab" onclick="switchTab('aprobari')" style="position:relative;">🚀 Aprobări<span id="aprobari-pending-badge" class="tab-badge" style="display:none;"></span></button>
+    <button class="tab" onclick="switchTab('capturi')" style="position:relative;">📸 Capturi<span id="capturi-pending-badge" class="tab-badge" style="display:none;"></span></button>
+    <button class="tab" onclick="switchTab('reclame')">📢 Reclame</button>
+    <button class="tab" onclick="switchTab('statistici')">📊 Statistici</button>
+    <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
   </div>
 
   <!-- BALTI PANEL -->
@@ -986,7 +986,7 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','statistici','aprobari','users','capturi','settings','reclame','mesaje'][i]===tab));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','mesaje','aprobari','capturi','reclame','statistici','settings'][i]===tab));
   const pB = document.getElementById('panel-balti');      if(pB) pB.style.display      = tab==='balti'      ? 'block' : 'none';
   const pST= document.getElementById('panel-statistici'); if(pST) pST.style.display    = tab==='statistici' ? 'block' : 'none';
   const pA = document.getElementById('panel-aprobari');   if(pA) pA.style.display      = tab==='aprobari'   ? 'block' : 'none';
