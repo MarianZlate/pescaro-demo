@@ -1094,7 +1094,7 @@ async function loadBaltiAdmin() {
   if (!zodaId) { listEl.innerHTML = '<div style="color:#334155;font-size:13px;text-align:center;padding:20px;">Nu ești asociat cu nicio baltă.</div>'; return 0; }
 
   const { data: balti, error } = await sb.from('balti')
-    .select('id, nume, judet, vizibilitate')
+    .select('id, nume, judet, vizibilitate, telefon, tarife, regulament, aprobare_solicitata_at')
     .eq('admin_zoda_id', zodaId)
     .order('nume');
 
@@ -1105,18 +1105,79 @@ async function loadBaltiAdmin() {
 
   _baltiAdminIds = balti.map(b => b.id);
 
-  listEl.innerHTML = balti.map(b => `
+  // Pentru fiecare baltă "basic", calculăm checklist-ul de completare
+  const baltiIds = balti.filter(b => b.vizibilitate === 'basic').map(b => b.id);
+  let pozeMap = {}, standuriMap = {};
+  if (baltiIds.length) {
+    const { data: poze } = await sb.from('poze').select('balta_id').in('balta_id', baltiIds).is('stand_id', null);
+    (poze || []).forEach(p => { pozeMap[p.balta_id] = true; });
+    const { data: standuri } = await sb.from('standuri').select('balta_id, pozitie').in('balta_id', baltiIds);
+    (standuri || []).forEach(s => {
+      if (!standuriMap[s.balta_id]) standuriMap[s.balta_id] = { total: 0, nepozitionate: 0 };
+      standuriMap[s.balta_id].total++;
+      let poz = null;
+      try { poz = s.pozitie ? JSON.parse(s.pozitie) : null; } catch(e) {}
+      if (!poz || poz.x == null || poz.y == null) standuriMap[s.balta_id].nepozitionate++;
+    });
+  }
+
+  listEl.innerHTML = balti.map(b => {
+    let checklistHtml = '';
+    if (b.vizibilitate === 'basic') {
+      const st = standuriMap[b.id] || { total: 0, nepozitionate: 0 };
+      const items = [
+        { ok: !!(b.telefon && b.telefon.trim()), label: 'Telefon completat' },
+        { ok: !!(b.tarife && b.tarife.trim()), label: 'Tarife completate' },
+        { ok: !!(b.regulament && b.regulament.trim()), label: 'Regulament completat' },
+        { ok: !!pozeMap[b.id], label: 'Cel puțin o poză generală' },
+        { ok: st.total > 0 && st.nepozitionate === 0, label: st.total === 0 ? 'Standuri (niciunul adăugat încă)' : 'Toate standurile poziționate pe hartă (' + (st.total - st.nepozitionate) + '/' + st.total + ')' },
+      ];
+      const allOk = items.every(i => i.ok);
+      const pending = !!b.aprobare_solicitata_at;
+      checklistHtml = `
+        <div class="balta-checklist" style="margin-top:10px;padding-top:10px;border-top:1px solid #1e293b;">
+          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.04em;margin-bottom:6px;">CHECKLIST DE COMPLETARE</div>
+          ${items.map(i => `<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:${i.ok?'#a3e635':'#64748b'};margin-bottom:3px;">${i.ok?'✅':'⬜'} ${i.label}</div>`).join('')}
+          ${pending
+            ? `<div style="margin-top:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:12px;font-weight:700;padding:8px 12px;border-radius:8px;">⏳ În așteptare aprobare</div>`
+            : `<button onclick="trimiteSprebAprobare(${b.id}, this)" ${allOk ? '' : 'disabled'} style="margin-top:8px;width:100%;background:${allOk?'#166534':'#1e293b'};color:${allOk?'#fff':'#4b5563'};font-weight:700;font-size:12.5px;padding:9px;border:none;border-radius:8px;cursor:${allOk?'pointer':'not-allowed'};">🚀 Trimite spre aprobare</button>`
+          }
+        </div>`;
+    }
+    return `
     <div class="balta-admin-card">
       <div class="balta-admin-info">
         <div class="balta-admin-nume">${escH(b.nume)}</div>
-        <div class="balta-admin-judet">📍 ${escH(b.judet || '—')}${b.vizibilitate === 'unlisted' ? ' · 🔒 Unlisted' : ''}</div>
+        <div class="balta-admin-judet">📍 ${escH(b.judet || '—')}${b.vizibilitate === 'unlisted' ? ' · 🔒 Unlisted' : b.vizibilitate === 'basic' ? ' · 🔍 Basic' : ' · ✅ Publică'}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn-add-captura" onclick="openCaptura(${b.id}, '${escH(b.nume).replace(/'/g,"\\'")}')">+ Adaugă captură</button>
         <a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:border-color .2s;" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">↗ Vezi balta</a>
       </div>
-    </div>`).join('');
+      ${checklistHtml}
+    </div>`;
+  }).join('');
   return balti.length;
+}
+
+async function trimiteSprebAprobare(baltaId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Se trimite...';
+  try {
+    const { data, error } = await sb.rpc('solicita_publicare_balta', { p_balta_id: baltaId });
+    if (error) throw error;
+    if (data && data.eroare) {
+      showToast(data.eroare, true);
+      btn.disabled = false;
+      btn.textContent = '🚀 Trimite spre aprobare';
+      return;
+    }
+    loadBaltiAdmin();
+  } catch (e) {
+    alert('Eroare la trimiterea cererii.');
+    btn.disabled = false;
+    btn.textContent = '🚀 Trimite spre aprobare';
+  }
 }
 
 // ── CAPTURI RESPINSE (balta_admin) ─────────────────────────────────────────────
