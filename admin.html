@@ -122,6 +122,9 @@ th,td{padding:8px 6px;}
 .tab{background:transparent;border:none;color:#4b5563;font-size:13px;font-weight:600;padding:8px 18px;border-radius:7px;cursor:pointer;transition:all .2s;}
 .tab.active{background:#1e293b;color:#f1f5f9;}
 .tab-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;background:#ef4444;border-radius:9px;font-size:10px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #0a0f1a;line-height:1;pointer-events:none;}
+.balta-admin-card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;}
+.balta-admin-nume{font-weight:800;font-size:14px;color:#f1f5f9;}
+.balta-admin-judet{font-size:12px;color:#64748b;margin-top:2px;}
 
 /* SECTION */
 .section-title{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
@@ -443,6 +446,7 @@ th,td{padding:8px 6px;}
   <!-- TABS -->
   <div class="tabs">
     <button class="tab active" onclick="switchTab('balti')">🎣 Bălți</button>
+    <button class="tab" onclick="switchTab('aprobari')" style="position:relative;">🚀 Aprobări<span id="aprobari-pending-badge" class="tab-badge" style="display:none;"></span></button>
     <button class="tab" onclick="switchTab('users')">👥 Utilizatori</button>
     <button class="tab" onclick="switchTab('capturi')" style="position:relative;">📸 Capturi<span id="capturi-pending-badge" class="tab-badge" style="display:none;"></span></button>
     <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
@@ -497,6 +501,13 @@ th,td{padding:8px 6px;}
   </div>
 
   <!-- CAPTURI PANEL -->
+  <div id="panel-aprobari" style="display:none;">
+    <div class="section-title">🚀 Cereri de aprobare — bălți gata de publicat</div>
+    <div id="aprobari-list">
+      <div class="empty-state">Se încarcă...</div>
+    </div>
+  </div>
+
   <div id="panel-capturi" style="display:none;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <span>📸 Cereri capturi</span>
@@ -935,18 +946,36 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','capturi','settings','reclame','mesaje'][i]===tab));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','aprobari','users','capturi','settings','reclame','mesaje'][i]===tab));
   const pB = document.getElementById('panel-balti');    if(pB) pB.style.display    = tab==='balti'    ? 'block' : 'none';
+  const pA = document.getElementById('panel-aprobari'); if(pA) pA.style.display    = tab==='aprobari' ? 'block' : 'none';
   const pU = document.getElementById('panel-users');    if(pU) pU.style.display    = tab==='users'    ? 'block' : 'none';
   const pC = document.getElementById('panel-capturi');  if(pC) pC.style.display    = tab==='capturi'  ? 'block' : 'none';
   const pS = document.getElementById('panel-settings'); if(pS) pS.style.display    = tab==='settings' ? 'block' : 'none';
   const pR = document.getElementById('panel-reclame');  if(pR) pR.style.display    = tab==='reclame'  ? 'block' : 'none';
   const pM = document.getElementById('panel-mesaje');   if(pM) pM.style.display    = tab==='mesaje'   ? 'block' : 'none';
+  if(tab==='aprobari') loadAprobari();
   if(tab==='users')    loadUsers();
   if(tab==='capturi')  loadCapturi();
   if(tab==='settings') loadSettings();
   if(tab==='reclame')  loadReclame();
   if(tab==='mesaje')   loadMesaje();
+}
+
+// ── BADGE APROBĂRI ÎN AȘTEPTARE ──────────────────────────────────────────────
+async function updateAprobariPendingBadge() {
+  const badge = document.getElementById('aprobari-pending-badge');
+  if (!badge) return;
+  const { count, error } = await sb.from('balti')
+    .select('id', { count: 'exact', head: true })
+    .not('aprobare_solicitata_at', 'is', null);
+  if (error) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 // ── BADGE CAPTURI ÎN AȘTEPTARE ───────────────────────────────────────────────
@@ -1021,6 +1050,102 @@ async function deleteMesaj(id) {
   if (!confirm('Ștergi acest mesaj definitiv?')) return;
   await sb.from('contact_messages').delete().eq('id', id);
   loadMesaje();
+}
+
+// ── CEREREI DE APROBARE PUBLICARE BALTĂ ──────────────────────────────────────
+async function loadAprobari() {
+  const listEl = document.getElementById('aprobari-list');
+  listEl.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+
+  const { data: balti, error } = await sb.from('balti')
+    .select('id, nume, judet, admin_zoda_id, aprobare_solicitata_at, telefon, tarife, regulament')
+    .not('aprobare_solicitata_at', 'is', null)
+    .order('aprobare_solicitata_at', { ascending: true });
+
+  if (error) {
+    listEl.innerHTML = `<div class="empty-state">⚠️ Eroare: ${error.message}</div>`;
+    return;
+  }
+  if (!balti?.length) {
+    listEl.innerHTML = '<div class="empty-state">Nicio cerere de aprobare momentan.</div>';
+    return;
+  }
+
+  // numărul de standuri + poze generale, pentru context rapid la aprobare
+  const ids = balti.map(b => b.id);
+  const { data: standuri } = await sb.from('standuri').select('balta_id').in('balta_id', ids);
+  const { data: poze } = await sb.from('poze').select('balta_id').in('balta_id', ids).is('stand_id', null);
+  const standuriCount = {};
+  (standuri || []).forEach(s => { standuriCount[s.balta_id] = (standuriCount[s.balta_id]||0) + 1; });
+  const pozeCount = {};
+  (poze || []).forEach(p => { pozeCount[p.balta_id] = (pozeCount[p.balta_id]||0) + 1; });
+
+  listEl.innerHTML = balti.map(b => `
+    <div class="balta-admin-card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div class="balta-admin-nume">${escH(b.nume)}</div>
+          <div class="balta-admin-judet">📍 ${escH(b.judet || '—')} · 👤 ${escH(b.admin_zoda_id || '—')}</div>
+          <div style="font-size:11px;color:#4b5563;margin-top:4px;">Cerere trimisă: ${new Date(b.aprobare_solicitata_at).toLocaleString('ro-RO')}</div>
+        </div>
+        <a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">↗ Vezi balta</a>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#94a3b8;margin-top:10px;padding-top:10px;border-top:1px solid #1e293b;">
+        <span>📞 ${b.telefon ? escH(b.telefon) : '—'}</span>
+        <span>💰 ${b.tarife ? '✓ completate' : '—'}</span>
+        <span>📋 ${b.regulament ? '✓ completat' : '—'}</span>
+        <span>🎣 ${standuriCount[b.id] || 0} standuri</span>
+        <span>📸 ${pozeCount[b.id] || 0} poze generale</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+        <input type="text" id="motiv-aprobare-${b.id}" placeholder="Motiv respingere (opțional)" style="flex:1;min-width:160px;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:7px 10px;color:#f1f5f9;font-size:12px;outline:none;"/>
+        <button onclick="respingeAprobareBalta(${b.id})" style="background:#1e293b;color:#ef4444;border:none;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;">✕ Respinge</button>
+        <button onclick="aprobaBalta(${b.id})" style="background:#166534;color:#fff;border:none;font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:7px;cursor:pointer;white-space:nowrap;">✓ Aprobă și publică</button>
+      </div>
+    </div>`).join('');
+}
+
+async function aprobaBalta(id) {
+  const { data: b } = await sb.from('balti').select('nume, admin_zoda_id').eq('id', id).single();
+  const { error } = await sb.from('balti').update({ vizibilitate: 'public', aprobare_solicitata_at: null }).eq('id', id);
+  if (error) { showToast('Eroare: ' + error.message, true); return; }
+
+  if (b?.admin_zoda_id) {
+    const { data: adminProf } = await sb.from('user_profiles').select('id').eq('zoda_id', b.admin_zoda_id).single();
+    if (adminProf?.id) {
+      await sb.from('notificari').insert({
+        user_id: adminProf.id,
+        tip: 'balta_aprobata',
+        mesaj: `Balta "${b.nume}" a fost aprobată și e acum publică pe Zoda! 🎉`,
+        meta: { balta_id: id }
+      });
+    }
+  }
+  showToast('✓ Baltă publicată!');
+  loadAprobari();
+  updateAprobariPendingBadge();
+}
+
+async function respingeAprobareBalta(id) {
+  const motiv = document.getElementById(`motiv-aprobare-${id}`)?.value.trim() || '';
+  const { data: b } = await sb.from('balti').select('nume, admin_zoda_id').eq('id', id).single();
+  const { error } = await sb.from('balti').update({ aprobare_solicitata_at: null }).eq('id', id);
+  if (error) { showToast('Eroare: ' + error.message, true); return; }
+
+  if (b?.admin_zoda_id) {
+    const { data: adminProf } = await sb.from('user_profiles').select('id').eq('zoda_id', b.admin_zoda_id).single();
+    if (adminProf?.id) {
+      await sb.from('notificari').insert({
+        user_id: adminProf.id,
+        tip: 'balta_respinsa',
+        mesaj: `Cererea de publicare pentru "${b.nume}" a fost respinsă.${motiv ? ' Motiv: ' + motiv : ''}`,
+        meta: { balta_id: id, motiv }
+      });
+    }
+  }
+  showToast('Cerere respinsă.');
+  loadAprobari();
+  updateAprobariPendingBadge();
 }
 
 async function loadCapturi() {
@@ -1756,6 +1881,7 @@ async function bootAdmin(user) {
   showScreen('dashboard');
   loadBalti();
   loadStats();
+  updateAprobariPendingBadge();
   updateCapturiPendingBadge();
   updateMesajePendingBadge();
 }
