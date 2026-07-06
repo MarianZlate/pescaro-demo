@@ -365,6 +365,17 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 </div>
 
 <div id="layout" style="display:none;">
+
+<!-- BANNER LISTARE DE BAZA — vizibil doar cand BALTA.vizibilitate === 'basic' -->
+<div id="basic-tier-banner" style="display:none;background:linear-gradient(135deg,#1e293b,#111827);border:1px solid #334155;border-radius:14px;padding:16px 20px;margin-bottom:14px;align-items:center;gap:16px;flex-wrap:wrap;">
+  <div style="font-size:28px;flex-shrink:0;">🔍</div>
+  <div style="flex:1;min-width:220px;">
+    <div style="font-weight:800;font-size:14px;color:#f1f5f9;margin-bottom:3px;">Listare de bază — neverificată încă</div>
+    <div style="font-size:12.5px;color:#94a3b8;line-height:1.5;">Datele de mai jos provin din surse publice și n-au fost confirmate de administratorul bălții. Nu există încă poze, standuri sau video de prezentare.</div>
+  </div>
+  <a href="#" onclick="openClaimModal();return false;" style="flex-shrink:0;background:#a3e635;color:#0a0f1a;font-weight:800;font-size:13px;padding:10px 18px;border-radius:9px;text-decoration:none;white-space:nowrap;">Ești administratorul? Revendic-o →</a>
+</div>
+
 <div class="lc">
 
   <!-- Info bar -->
@@ -589,6 +600,43 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 </footer>
 
 <!-- OVERLAY GENERIC — TARIFE / REGULAMENT (in afara #map-wrap, ca sa functioneze si pt balti fara harta) -->
+<!-- MODAL REVENDICARE BALTA — folosit doar pe baltile 'basic', mesaj adaptat -->
+<div id="claim-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2200;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:480px;margin:0 16px;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;background:#0a0f1a;">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:#f1f5f9;">🔍 Revendică balta</div>
+        <div style="font-size:12px;color:#4b5563;margin-top:3px;">Ești administratorul acestei bălți? Contactează-ne să preiei controlul complet.</div>
+      </div>
+      <button onclick="closeClaimModal()" style="background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px;">📧</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">EMAIL</div>
+          <a id="claim-email-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
+        </div>
+      </div>
+      <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px;">📞</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">TELEFON</div>
+          <a id="claim-phone-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
+        </div>
+      </div>
+      <a id="claim-wa-link" href="#" target="_blank" style="display:flex;align-items:center;gap:14px;background:#25d366;border-radius:12px;padding:16px;text-decoration:none;cursor:pointer;">
+        <div style="font-size:28px;">💬</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:rgba(0,0,0,.5);letter-spacing:.06em;margin-bottom:4px;">WHATSAPP</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">Trimite mesaj pe WhatsApp →</div>
+        </div>
+      </a>
+      <div id="claim-loading" style="text-align:center;color:#4b5563;font-size:13px;padding:8px 0;display:none;">Se încarcă informațiile de contact...</div>
+    </div>
+  </div>
+</div>
+
 <div id="info-overlay-backdrop" onclick="closeInfoOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2099;"></div>
 <div id="info-overlay" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2100;background:#111827;border:1px solid #1e293b;border-radius:14px;width:calc(100% - 24px);max-width:480px;max-height:80vh;overflow:hidden;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.85);">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #1e293b;flex-shrink:0;">
@@ -916,6 +964,17 @@ function renderPage(hartaUrl) {
   }
   if (b.regulament && b.regulament.trim()) {
     document.getElementById('btn-regulament').style.display = 'flex';
+  }
+
+  // Listare de bază (neverificată) — banner de revendicare + ascundem
+  // secțiunile care n-ar avea sens fără date reale (Top 10 / capturi).
+  if (b.vizibilitate === 'basic') {
+    var basicBanner = document.getElementById('basic-tier-banner');
+    if (basicBanner) basicBanner.style.display = 'flex';
+    var top10Card = document.getElementById('top10-card');
+    if (top10Card) top10Card.style.display = 'none';
+    var top10LunarCard = document.getElementById('top10-lunar-card');
+    if (top10LunarCard) top10LunarCard.style.display = 'none';
   }
 
   // Navigare GPS
@@ -1495,6 +1554,46 @@ function closeInfoOverlay() {
   document.getElementById('info-overlay-backdrop').style.display = 'none';
 }
 
+// ── MODAL REVENDICARE BALTA (doar pt bălți 'basic') ────────────────────────────
+var _platSettingsClaim = null;
+async function openClaimModal() {
+  document.getElementById('claim-modal').style.display = 'flex';
+  if (!_platSettingsClaim) {
+    document.getElementById('claim-loading').style.display = 'block';
+    const { data } = await sb.from('platform_settings').select('*').eq('id', 1).single();
+    _platSettingsClaim = data || {};
+    document.getElementById('claim-loading').style.display = 'none';
+  }
+  var s = _platSettingsClaim;
+  var email = s.contact_email || '';
+  var phone = s.contact_phone || '';
+  var wa    = s.contact_whatsapp || '';
+  var numeBalta = (BALTA && BALTA.nume) ? BALTA.nume : 'această baltă';
+  var idBalta = (BALTA && BALTA.id) ? BALTA.id : '—';
+  var waText = 'Bună ziua! Sunt administratorul bălții "' + numeBalta + '" (Zoda ID ' + idBalta + ') și vreau să preiau contul de pe Zoda.';
+  var mailSubject = 'Revendicare baltă: ' + numeBalta;
+  var waMsg = encodeURIComponent(waText);
+
+  var eEl = document.getElementById('claim-email-link');
+  eEl.textContent = email || 'Indisponibil';
+  eEl.href = email ? 'mailto:' + email + '?subject=' + encodeURIComponent(mailSubject) : '#';
+
+  var pEl = document.getElementById('claim-phone-link');
+  pEl.textContent = phone || 'Indisponibil';
+  pEl.href = phone ? 'tel:' + phone : '#';
+
+  var wEl = document.getElementById('claim-wa-link');
+  if (wa) {
+    wEl.href = 'https://wa.me/' + wa.replace(/\D/g,'') + '?text=' + waMsg;
+    wEl.style.opacity = '1'; wEl.style.pointerEvents = '';
+  } else {
+    wEl.href = '#'; wEl.style.opacity = '.4'; wEl.style.pointerEvents = 'none';
+  }
+}
+function closeClaimModal() {
+  document.getElementById('claim-modal').style.display = 'none';
+}
+
 function deselectStand() {
   selId = null;
   document.getElementById('stand-overlay').style.display = 'none';
@@ -1604,7 +1703,7 @@ function openFS(src) { document.getElementById('fs-img').src = src; document.get
 function closeFS() { document.getElementById('fs-modal').style.display = 'none'; document.getElementById('fs-img').src = ''; }
 function openYT(url) { var emb = ytEmbed(url); if (!emb) return; document.getElementById('yt-iframe').src = emb.replace('?rel=0','?rel=0&autoplay=1'); document.getElementById('yt-modal').style.display = 'flex'; }
 function closeYT() { document.getElementById('yt-iframe').src = ''; document.getElementById('yt-modal').style.display = 'none'; }
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeFS(); closeYT(); } });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeFS(); closeYT(); closeClaimModal(); } });
 
 // ─── EDIT MODE (admin) ─────────────────────────────────────────────────────
 var _origPositions = []; // backup pentru Anulează
