@@ -1134,6 +1134,8 @@ document.addEventListener('click', function(e) {
   }
 });
 
+var _raportePDF = {}; // { balta_id: jsPDF doc } — generat, in asteptarea descarcarii
+
 async function genereazaRaportBalta(id) {
   const btn = event?.target;
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Se generează...'; }
@@ -1226,12 +1228,26 @@ async function genereazaRaportBalta(id) {
     doc.setFontSize(8).setTextColor(150,150,150).setFont(undefined,'normal');
     doc.text('Generat automat de Zoda — platforma pentru balti de pescuit din Romania', 14, 290);
 
-    doc.save('raport-' + roAscii(b.nume).toLowerCase().replace(/[^a-z0-9]+/g,'-') + '.pdf');
+    _raportePDF[id] = { doc, filename: 'raport-' + roAscii(b.nume).toLowerCase().replace(/[^a-z0-9]+/g,'-') + '.pdf' };
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '⬇️ Descarcă PDF';
+      btn.onclick = function() { descarcaRaportBalta(id); };
+      btn.style.background = '#166534';
+      btn.style.color = '#fff';
+    }
   } catch (e) {
     showToast('Eroare la generarea raportului', true);
-  } finally {
     if (btn) { btn.disabled = false; btn.textContent = '📄 Raport'; }
   }
+}
+
+// Descarcă efectiv PDF-ul deja generat (pasul 2, separat de generare)
+function descarcaRaportBalta(id) {
+  const item = _raportePDF[id];
+  if (!item) { showToast('Generează raportul din nou.', true); return; }
+  item.doc.save(item.filename);
 }
 
 // ── STATISTICI PLATFORMĂ ─────────────────────────────────────────────────────
