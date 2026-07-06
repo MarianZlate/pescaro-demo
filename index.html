@@ -78,12 +78,12 @@ nav{display:flex;align-items:center;gap:6px;}
 .dd-open{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 #stats-bar{display:block;margin-bottom:10px;padding:0 14px;}
 .stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative;}
-.stats-hint{text-align:center;font-size:10.5px;color:#4b5563;margin-bottom:6px;}
+.stats-hint{text-align:center;font-size:10.5px;color:#94a3b8;margin-bottom:6px;text-shadow:0 1px 3px rgba(0,0,0,.8);}
 .stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;color:#64748b;text-align:center;padding:4px 12px;font-size:12px;}
 .stat-chip strong{color:#a3e635;font-size:16px;}
 .stat-chip-clickable{cursor:pointer;user-select:none;position:relative;transition:border-color .15s;}
 .stat-chip-clickable:hover{border-color:#a3e635;}
-.stat-chip-clickable strong{color:#60a5fa;}
+.stat-chip-clickable strong{color:#f1f5f9;}
 #public-balti-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#111827;border:1px solid #1e293b;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:900;min-width:260px;max-width:320px;max-height:320px;overflow-y:auto;text-align:left;}
 #public-balti-dropdown .pbd-hdr{padding:12px 14px;border-bottom:1px solid #1e293b;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.04em;}
 #public-balti-dropdown a{display:block;padding:9px 14px;font-size:13px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #0f172a;}
@@ -529,7 +529,7 @@ nav{display:flex;align-items:center;gap:6px;}
       <div class="stats-inner">
         <div class="stat-chip"><strong id="stat-inregistrate">—</strong> bălți înregistrate</div>
         <div class="stat-chip stat-chip-clickable" id="stat-publice-chip" onclick="togglePublicBaltiDropdown()">
-          <strong id="stat-publice">—</strong> ✅ Bălți Zoda ▾
+          <strong id="stat-publice">—</strong> Bălți Zoda ✅ ▾
           <div id="public-balti-dropdown">
             <div class="pbd-hdr">✅ BĂLȚI ZODA — COMPLETE ȘI VERIFICATE</div>
             <div id="public-balti-list"></div>
