@@ -1076,11 +1076,14 @@ function renderPage(hartaUrl) {
     document.getElementById('btn-regulament').style.display = 'flex';
   }
 
-  // Listare de bază (neverificată) — banner de revendicare + ascundem
-  // secțiunile care n-ar avea sens fără date reale (Top 10 / capturi).
+  // Listare de bază (neverificată) — banner de revendicare (doar dacă nu are
+  // deja un admin atribuit) + ascundem secțiunile care n-ar avea sens fără
+  // date reale (Top 10 / capturi).
   if (b.vizibilitate === 'basic') {
     var basicBanner = document.getElementById('basic-tier-banner');
-    if (basicBanner) basicBanner.style.display = 'flex';
+    if (basicBanner && !(b.admin_zoda_id && b.admin_zoda_id.trim())) {
+      basicBanner.style.display = 'flex';
+    }
     var top10Card = document.getElementById('top10-card');
     if (top10Card) top10Card.style.display = 'none';
     var top10LunarCard = document.getElementById('top10-lunar-card');
