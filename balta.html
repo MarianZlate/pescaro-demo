@@ -970,6 +970,7 @@ async function loadBalta(id) {
   CACHE.set(cacheKey, { balta: BALTA, standuri: ST, hartaUrl: hartaUrl }, 15);
   // Salvează balta în istoricul personal de vizite (local, per browser — nu e un contor public)
   saveVizitaIstoric(id, BALTA.nume);
+  inregistreazaVizitaReala(id);
   // Restaurează starea dacă userul vine înapoi din altă pagină
   restoreBaltaState();
 }
@@ -996,6 +997,18 @@ async function saveVizitaIstoric(id, nume) {
         { onConflict: 'user_id,balta_id' }
       );
     }
+  } catch (e) {}
+}
+
+// Contor real de vizite (pentru statistici) — o singură dată per baltă pe zi,
+// per browser, ca un refresh repetat sau un bot să nu umfle artificial cifra.
+async function inregistreazaVizitaReala(id) {
+  try {
+    var key = 'zoda_vizita_numarata_' + id;
+    var azi = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    if (localStorage.getItem(key) === azi) return; // deja numărată azi
+    await sb.rpc('inregistreaza_vizita', { p_balta_id: id });
+    localStorage.setItem(key, azi);
   } catch (e) {}
 }
 
