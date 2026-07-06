@@ -1693,6 +1693,34 @@ function retryStandFoto(img) {
   }, 1000 + tries * 800);
 }
 
+// ── CONVERSIE HEIC → JPEG (poze de pe iPhone vin implicit ca .heic, pe care
+//    niciun browser nu le poate afișa într-un <img>) ────────────────────────
+var _heic2anyLoading = null;
+function loadHeic2Any() {
+  if (window.heic2any) return Promise.resolve();
+  if (_heic2anyLoading) return _heic2anyLoading;
+  _heic2anyLoading = new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return _heic2anyLoading;
+}
+function isHeicFile(file) {
+  var t = (file.type || '').toLowerCase();
+  var n = (file.name || '').toLowerCase();
+  return t === 'image/heic' || t === 'image/heif' || n.endsWith('.heic') || n.endsWith('.heif');
+}
+async function convertToUploadableImage(file) {
+  if (!isHeicFile(file)) return file;
+  await loadHeic2Any();
+  var blob = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+  var jpgName = file.name.replace(/\.(heic|heif)$/i, '') + '.jpg';
+  return new File([blob], jpgName, { type: 'image/jpeg' });
+}
+
 async function uploadOverlayStandFoto(input) {
   var file = input.files[0];
   if (!file) return;
@@ -1700,6 +1728,11 @@ async function uploadOverlayStandFoto(input) {
   status.textContent = 'Se încarcă poza...';
   status.style.color = '#64748b';
   try {
+    if (isHeicFile(file)) {
+      status.textContent = 'Se convertește poza (HEIC → JPEG)...';
+      file = await convertToUploadableImage(file);
+      status.textContent = 'Se încarcă poza...';
+    }
     var fd = new FormData();
     fd.append('file', file);
     var resp = await fetch(WORKER_R2_UPLOAD + '?folder=standuri', { method: 'POST', body: fd });
