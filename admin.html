@@ -375,6 +375,7 @@ th,td{padding:8px 6px;}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -446,6 +447,7 @@ th,td{padding:8px 6px;}
   <!-- TABS -->
   <div class="tabs">
     <button class="tab active" onclick="switchTab('balti')">🎣 Bălți</button>
+    <button class="tab" onclick="switchTab('statistici')">📊 Statistici</button>
     <button class="tab" onclick="switchTab('aprobari')" style="position:relative;">🚀 Aprobări<span id="aprobari-pending-badge" class="tab-badge" style="display:none;"></span></button>
     <button class="tab" onclick="switchTab('users')">👥 Utilizatori</button>
     <button class="tab" onclick="switchTab('capturi')" style="position:relative;">📸 Capturi<span id="capturi-pending-badge" class="tab-badge" style="display:none;"></span></button>
@@ -501,6 +503,35 @@ th,td{padding:8px 6px;}
   </div>
 
   <!-- CAPTURI PANEL -->
+  <div id="panel-statistici" style="display:none;">
+    <div class="section-title">📊 Statistici platformă</div>
+
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;">
+      <label style="font-size:12px;color:#94a3b8;font-weight:600;">De la:</label>
+      <input type="date" id="stats-de-la" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:7px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+      <label style="font-size:12px;color:#94a3b8;font-weight:600;">Până la:</label>
+      <input type="date" id="stats-pana-la" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:7px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+      <button onclick="loadStatistici()" style="background:#166534;color:#fff;font-weight:700;font-size:12.5px;padding:8px 16px;border:none;border-radius:7px;cursor:pointer;">Aplică</button>
+      <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;">
+        <button onclick="setStatsInterval(7)" class="se-sort-btn" style="font-size:11.5px;">7 zile</button>
+        <button onclick="setStatsInterval(30)" class="se-sort-btn" style="font-size:11.5px;">30 zile</button>
+        <button onclick="setStatsInterval(90)" class="se-sort-btn" style="font-size:11.5px;">90 zile</button>
+        <button onclick="setStatsInterval(null)" class="se-sort-btn" style="font-size:11.5px;">Tot timpul</button>
+      </div>
+    </div>
+
+    <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
+      <div class="empty-state">Se încarcă...</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr;gap:16px;">
+      <div class="balta-admin-card">
+        <div style="font-weight:800;font-size:13px;color:#e2e8f0;margin-bottom:10px;">🏆 Top 10 bălți după vizite (în interval)</div>
+        <div id="stats-top-balti">Se încarcă...</div>
+      </div>
+    </div>
+  </div>
+
   <div id="panel-aprobari" style="display:none;">
     <div class="section-title">🚀 Cereri de aprobare — bălți gata de publicat</div>
     <div id="aprobari-list">
@@ -946,14 +977,16 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','aprobari','users','capturi','settings','reclame','mesaje'][i]===tab));
-  const pB = document.getElementById('panel-balti');    if(pB) pB.style.display    = tab==='balti'    ? 'block' : 'none';
-  const pA = document.getElementById('panel-aprobari'); if(pA) pA.style.display    = tab==='aprobari' ? 'block' : 'none';
-  const pU = document.getElementById('panel-users');    if(pU) pU.style.display    = tab==='users'    ? 'block' : 'none';
-  const pC = document.getElementById('panel-capturi');  if(pC) pC.style.display    = tab==='capturi'  ? 'block' : 'none';
-  const pS = document.getElementById('panel-settings'); if(pS) pS.style.display    = tab==='settings' ? 'block' : 'none';
-  const pR = document.getElementById('panel-reclame');  if(pR) pR.style.display    = tab==='reclame'  ? 'block' : 'none';
-  const pM = document.getElementById('panel-mesaje');   if(pM) pM.style.display    = tab==='mesaje'   ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','statistici','aprobari','users','capturi','settings','reclame','mesaje'][i]===tab));
+  const pB = document.getElementById('panel-balti');      if(pB) pB.style.display      = tab==='balti'      ? 'block' : 'none';
+  const pST= document.getElementById('panel-statistici'); if(pST) pST.style.display    = tab==='statistici' ? 'block' : 'none';
+  const pA = document.getElementById('panel-aprobari');   if(pA) pA.style.display      = tab==='aprobari'   ? 'block' : 'none';
+  const pU = document.getElementById('panel-users');      if(pU) pU.style.display      = tab==='users'      ? 'block' : 'none';
+  const pC = document.getElementById('panel-capturi');    if(pC) pC.style.display      = tab==='capturi'    ? 'block' : 'none';
+  const pS = document.getElementById('panel-settings');   if(pS) pS.style.display      = tab==='settings'   ? 'block' : 'none';
+  const pR = document.getElementById('panel-reclame');    if(pR) pR.style.display      = tab==='reclame'    ? 'block' : 'none';
+  const pM = document.getElementById('panel-mesaje');     if(pM) pM.style.display      = tab==='mesaje'     ? 'block' : 'none';
+  if(tab==='statistici') { setStatsInterval(30); }
   if(tab==='aprobari') loadAprobari();
   if(tab==='users')    loadUsers();
   if(tab==='capturi')  loadCapturi();
@@ -1053,6 +1086,203 @@ async function deleteMesaj(id) {
 }
 
 // ── CEREREI DE APROBARE PUBLICARE BALTĂ ──────────────────────────────────────
+// ── RAPORT PDF PER BALTĂ ──────────────────────────────────────────────────────
+// Notă: jsPDF nu suportă corect diacritice românești cu fonturile standard
+// (ă/â/î/ș/ț pot apărea ca simboluri greșite) — transliterăm în raport ca
+// să fie garantat lizibil, în loc să riscăm caractere stricate.
+function roAscii(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/ă/g,'a').replace(/â/g,'a').replace(/î/g,'i').replace(/ș|ş/g,'s').replace(/ț|ţ/g,'t')
+    .replace(/Ă/g,'A').replace(/Â/g,'A').replace(/Î/g,'I').replace(/Ș|Ş/g,'S').replace(/Ț|Ţ/g,'T');
+}
+
+async function genereazaRaportBalta(id) {
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Se generează...'; }
+  try {
+    const { data: b } = await sb.from('balti').select('*').eq('id', id).single();
+    if (!b) { showToast('Baltă negăsită', true); return; }
+
+    const [
+      { count: capturiTotal },
+      { count: capturiAprobate },
+      { data: ultimaCaptura },
+      { data: standuri },
+      { count: pozeGenerale },
+      { data: viziteRows },
+    ] = await Promise.all([
+      sb.from('capturi').select('id', { count: 'exact', head: true }).eq('balta_id', id),
+      sb.from('capturi').select('id', { count: 'exact', head: true }).eq('balta_id', id).eq('status','approved'),
+      sb.from('capturi').select('data_captura').eq('balta_id', id).eq('status','approved').order('data_captura',{ascending:false}).limit(1),
+      sb.from('standuri').select('id, rec_kg').eq('balta_id', id),
+      sb.from('poze').select('id', { count: 'exact', head: true }).eq('balta_id', id).is('stand_id', null),
+      sb.from('vizite_log').select('created_at').eq('balta_id', id),
+    ]);
+
+    const standuriTotal = (standuri||[]).length;
+    const standuriCuRecord = (standuri||[]).filter(s => s.rec_kg && parseFloat(s.rec_kg) > 0).length;
+
+    // grupare vizite pe luna (YYYY-MM)
+    const lunar = {};
+    (viziteRows||[]).forEach(v => {
+      const luna = v.created_at.slice(0,7);
+      lunar[luna] = (lunar[luna]||0) + 1;
+    });
+    const luniOrdonate = Object.keys(lunar).sort();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 20;
+
+    doc.setFontSize(20).setTextColor(20,83,45).setFont(undefined,'bold');
+    doc.text('Zoda — Raport balta', 14, y); y += 8;
+    doc.setFontSize(14).setTextColor(20,20,20);
+    doc.text(roAscii(b.nume), 14, y); y += 6;
+    doc.setFontSize(10).setTextColor(100,100,100).setFont(undefined,'normal');
+    doc.text(roAscii(b.judet||'') + ' · Generat: ' + new Date().toLocaleDateString('ro-RO'), 14, y); y += 12;
+
+    doc.setDrawColor(220,220,220);
+    doc.line(14, y, 196, y); y += 10;
+
+    const rows = [
+      ['Pe platforma din', b.created_at ? new Date(b.created_at).toLocaleDateString('ro-RO') : '-'],
+      ['Stare curenta', roAscii(b.vizibilitate)],
+      ['Total vizite (all-time)', String(b.vizite || (viziteRows||[]).length)],
+      ['Standuri', String(standuriTotal)],
+      ['Standuri cu record stabilit', String(standuriCuRecord)],
+      ['Poze generale', String(pozeGenerale||0)],
+      ['Capturi trimise (total)', String(capturiTotal||0)],
+      ['Capturi aprobate (total)', String(capturiAprobate||0)],
+      ['Ultima captura aprobata', ultimaCaptura?.[0]?.data_captura ? new Date(ultimaCaptura[0].data_captura).toLocaleDateString('ro-RO') : 'Niciodata'],
+    ];
+    doc.setFontSize(11);
+    rows.forEach(([label, val]) => {
+      doc.setFont(undefined,'normal').setTextColor(90,90,90);
+      doc.text(roAscii(label) + ':', 14, y);
+      doc.setFont(undefined,'bold').setTextColor(20,20,20);
+      doc.text(String(val), 100, y);
+      y += 8;
+    });
+
+    y += 6;
+    doc.setDrawColor(220,220,220);
+    doc.line(14, y, 196, y); y += 10;
+    doc.setFontSize(13).setFont(undefined,'bold').setTextColor(20,83,45);
+    doc.text('Vizite pe luna', 14, y); y += 8;
+
+    if (!luniOrdonate.length) {
+      doc.setFontSize(10).setFont(undefined,'normal').setTextColor(120,120,120);
+      doc.text('Nicio vizita inregistrata inca.', 14, y);
+    } else {
+      doc.setFontSize(10);
+      luniOrdonate.forEach(luna => {
+        if (y > 275) { doc.addPage(); y = 20; }
+        doc.setFont(undefined,'normal').setTextColor(90,90,90);
+        doc.text(luna, 14, y);
+        doc.setFont(undefined,'bold').setTextColor(20,20,20);
+        doc.text(String(lunar[luna]) + ' vizite', 60, y);
+        y += 7;
+      });
+    }
+
+    doc.setFontSize(8).setTextColor(150,150,150).setFont(undefined,'normal');
+    doc.text('Generat automat de Zoda — platforma pentru balti de pescuit din Romania', 14, 290);
+
+    doc.save('raport-' + roAscii(b.nume).toLowerCase().replace(/[^a-z0-9]+/g,'-') + '.pdf');
+  } catch (e) {
+    showToast('Eroare la generarea raportului', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📄 Raport'; }
+  }
+}
+
+// ── STATISTICI PLATFORMĂ ─────────────────────────────────────────────────────
+function setStatsInterval(days) {
+  const de = document.getElementById('stats-de-la');
+  const pana = document.getElementById('stats-pana-la');
+  const azi = new Date();
+  pana.value = azi.toISOString().slice(0, 10);
+  if (days === null) {
+    de.value = '2026-01-01'; // "tot timpul" — de la lansarea platformei
+  } else {
+    const start = new Date(azi.getTime() - days * 86400000);
+    de.value = start.toISOString().slice(0, 10);
+  }
+  loadStatistici();
+}
+
+async function loadStatistici() {
+  const grid = document.getElementById('stats-grid');
+  const topEl = document.getElementById('stats-top-balti');
+  grid.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+
+  const deLa = document.getElementById('stats-de-la').value || '2020-01-01';
+  const panaLa = document.getElementById('stats-pana-la').value || new Date().toISOString().slice(0,10);
+  const panaLaExclusiv = panaLa + 'T23:59:59';
+
+  const [
+    { count: useriNoi },
+    { count: capturiTrimise },
+    { count: capturiAprobate },
+    { count: capturiRespinse },
+    { data: cereriData },
+    { data: vizite },
+    { count: totalPublic },
+    { count: totalBasic },
+    { count: totalUnlisted },
+  ] = await Promise.all([
+    sb.from('user_profiles').select('id', { count: 'exact', head: true }).gte('created_at', deLa).lte('created_at', panaLaExclusiv),
+    sb.from('capturi').select('id', { count: 'exact', head: true }).gte('created_at', deLa).lte('created_at', panaLaExclusiv),
+    sb.from('capturi').select('id', { count: 'exact', head: true }).eq('status','approved').gte('created_at', deLa).lte('created_at', panaLaExclusiv),
+    sb.from('capturi').select('id', { count: 'exact', head: true }).eq('status','rejected').gte('created_at', deLa).lte('created_at', panaLaExclusiv),
+    sb.from('notificari').select('meta').eq('tip','cerere_publicare_balta').gte('created_at', deLa).lte('created_at', panaLaExclusiv),
+    sb.from('vizite_log').select('balta_id').gte('created_at', deLa).lte('created_at', panaLaExclusiv),
+    sb.from('balti').select('id', { count: 'exact', head: true }).eq('vizibilitate','public'),
+    sb.from('balti').select('id', { count: 'exact', head: true }).eq('vizibilitate','basic'),
+    sb.from('balti').select('id', { count: 'exact', head: true }).eq('vizibilitate','unlisted'),
+  ]);
+
+  const cereriUnice = new Set((cereriData||[]).map(c => c.meta?.balta_id)).size;
+  const totalVizite = (vizite||[]).length;
+  const rataAprobare = capturiTrimise > 0 ? Math.round((capturiAprobate/capturiTrimise)*100) : 0;
+
+  const cards = [
+    { label: '👥 Utilizatori noi', val: useriNoi||0 },
+    { label: '👁️ Vizite bălți', val: totalVizite },
+    { label: '📸 Capturi trimise', val: capturiTrimise||0 },
+    { label: '✅ Capturi aprobate', val: capturiAprobate||0 },
+    { label: '✕ Capturi respinse', val: capturiRespinse||0 },
+    { label: '📊 Rată aprobare capturi', val: rataAprobare + '%' },
+    { label: '🚀 Cereri publicare baltă', val: cereriUnice },
+    { label: '✅ Bălți publice (acum)', val: totalPublic||0 },
+    { label: '🔍 Bălți basic (acum)', val: totalBasic||0 },
+    { label: '🔒 Bălți unlisted (acum)', val: totalUnlisted||0 },
+  ];
+  grid.innerHTML = cards.map(c => `
+    <div class="balta-admin-card" style="text-align:center;padding:16px 10px;">
+      <div style="font-size:24px;font-weight:900;color:#a3e635;">${c.val}</div>
+      <div style="font-size:11.5px;color:#94a3b8;margin-top:4px;">${c.label}</div>
+    </div>`).join('');
+
+  // Top 10 bălți dupa vizite in interval
+  const countByBalta = {};
+  (vizite||[]).forEach(v => { countByBalta[v.balta_id] = (countByBalta[v.balta_id]||0) + 1; });
+  const topIds = Object.entries(countByBalta).sort((a,b) => b[1]-a[1]).slice(0,10);
+  if (!topIds.length) {
+    topEl.innerHTML = '<div style="color:#4b5563;font-size:12.5px;">Nicio vizită înregistrată în acest interval.</div>';
+    return;
+  }
+  const { data: baltiNume } = await sb.from('balti').select('id,nume,judet').in('id', topIds.map(t => +t[0]));
+  const numeMap = {};
+  (baltiNume||[]).forEach(b => { numeMap[b.id] = b; });
+  topEl.innerHTML = topIds.map(([id, count], i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;${i>0?'border-top:1px solid #1e293b;':''}">
+      <div style="font-size:13px;color:#e2e8f0;">${i+1}. ${escH(numeMap[id]?.nume || 'Baltă #'+id)} <span style="color:#4b5563;font-size:11.5px;">· ${escH(numeMap[id]?.judet||'')}</span></div>
+      <div style="font-weight:800;color:#a3e635;font-size:13px;">${count}</div>
+    </div>`).join('');
+}
+
 async function loadAprobari() {
   const listEl = document.getElementById('aprobari-list');
   listEl.innerHTML = '<div class="empty-state">Se încarcă...</div>';
@@ -2031,6 +2261,7 @@ function renderBaltiTable() {
               : `<button class="btn-pub" onclick="setBaltaVis(${b.id},'basic')">🔍 Basic</button>`}
           <button class="btn-edit" onclick="openEditBalta(${b.id})">✏️ Editează</button>
           <a class="btn-view" href="balta.html?id=${b.id}&edit=1">👁️ Vezi</a>
+          <button class="btn-edit" onclick="genereazaRaportBalta(${b.id})" title="Descarcă raport PDF">📄 Raport</button>
           <button class="btn-del" onclick="confirmDeleteBalta(${b.id},'${b.nume.replace(/'/g,"\\'")}')">🗑️</button>
         </div>
       </td>
