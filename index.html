@@ -6,6 +6,9 @@
 <title>Zoda — Bălți de pescuit din România</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
@@ -877,7 +880,7 @@ const MEDAL_C = ['#FFD700','#C0C0C0','#CD7F32'];
 const MEDAL_I = ['🥇','🥈','🥉'];
 
 // ── MAP ───────────────────────────────────────────────────────────────────────
-let map, highlightId = null;
+let map, markerCluster, highlightId = null;
 
 function isTouchDevice() {
   return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
@@ -913,11 +916,22 @@ document.addEventListener('touchstart', function(e) {
 }, { passive: true });
 
 function initMap() {
-  map = L.map('map', { center: [45.5, 24.8], zoom: 7 });
+  map = L.map('map', { center: [45.5, 24.8], zoom: 7, preferCanvas: true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(map);
+
+  // Grupare pini (clustering) — cu 250+ bălți, randarea individuală a
+  // fiecărui pin la zoom mic era principala cauză a lag-ului pe mobil.
+  // Gruparea reduce drastic numărul de elemente DOM active la un moment dat.
+  markerCluster = L.markerClusterGroup({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    disableClusteringAtZoom: 14, // sub acest nivel de zoom, pinii se despart complet
+    chunkedLoading: true
+  });
+  map.addLayer(markerCluster);
 
   // Pe mobil: dezactivăm interacțiunile touch implicit
   if (isTouchDevice()) {
@@ -927,16 +941,6 @@ function initMap() {
     document.getElementById('map-touch-overlay').classList.add('active');
   }
 
-  BALTI.forEach(b => {
-    if (!b.lat || !b.lng) return;
-    const icon = makeMarker(false);
-    const m = L.marker([b.lat, b.lng], { icon })
-      .addTo(map)
-      .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
-      .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
-    m.on('click', () => { flyToBalta(b.id); });
-    b._marker = m;
-  });
 
   window.__goToBalta = id => {
     saveIndexState();
@@ -993,8 +997,16 @@ function flyToBalta(id) {
   const b = BALTI.find(x => x.id === id);
   if (!b) return;
   BALTI.forEach(x => x._marker && x._marker.setIcon(makeMarker(x.id === id)));
-  map.flyTo([b.lat, b.lng], 13, { duration: 1.2 });
-  setTimeout(() => b._marker && b._marker.openPopup(), 1300);
+  if (b._marker && markerCluster.hasLayer(b._marker)) {
+    // zoomToShowLayer se ocupă corect de cazul în care pinul e ascuns
+    // într-un cluster la zoom mic — îl "desface" înainte să deschidă popup-ul
+    markerCluster.zoomToShowLayer(b._marker, () => {
+      b._marker.openPopup();
+    });
+  } else {
+    map.flyTo([b.lat, b.lng], 13, { duration: 1.2 });
+    setTimeout(() => b._marker && b._marker.openPopup(), 1300);
+  }
   // highlight in lista
   document.querySelectorAll('.balta-row').forEach(r => r.classList.toggle('active-row', +r.dataset.id === id));
 }
@@ -1423,22 +1435,28 @@ async function refreshBaltiInBackground() {
 // Admini văd toate bălțile (unlisted semi-transparent); userii văd doar public.
 function renderMapMarkers() {
   const isAdmin = currentRole === 'zoda_admin';
+  const skipTooltip = isTouchDevice(); // fără hover real pe touch, tooltip-ul e cost degeaba
   BALTI.forEach(b => {
     const visible = isAdmin || b.vizibilitate === 'public' || b.vizibilitate === 'basic';
     if (!b.lat || !b.lng) return;
     if (!b._marker) {
-      const m = L.marker([b.lat, b.lng], { icon: makeMarker(false, b.vizibilitate === 'basic') })
-        .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
-        .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
+      const m = L.marker([b.lat, b.lng], { icon: makeMarker(false, b.vizibilitate === 'basic') });
+      // Popup generat "leneș" — abia când userul chiar îl deschide, nu la încărcare
+      m.bindPopup(function() { return popHtml(b); }, { maxWidth: 240, minWidth: 220 });
+      if (!skipTooltip) {
+        m.bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
+      }
       m.on('click', () => { flyToBalta(b.id); });
       b._marker = m;
     }
     if (visible) {
-      if (!map.hasLayer(b._marker)) b._marker.addTo(map);
+      if (!markerCluster.hasLayer(b._marker)) markerCluster.addLayer(b._marker);
       b._marker.setOpacity(isAdmin && b.vizibilitate === 'unlisted' ? 0.55 : 1);
-      b._marker.setTooltipContent(isAdmin && b.vizibilitate === 'unlisted' ? b.nume + ' 🔒' : b.nume);
+      if (!skipTooltip) {
+        b._marker.setTooltipContent(isAdmin && b.vizibilitate === 'unlisted' ? b.nume + ' 🔒' : b.nume);
+      }
     } else {
-      if (map.hasLayer(b._marker)) map.removeLayer(b._marker);
+      if (markerCluster.hasLayer(b._marker)) markerCluster.removeLayer(b._marker);
     }
   });
   const publicOnlyCount = BALTI.filter(b => b.vizibilitate === 'public').length;
