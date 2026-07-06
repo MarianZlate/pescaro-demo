@@ -2052,8 +2052,10 @@ async function setUserRole(userId, rol) {
 // EDIT BALTĂ MODAL — fetch real din Supabase
 // ════════════════════════════════════════════════════════════════════════════════
 // ── Cloudinary eliminat — upload via Cloudflare R2 ──────────────────────────
+// ── CONVERSIE HEIC → JPEG — reutilizăm ensureNotHeic() deja existent mai sus ──
 // Funcție helper centralizată pentru upload la R2
 async function uploadToR2(file, folder) {
+  file = await ensureNotHeic(file);
   const fd = new FormData();
   fd.append('file', file);
   const resp = await fetch(`${WORKER_R2_UPLOAD}?folder=${folder}`, { method: 'POST', body: fd });
