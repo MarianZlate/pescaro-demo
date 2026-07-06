@@ -421,6 +421,43 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     </div>
   </div>
 
+  <!-- Editare informații baltă (telefon, whatsapp, facebook, tarife, regulament) -->
+  <div id="edit-info-panel" style="display:none;background:#111827;border:1px solid #1e293b;border-radius:12px;margin-top:10px;overflow:hidden;">
+    <div onclick="toggleEditInfoPanel()" style="display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;">
+      <span style="font-size:16px;">✏️</span>
+      <div style="flex:1;font-weight:700;font-size:13px;color:#e2e8f0;">Editare informații baltă</div>
+      <span id="edit-info-arrow" style="color:#64748b;">▸</span>
+    </div>
+    <div id="edit-info-body" style="display:none;padding:0 14px 16px;flex-direction:column;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">TELEFON</label>
+          <input type="tel" id="einfo-telefon" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">WHATSAPP</label>
+          <input type="tel" id="einfo-whatsapp" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">LINK FACEBOOK</label>
+        <input type="url" id="einfo-facebook" placeholder="https://facebook.com/..." style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">💰 TARIFE</label>
+        <textarea id="einfo-tarife" rows="4" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;font-family:inherit;resize:vertical;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">📋 REGULAMENT</label>
+        <textarea id="einfo-regulament" rows="5" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;font-family:inherit;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="saveEditInfoPanel()" style="background:#166534;color:#fff;font-weight:700;font-size:13px;padding:9px 18px;border:none;border-radius:8px;cursor:pointer;">💾 Salvează</button>
+        <span id="einfo-status" style="font-size:12px;color:#64748b;"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- Map + Sidebar + Top10: wrapper flex pe desktop -->
   <div id="main-area">
   <div id="map-grid">
@@ -434,6 +471,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div id="stand-overlay">
       <div class="ov-hdr">
         <div class="spnr" id="ov-nr">Stand 1</div>
+        <button id="ov-edit-btn" onclick="toggleOverlayEdit()" style="display:none;background:rgba(163,230,53,.1);border:1px solid rgba(163,230,53,.3);color:#a3e635;font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;margin-right:6px;">✏️ Editează</button>
         <button class="xbtn" onclick="closeOverlay()">✕</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
@@ -453,6 +491,40 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
             <div class="stat-row"><span class="stat-lbl">📏 Lățime stand</span><strong id="ov-la" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
             <div class="stat-row"><span class="stat-lbl">🎯 Distanță lansare</span><strong id="ov-di" style="color:#a3e635;font-size:14px;font-weight:900;">-</strong></div>
           </div>
+        </div>
+      </div>
+
+      <!-- Editare detalii stand (nume/adâncime/distanță/lățime + galerie poze) -->
+      <div id="ov-edit-section" style="display:none;padding:12px 10px;border-top:1px solid #1e293b;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#4b5563;">ZONĂ / DESCRIERE</label>
+            <input type="text" id="ov-edit-zona" style="width:100%;margin-top:3px;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:6px 8px;color:#f1f5f9;font-size:12.5px;outline:none;"/>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#4b5563;">ADÂNCIME (m)</label>
+            <input type="number" step="0.1" id="ov-edit-adancime" style="width:100%;margin-top:3px;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:6px 8px;color:#f1f5f9;font-size:12.5px;outline:none;"/>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#4b5563;">DISTANȚĂ LANSARE (m)</label>
+            <input type="number" id="ov-edit-distanta" style="width:100%;margin-top:3px;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:6px 8px;color:#f1f5f9;font-size:12.5px;outline:none;"/>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#4b5563;">LĂȚIME ZONĂ (m)</label>
+            <input type="number" id="ov-edit-latime" style="width:100%;margin-top:3px;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:6px 8px;color:#f1f5f9;font-size:12.5px;outline:none;"/>
+          </div>
+        </div>
+        <label style="font-size:10px;font-weight:700;color:#4b5563;">📸 POZE STAND</label>
+        <div id="ov-edit-gallery" style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 10px;"></div>
+        <label class="rec-upload-btn" style="display:inline-flex;align-items:center;gap:5px;background:rgba(163,230,53,.1);border:1px solid rgba(163,230,53,.3);color:#a3e635;font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer;margin-bottom:10px;">
+          📷 Adaugă poză
+          <input type="file" accept="image/*" style="display:none;" onchange="uploadOverlayStandFoto(this)"/>
+        </label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="saveOverlayStandDetails()" style="background:#166534;color:#fff;font-weight:700;font-size:12.5px;padding:8px 16px;border:none;border-radius:7px;cursor:pointer;">💾 Salvează stand</button>
+          <span id="ov-edit-status" style="font-size:11.5px;color:#64748b;"></span>
         </div>
       </div>
     </div>
@@ -674,6 +746,8 @@ var sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
 // ─── STATE ─────────────────────────────────────────────────────────────────
 var BALTA = null;     // row din tabela balti
 var WA_FALLBACK_DIGITS = ''; // cifrele telefonului, cand e introdus complet cu indicativ, folosite ca fallback pt WhatsApp/Tarife
+var WORKER_R2_UPLOAD = 'https://zoda-r2-upload.marianzlate90.workers.dev';
+var CAN_EDIT = false; // true daca userul curent (zoda_admin sau balta_admin al acestei balti) poate edita
 var ST = [];          // standuri cu pozitii + poze
 var CAPTURES = [];    // capturi (viitor: tabela captures)
 var selId = null, editMode = false;
@@ -825,7 +899,7 @@ async function loadBalta(id) {
   ST = standuri.map(function(s, i) {
     var pozitie = {};
     try { pozitie = s.pozitie ? JSON.parse(s.pozitie) : {}; } catch(e) {}
-    var pozeFotou = poze.filter(function(p){ return p.stand_id === s.id; }).map(function(p){ return {u: p.url, c: s.nume}; });
+    var pozeFotou = poze.filter(function(p){ return p.stand_id === s.id; }).map(function(p){ return {u: p.url, c: s.nume, id: p.id}; });
     return {
       id: s.id,
       nr: i + 1,
@@ -858,8 +932,28 @@ async function loadBalta(id) {
       if (!user) return;
 
       var rRes = await sb.from('user_roles').select('rol').eq('id', user.id).single();
-      if (rRes.data && rRes.data.rol === 'zoda_admin') {
+      var rol = rRes.data?.rol;
+      var canEdit = false;
+      if (rol === 'zoda_admin') {
+        canEdit = true;
+      } else if (rol === 'balta_admin') {
+        var pRes = await sb.from('user_profiles').select('zoda_id').eq('id', user.id).single();
+        if (pRes.data?.zoda_id && pRes.data.zoda_id === BALTA.admin_zoda_id) {
+          canEdit = true;
+        }
+      }
+      if (canEdit) {
+        CAN_EDIT = true;
         document.getElementById('edit-bar').style.display = 'flex';
+        var infoPanel = document.getElementById('edit-info-panel');
+        if (infoPanel) {
+          infoPanel.style.display = 'block';
+          document.getElementById('einfo-telefon').value = BALTA.telefon || '';
+          document.getElementById('einfo-whatsapp').value = BALTA.whatsapp || '';
+          document.getElementById('einfo-facebook').value = BALTA.facebook || '';
+          document.getElementById('einfo-tarife').value = BALTA.tarife || '';
+          document.getElementById('einfo-regulament').value = BALTA.regulament || '';
+        }
       }
     }
 
@@ -916,7 +1010,7 @@ async function refreshBaltaInBackground(id, cacheKey) {
     var standuri = (sRes.data || []).map(function(s, i) {
       var pozitie = {};
       try { pozitie = s.pozitie ? JSON.parse(s.pozitie) : {}; } catch(e) {}
-      var pozeFotou = poze.filter(function(p){ return p.stand_id === s.id; }).map(function(p){ return {u: p.url, c: s.nume}; });
+      var pozeFotou = poze.filter(function(p){ return p.stand_id === s.id; }).map(function(p){ return {u: p.url, c: s.nume, id: p.id}; });
       return {
         id: s.id, nr: i+1,
         x: pozitie.x != null ? pozitie.x : (4 + (i % 23) * 4),
@@ -1489,6 +1583,11 @@ function openOverlay(id) {
   var s = ST.find(function(x) { return x.id === id; });
   document.getElementById('ov-nr').textContent = s.z || ('Stand ' + s.nr);
 
+  var editBtn = document.getElementById('ov-edit-btn');
+  if (editBtn) editBtn.style.display = CAN_EDIT ? 'inline-flex' : 'none';
+  var editSection = document.getElementById('ov-edit-section');
+  if (editSection) editSection.style.display = 'none';
+
   document.getElementById('ov-kg').textContent = (s.r.kg !== '' && s.r.kg !== null && s.r.kg !== '-') ? s.r.kg + ' kg' : '—';
   var peEl = document.getElementById('ov-pe');
   var peName = (s.r.pe && s.r.pe !== '-') ? s.r.pe : '—';
@@ -1546,6 +1645,114 @@ function openOverlay(id) {
   document.getElementById('stand-overlay-backdrop').style.display = 'block';
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
+}
+
+// ── EDITARE DETALII STAND (zonă, adâncime, distanță, lățime, poze) ──────────
+function toggleOverlayEdit() {
+  var section = document.getElementById('ov-edit-section');
+  var opening = section.style.display === 'none';
+  if (opening) {
+    var s = ST.find(function(x) { return x.id === selId; });
+    document.getElementById('ov-edit-zona').value = s.z || '';
+    document.getElementById('ov-edit-adancime').value = s.ad || '';
+    document.getElementById('ov-edit-distanta').value = s.di || '';
+    document.getElementById('ov-edit-latime').value = s.la || '';
+    renderOverlayGallery(s);
+    document.getElementById('ov-edit-status').textContent = '';
+  }
+  section.style.display = opening ? 'block' : 'none';
+}
+
+function renderOverlayGallery(s) {
+  var wrap = document.getElementById('ov-edit-gallery');
+  var gal = s.g || [];
+  if (!gal.length) {
+    wrap.innerHTML = '<div style="font-size:11px;color:#4b5563;">Nicio poză adăugată încă.</div>';
+    return;
+  }
+  wrap.innerHTML = gal.map(function(p) {
+    return '<div style="position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid #1e293b;">' +
+      '<img src="' + p.u + '" style="width:100%;height:100%;object-fit:cover;"/>' +
+      '<button onclick="deleteOverlayStandFoto(' + p.id + ')" title="Șterge" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;color:#ef4444;font-size:11px;width:18px;height:18px;border-radius:4px;cursor:pointer;line-height:1;">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+async function uploadOverlayStandFoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var status = document.getElementById('ov-edit-status');
+  status.textContent = 'Se încarcă poza...';
+  status.style.color = '#64748b';
+  try {
+    var fd = new FormData();
+    fd.append('file', file);
+    var resp = await fetch(WORKER_R2_UPLOAD + '?folder=standuri', { method: 'POST', body: fd });
+    var data = await resp.json();
+    if (!resp.ok || !data.url) throw new Error(data.error || 'Eroare upload');
+
+    var { data: inserted, error } = await sb.from('poze')
+      .insert({ balta_id: BALTA.id, stand_id: selId, url: data.url })
+      .select().single();
+    if (error) throw error;
+
+    var s = ST.find(function(x) { return x.id === selId; });
+    s.g = s.g || [];
+    s.g.push({ u: data.url, c: s.z, id: inserted.id });
+    renderOverlayGallery(s);
+    status.textContent = '✓ Poză adăugată!';
+    status.style.color = '#a3e635';
+  } catch (e) {
+    status.textContent = '✕ Eroare la încărcare poză';
+    status.style.color = '#ef4444';
+  }
+  input.value = '';
+}
+
+async function deleteOverlayStandFoto(pozaId) {
+  if (!confirm('Ștergi această poză?')) return;
+  try {
+    const { error } = await sb.from('poze').delete().eq('id', pozaId);
+    if (error) throw error;
+    var s = ST.find(function(x) { return x.id === selId; });
+    s.g = (s.g || []).filter(function(p) { return p.id !== pozaId; });
+    renderOverlayGallery(s);
+  } catch (e) {
+    alert('Eroare la ștergerea pozei.');
+  }
+}
+
+async function saveOverlayStandDetails() {
+  var status = document.getElementById('ov-edit-status');
+  status.textContent = 'Se salvează...';
+  status.style.color = '#64748b';
+  var zona = document.getElementById('ov-edit-zona').value.trim();
+  var adancime = parseFloat(document.getElementById('ov-edit-adancime').value) || null;
+  var distanta = parseInt(document.getElementById('ov-edit-distanta').value, 10) || null;
+  var latime = parseInt(document.getElementById('ov-edit-latime').value, 10) || null;
+  try {
+    const { data, error } = await sb.rpc('actualizeaza_stand_admin', {
+      p_stand_id: selId, p_zona: zona || null, p_adancime: adancime, p_distanta: distanta, p_latime: latime
+    });
+    if (error) throw error;
+    if (data && data.eroare) {
+      status.textContent = '✕ ' + data.eroare;
+      status.style.color = '#ef4444';
+      return;
+    }
+    var s = ST.find(function(x) { return x.id === selId; });
+    if (zona) s.z = zona;
+    s.ad = adancime; s.di = distanta; s.la = latime;
+    document.getElementById('ov-nr').textContent = s.z || ('Stand ' + s.nr);
+    document.getElementById('ov-la').textContent = (latime ? latime + 'm' : '—');
+    document.getElementById('ov-di').textContent = (distanta ? distanta + 'm' : '—');
+    updatePills();
+    status.textContent = '✓ Salvat!';
+    status.style.color = '#a3e635';
+  } catch (e) {
+    status.textContent = '✕ Eroare la salvare';
+    status.style.color = '#ef4444';
+  }
 }
 
 function closeOverlay() {
@@ -1947,6 +2154,48 @@ function refreshLegendList() {
       +'</div>';
   }).join('');
   initSortableList();
+}
+
+// ── EDITARE INFORMAȚII BALTĂ (telefon/whatsapp/facebook/tarife/regulament) ──
+function toggleEditInfoPanel() {
+  var body = document.getElementById('edit-info-body');
+  var arrow = document.getElementById('edit-info-arrow');
+  var open = body.style.display !== 'flex';
+  body.style.display = open ? 'flex' : 'none';
+  arrow.textContent = open ? '▾' : '▸';
+}
+async function saveEditInfoPanel() {
+  var status = document.getElementById('einfo-status');
+  status.textContent = 'Se salvează...';
+  status.style.color = '#64748b';
+  var payload = {
+    p_balta_id: BALTA.id,
+    p_telefon: document.getElementById('einfo-telefon').value.trim(),
+    p_whatsapp: document.getElementById('einfo-whatsapp').value.trim(),
+    p_facebook: document.getElementById('einfo-facebook').value.trim(),
+    p_tarife: document.getElementById('einfo-tarife').value.trim(),
+    p_regulament: document.getElementById('einfo-regulament').value.trim(),
+  };
+  try {
+    const { data, error } = await sb.rpc('actualizeaza_balta_admin', payload);
+    if (error) throw error;
+    if (data && data.eroare) {
+      status.textContent = '✕ ' + data.eroare;
+      status.style.color = '#ef4444';
+      return;
+    }
+    // actualizăm obiectul local ca butoanele (Tarife/Regulament/WA/FB) să reflecte imediat
+    BALTA.telefon = payload.p_telefon;
+    BALTA.whatsapp = payload.p_whatsapp;
+    BALTA.facebook = payload.p_facebook;
+    BALTA.tarife = payload.p_tarife;
+    BALTA.regulament = payload.p_regulament;
+    status.textContent = '✓ Salvat!';
+    status.style.color = '#a3e635';
+  } catch (e) {
+    status.textContent = '✕ Eroare la salvare';
+    status.style.color = '#ef4444';
+  }
 }
 
 function toggleEdit() {
