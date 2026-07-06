@@ -1065,14 +1065,31 @@ function onSearch(q) {
   if (!q.trim()) { dd.style.display = 'none'; return; }
   const isAdmin = currentRole === 'zoda_admin';
   const qn = normStr(q);
-  const res = BALTI.filter(b => {
-    if (!(isAdmin || b.vizibilitate === 'public' || b.vizibilitate === 'basic')) return false;
+
+  const scored = [];
+  BALTI.forEach(b => {
+    if (!(isAdmin || b.vizibilitate === 'public' || b.vizibilitate === 'basic')) return;
     const nameN = normStr(b.nume);
     const judetN = normStr(b.judet);
-    if (nameN.includes(qn) || judetN.includes(qn)) return true;
-    return fuzzyWordMatch(qn, nameN) || fuzzyWordMatch(qn, judetN) ||
-           fuzzyPrefixMatch(qn, nameN) || fuzzyPrefixMatch(qn, judetN);
+
+    // Scor de relevanță: cu cât mai mic, cu atât mai sus în listă.
+    // Potrivirile exacte pe nume ies mereu înaintea celor "aproximative" (fuzzy).
+    let score = null;
+    if (nameN === qn) score = 0;
+    else if (nameN.startsWith(qn)) score = 1;
+    else if (nameN.includes(qn)) score = 2;
+    else if (judetN.startsWith(qn)) score = 3;
+    else if (judetN.includes(qn)) score = 4;
+    else if (fuzzyPrefixMatch(qn, nameN)) score = 5;
+    else if (fuzzyWordMatch(qn, nameN)) score = 6;
+    else if (fuzzyPrefixMatch(qn, judetN) || fuzzyWordMatch(qn, judetN)) score = 7;
+
+    if (score !== null) scored.push({ b, score });
   });
+
+  scored.sort((x, y) => x.score - y.score || x.b.nume.localeCompare(y.b.nume, 'ro'));
+  const res = scored.slice(0, 20).map(s => s.b);
+
   if (!res.length) {
     dd.innerHTML = '<div style="padding:14px 16px;color:#4b5563;font-size:13px;">Nicio baltă găsită</div>';
     dd.style.display = 'block';
