@@ -821,6 +821,39 @@ var CACHE = {
   }
 };
 
+async function checkAdminAndShowBar() {
+  // Citim sesiunea din localStorage (zoda-auth) — fără token în URL
+  var { data: { session } } = await sb.auth.getSession();
+  var user = session?.user;
+
+  if (!user) return;
+
+  var rRes = await sb.from('user_roles').select('rol').eq('id', user.id).single();
+  var rol = rRes.data?.rol;
+  var canEdit = false;
+  if (rol === 'zoda_admin') {
+    canEdit = true;
+  } else if (rol === 'balta_admin') {
+    var pRes = await sb.from('user_profiles').select('zoda_id').eq('id', user.id).single();
+    if (pRes.data?.zoda_id && pRes.data.zoda_id === BALTA.admin_zoda_id) {
+      canEdit = true;
+    }
+  }
+  if (canEdit) {
+    CAN_EDIT = true;
+    document.getElementById('edit-bar').style.display = 'flex';
+    var infoPanel = document.getElementById('edit-info-panel');
+    if (infoPanel) {
+      infoPanel.style.display = 'block';
+      document.getElementById('einfo-telefon').value = BALTA.telefon || '';
+      document.getElementById('einfo-whatsapp').value = BALTA.whatsapp || '';
+      document.getElementById('einfo-facebook').value = BALTA.facebook || '';
+      document.getElementById('einfo-tarife').value = BALTA.tarife || '';
+      document.getElementById('einfo-regulament').value = BALTA.regulament || '';
+    }
+  }
+}
+
 async function loadBalta(id) {
   var cacheKey = 'balta_' + id;
   var cached = CACHE.get(cacheKey);
@@ -834,6 +867,9 @@ async function loadBalta(id) {
     renderPage(hartaUrl);
     loadTop10Lunar(id);
     loadHallOfFame(id);
+    if (new URLSearchParams(location.search).get('edit') === '1') {
+      checkAdminAndShowBar();
+    }
     // Refresh în background
     setTimeout(function() { refreshBaltaInBackground(id, cacheKey); }, 100);
     return;
@@ -924,39 +960,6 @@ async function loadBalta(id) {
   // Arată edit bar DOAR dacă pagina e deschisă cu ?edit=1 din admin
   var editParam = new URLSearchParams(location.search).get('edit') === '1';
   if (editParam) {
-    async function checkAdminAndShowBar() {
-      // Citim sesiunea din localStorage (zoda-auth) — fără token în URL
-      var { data: { session } } = await sb.auth.getSession();
-      var user = session?.user;
-
-      if (!user) return;
-
-      var rRes = await sb.from('user_roles').select('rol').eq('id', user.id).single();
-      var rol = rRes.data?.rol;
-      var canEdit = false;
-      if (rol === 'zoda_admin') {
-        canEdit = true;
-      } else if (rol === 'balta_admin') {
-        var pRes = await sb.from('user_profiles').select('zoda_id').eq('id', user.id).single();
-        if (pRes.data?.zoda_id && pRes.data.zoda_id === BALTA.admin_zoda_id) {
-          canEdit = true;
-        }
-      }
-      if (canEdit) {
-        CAN_EDIT = true;
-        document.getElementById('edit-bar').style.display = 'flex';
-        var infoPanel = document.getElementById('edit-info-panel');
-        if (infoPanel) {
-          infoPanel.style.display = 'block';
-          document.getElementById('einfo-telefon').value = BALTA.telefon || '';
-          document.getElementById('einfo-whatsapp').value = BALTA.whatsapp || '';
-          document.getElementById('einfo-facebook').value = BALTA.facebook || '';
-          document.getElementById('einfo-tarife').value = BALTA.tarife || '';
-          document.getElementById('einfo-regulament').value = BALTA.regulament || '';
-        }
-      }
-    }
-
     checkAdminAndShowBar();
   }
 
