@@ -2212,6 +2212,8 @@ function toggleEdit() {
   document.getElementById('btn-edit').style.display   = 'none';
   document.getElementById('btn-cancel').style.display = 'block';
   document.getElementById('btn-save').style.display   = 'block';
+  document.getElementById('btn-save').disabled   = false;
+  document.getElementById('btn-cancel').disabled = false;
   document.getElementById('edit-bar-hint').classList.add('active');
 
   document.getElementById('edit-status-icon').textContent  = '✏️';
@@ -2290,6 +2292,8 @@ async function savePositions() {
     document.getElementById('edit-status-title').textContent = 'Poziții salvate!';
     document.getElementById('edit-status-title').style.color = '#a3e635';
     document.getElementById('edit-status-sub').textContent   = '';
+    document.getElementById('btn-save').disabled   = false;
+    document.getElementById('btn-cancel').disabled = false;
     setTimeout(function() {
       exitEditMode();
       document.getElementById('edit-status-title').textContent = 'Poziții blocate';
