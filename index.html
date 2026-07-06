@@ -6,9 +6,6 @@
 <title>Zoda — Bălți de pescuit din România</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
@@ -82,10 +79,10 @@ nav{display:flex;align-items:center;gap:6px;}
 #stats-bar{display:block;margin-bottom:10px;padding:0 14px;}
 .stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative;}
 .stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;color:#64748b;text-align:center;padding:4px 10px;font-size:11px;white-space:nowrap;}
-.stat-chip strong{color:#a3e635;font-size:14px;}
+.stat-chip strong{color:#f1f5f9;font-size:14px;}
 .stat-chip-clickable{cursor:pointer;user-select:none;position:relative;transition:border-color .15s;}
 .stat-chip-clickable:hover{border-color:#a3e635;}
-.stat-chip-clickable strong{color:#f1f5f9;}
+.stat-chip-clickable strong{color:#a3e635;}
 #public-balti-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#111827;border:1px solid #1e293b;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:900;min-width:260px;max-width:320px;max-height:320px;overflow-y:auto;text-align:left;}
 #public-balti-dropdown .pbd-hdr{padding:12px 14px;border-bottom:1px solid #1e293b;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.04em;}
 #public-balti-dropdown a{display:block;padding:9px 14px;font-size:13px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #0f172a;}
@@ -107,6 +104,7 @@ nav{display:flex;align-items:center;gap:6px;}
 .pop-btn{width:100%;background:#166534;border:none;color:#a3e635;font-weight:700;font-size:12px;padding:8px;border-radius:7px;cursor:pointer;}
 .pop-btn:hover{background:#1a7a40;}
 #map-legend{position:absolute;bottom:14px;left:14px;background:rgba(10,15,26,.85);border:1px solid #1e293b;border-radius:8px;padding:8px 12px;font-size:11px;color:#64748b;z-index:10;pointer-events:none;}
+#map-zoom-hint{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,15,26,.92);border:1px solid #334155;border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;color:#e2e8f0;z-index:15;pointer-events:none;text-align:center;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.5);}
 /* Overlay scroll-block pe mobil */
 #map-touch-overlay{display:none;position:absolute;inset:0;z-index:20;cursor:pointer;background:rgba(10,15,26,.45);align-items:center;justify-content:center;flex-direction:column;gap:8px;transition:opacity .2s;touch-action:pan-y;}
 #map-touch-overlay.active{display:flex;}
@@ -530,7 +528,7 @@ nav{display:flex;align-items:center;gap:6px;}
     <div class="stats-inner">
         <div class="stat-chip"><strong id="stat-inregistrate">—</strong> bălți înregistrate</div>
         <div class="stat-chip stat-chip-clickable" id="stat-publice-chip" onclick="togglePublicBaltiDropdown()">
-          <strong id="stat-publice">—</strong> Bălți Verificate Zoda <span style="font-size:15px;font-weight:900;">▾</span>
+          <strong id="stat-publice">—</strong> <span style="font-style:italic;">Bălți Verificate Zoda</span> <span style="font-size:15px;font-weight:900;">▾</span>
           <div id="public-balti-dropdown">
             <div class="pbd-hdr">✅ Bălți Verificate Zoda — complete, standuri, poze și video reale</div>
             <div id="public-balti-list"></div>
@@ -542,6 +540,7 @@ nav{display:flex;align-items:center;gap:6px;}
     <div id="map-wrap">
     <div id="map"></div>
     <div id="map-legend">🎣 Click pe marker pentru detalii</div>
+    <div id="map-zoom-hint">🔍 Dă zoom sau caută o baltă ca să vezi pinurile pe hartă</div>
     <div id="map-touch-overlay" onclick="activateMap()">
       <div class="mto-inner"><span class="mto-icon">👆</span> Apasă pentru a interacționa cu harta</div>
     </div>
@@ -880,7 +879,7 @@ const MEDAL_C = ['#FFD700','#C0C0C0','#CD7F32'];
 const MEDAL_I = ['🥇','🥈','🥉'];
 
 // ── MAP ───────────────────────────────────────────────────────────────────────
-let map, markerCluster, highlightId = null;
+let map, highlightId = null;
 
 function isTouchDevice() {
   return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
@@ -922,16 +921,12 @@ function initMap() {
     maxZoom: 19
   }).addTo(map);
 
-  // Grupare pini (clustering) — cu 250+ bălți, randarea individuală a
-  // fiecărui pin la zoom mic era principala cauză a lag-ului pe mobil.
-  // Gruparea reduce drastic numărul de elemente DOM active la un moment dat.
-  markerCluster = L.markerClusterGroup({
-    maxClusterRadius: 50,
-    spiderfyOnMaxZoom: true,
-    disableClusteringAtZoom: 14, // sub acest nivel de zoom, pinii se despart complet
-    chunkedLoading: true
-  });
-  map.addLayer(markerCluster);
+  // Randare "doar ce se vede" — cu 250+ bălți, arătarea tuturor pinurilor
+  // deodată (chiar și cu clustering) tot însemna prea mult DOM la zoom mic.
+  // În loc de asta, la fiecare mutare/zoom recalculăm și arătăm DOAR pinii
+  // aflați în dreptunghiul curent vizibil pe hartă — de obicei 5-20 pini,
+  // niciodată toate cele 250. Explorarea vizuală rămâne complet funcțională.
+  map.on('moveend zoomend', updateVisibleMarkers);
 
   // Pe mobil: dezactivăm interacțiunile touch implicit
   if (isTouchDevice()) {
@@ -997,16 +992,10 @@ function flyToBalta(id) {
   const b = BALTI.find(x => x.id === id);
   if (!b) return;
   BALTI.forEach(x => x._marker && x._marker.setIcon(makeMarker(x.id === id)));
-  if (b._marker && markerCluster.hasLayer(b._marker)) {
-    // zoomToShowLayer se ocupă corect de cazul în care pinul e ascuns
-    // într-un cluster la zoom mic — îl "desface" înainte să deschidă popup-ul
-    markerCluster.zoomToShowLayer(b._marker, () => {
-      b._marker.openPopup();
-    });
-  } else {
-    map.flyTo([b.lat, b.lng], 13, { duration: 1.2 });
-    setTimeout(() => b._marker && b._marker.openPopup(), 1300);
-  }
+  map.flyTo([b.lat, b.lng], 13, { duration: 1.2 });
+  // "moveend" (declanșat de flyTo) rulează updateVisibleMarkers() automat,
+  // care va adăuga pinul pe hartă dacă nu era deja — apoi îi deschidem popup-ul
+  setTimeout(() => { if (b._marker && map.hasLayer(b._marker)) b._marker.openPopup(); }, 1300);
   // highlight in lista
   document.querySelectorAll('.balta-row').forEach(r => r.classList.toggle('active-row', +r.dataset.id === id));
 }
@@ -1433,11 +1422,12 @@ async function refreshBaltiInBackground() {
 
 // Adaugă/actualizează markerii pe hartă în funcție de rol.
 // Admini văd toate bălțile (unlisted semi-transparent); userii văd doar public.
+var MAP_MIN_ZOOM_PINS = 9; // sub acest zoom, nu randăm pini deloc (prea multi la nivel de tara)
+
 function renderMapMarkers() {
   const isAdmin = currentRole === 'zoda_admin';
   const skipTooltip = isTouchDevice(); // fără hover real pe touch, tooltip-ul e cost degeaba
   BALTI.forEach(b => {
-    const visible = isAdmin || b.vizibilitate === 'public' || b.vizibilitate === 'basic';
     if (!b.lat || !b.lng) return;
     if (!b._marker) {
       const m = L.marker([b.lat, b.lng], { icon: makeMarker(false, b.vizibilitate === 'basic') });
@@ -1449,16 +1439,12 @@ function renderMapMarkers() {
       m.on('click', () => { flyToBalta(b.id); });
       b._marker = m;
     }
-    if (visible) {
-      if (!markerCluster.hasLayer(b._marker)) markerCluster.addLayer(b._marker);
-      b._marker.setOpacity(isAdmin && b.vizibilitate === 'unlisted' ? 0.55 : 1);
-      if (!skipTooltip) {
-        b._marker.setTooltipContent(isAdmin && b.vizibilitate === 'unlisted' ? b.nume + ' 🔒' : b.nume);
-      }
-    } else {
-      if (markerCluster.hasLayer(b._marker)) markerCluster.removeLayer(b._marker);
+    b._marker.setOpacity(isAdmin && b.vizibilitate === 'unlisted' ? 0.55 : 1);
+    if (!skipTooltip) {
+      b._marker.setTooltipContent(isAdmin && b.vizibilitate === 'unlisted' ? b.nume + ' 🔒' : b.nume);
     }
   });
+
   const publicOnlyCount = BALTI.filter(b => b.vizibilitate === 'public').length;
   const registeredCount = BALTI.filter(b => b.vizibilitate === 'public' || b.vizibilitate === 'basic').length;
   const visibleCount = isAdmin ? BALTI.length : registeredCount;
@@ -1466,6 +1452,37 @@ function renderMapMarkers() {
   const statPub = document.getElementById('stat-publice');
   if (statInreg) statInreg.textContent = visibleCount;
   if (statPub) statPub.textContent = publicOnlyCount;
+
+  updateVisibleMarkers();
+}
+
+// Adaugă/scoate pini de pe hartă în funcție DOAR de ce e vizibil în
+// dreptunghiul curent (viewport) — niciodată toate cele 250+ deodată.
+// Rulează la fiecare mutare/zoom (moveend/zoomend) și după fiecare
+// încărcare/actualizare de date.
+function updateVisibleMarkers() {
+  if (!map) return;
+  const isAdmin = currentRole === 'zoda_admin';
+  const zoom = map.getZoom();
+  const hint = document.getElementById('map-zoom-hint');
+
+  if (zoom < MAP_MIN_ZOOM_PINS) {
+    if (hint) hint.style.display = 'block';
+    BALTI.forEach(b => { if (b._marker && map.hasLayer(b._marker)) map.removeLayer(b._marker); });
+    return;
+  }
+  if (hint) hint.style.display = 'none';
+
+  const bounds = map.getBounds();
+  BALTI.forEach(b => {
+    if (!b._marker || !b.lat || !b.lng) return;
+    const allowed = isAdmin || b.vizibilitate === 'public' || b.vizibilitate === 'basic';
+    const inView = bounds.contains([b.lat, b.lng]);
+    const shouldShow = allowed && inView;
+    const isShown = map.hasLayer(b._marker);
+    if (shouldShow && !isShown) map.addLayer(b._marker);
+    else if (!shouldShow && isShown) map.removeLayer(b._marker);
+  });
 }
 
 function togglePublicBaltiDropdown(e) {
