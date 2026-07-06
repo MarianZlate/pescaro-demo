@@ -76,10 +76,19 @@ nav{display:flex;align-items:center;gap:6px;}
 .dd-name{font-weight:700;font-size:14px;color:#f1f5f9;}
 .dd-meta{font-size:11px;color:#64748b;margin-top:2px;}
 .dd-open{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-#stats-bar{display:none;margin-bottom:10px;padding:0 14px;}
-.stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#stats-bar{display:block;margin-bottom:10px;padding:0 14px;}
+.stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative;}
+.stats-hint{text-align:center;font-size:10.5px;color:#4b5563;margin-bottom:6px;}
 .stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;color:#64748b;text-align:center;padding:4px 12px;font-size:12px;}
 .stat-chip strong{color:#a3e635;font-size:16px;}
+.stat-chip-clickable{cursor:pointer;user-select:none;position:relative;transition:border-color .15s;}
+.stat-chip-clickable:hover{border-color:#a3e635;}
+.stat-chip-clickable strong{color:#60a5fa;}
+#public-balti-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#111827;border:1px solid #1e293b;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:900;min-width:260px;max-width:320px;max-height:320px;overflow-y:auto;text-align:left;}
+#public-balti-dropdown .pbd-hdr{padding:12px 14px;border-bottom:1px solid #1e293b;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.04em;}
+#public-balti-dropdown a{display:block;padding:9px 14px;font-size:13px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #0f172a;}
+#public-balti-dropdown a:last-child{border-bottom:none;}
+#public-balti-dropdown a:hover{background:#1e293b;color:#a3e635;}
 #main{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr;align-items:start;padding:0 8px 40px;gap:10px;}
 #map-wrap{position:relative;border:1px solid #1e293b;overflow:hidden;border-radius:10px;margin:0 10px;}
 #map{width:100%;height:300px;}
@@ -516,9 +525,16 @@ nav{display:flex;align-items:center;gap:6px;}
   <div>
     <!-- STATS BAR -->
     <div id="stats-bar">
+      <div class="stats-hint">📍 „Înregistrate" = tot ce găsești pe Zoda &nbsp;·&nbsp; ✅ „Publice" = bălți complete, verificate de noi (standuri, poze, video)</div>
       <div class="stats-inner">
-        <div class="stat-chip"><strong>1</strong> baltă înregistrată</div>
-        <div class="stat-chip"><strong id="stat-useri">—</strong> pescari înregistrați</div>
+        <div class="stat-chip"><strong id="stat-inregistrate">—</strong> bălți înregistrate</div>
+        <div class="stat-chip stat-chip-clickable" id="stat-publice-chip" onclick="togglePublicBaltiDropdown()">
+          <strong id="stat-publice">—</strong> bălți publice ▾
+          <div id="public-balti-dropdown">
+            <div class="pbd-hdr">BĂLȚI COMPLETE ȘI VERIFICATE</div>
+            <div id="public-balti-list"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -934,7 +950,21 @@ function initMap() {
     new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById('map'));
 }
 
-function makeMarker(active) {
+function makeMarker(active, isBasic) {
+  if (isBasic) {
+    // Baltă "basic" (listare de bază, neverificată încă) — pin gri, mai mic,
+    // ca să nu se confunde vizual cu bălțile complete/verificate.
+    const bg = active ? '#f59e0b' : '#4b5563';
+    const glow = active ? 'drop-shadow(0 0 5px rgba(245,158,11,.5)) drop-shadow(0 2px 5px rgba(0,0,0,.7))' : 'drop-shadow(0 2px 5px rgba(0,0,0,.6))';
+    return L.divIcon({
+      className: '',
+      html: `<svg width="20" height="27" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" style="filter:${glow};display:block;">
+        <path d="M15 0C6.72 0 0 6.72 0 15c0 9.75 15 25 15 25S30 24.75 30 15C30 6.72 23.28 0 15 0z" fill="${bg}" opacity="0.88"/>
+        <circle cx="15" cy="14" r="8" fill="rgba(0,0,0,0.15)"/>
+      </svg>`,
+      iconSize: [20, 27], iconAnchor: [10, 27], popupAnchor: [0, -30],
+    });
+  }
   const bg = active ? '#f59e0b' : '#1a6b3a';
   const bdr = active ? '#fcd34d' : 'rgba(255,255,255,.3)';
   const glow = active ? 'drop-shadow(0 0 6px rgba(245,158,11,.6)) drop-shadow(0 3px 8px rgba(0,0,0,.8))' : 'drop-shadow(0 3px 8px rgba(0,0,0,.8))';
@@ -1038,7 +1068,7 @@ function onSearch(q) {
   const isAdmin = currentRole === 'zoda_admin';
   const qn = normStr(q);
   const res = BALTI.filter(b => {
-    if (!(isAdmin || b.vizibilitate === 'public')) return false;
+    if (!(isAdmin || b.vizibilitate === 'public' || b.vizibilitate === 'basic')) return false;
     const nameN = normStr(b.nume);
     const judetN = normStr(b.judet);
     if (nameN.includes(qn) || judetN.includes(qn)) return true;
@@ -1318,11 +1348,7 @@ const CACHE = {
   }
 };
 
-// Arată bara de statistici doar când platforma ajunge la 1000 de pescari înregistrați
-function updateStatsBarVisibility(userCount) {
-  const bar = document.getElementById('stats-bar');
-  if (bar) bar.style.display = (userCount >= 1000) ? 'block' : 'none';
-}
+// (bara de statistici e acum mereu vizibilă — vezi renderMapMarkers pentru calculul contoarelor)
 
 // ── BOOT ─────────────────────────────────────────────────────────────────────
 async function loadBaltiFromSupabase() {
@@ -1333,10 +1359,6 @@ async function loadBaltiFromSupabase() {
     renderMapMarkers();
     renderBalti();
     loadHof();
-    const statUseri = document.getElementById('stat-useri');
-    const cachedUseri = CACHE.get('stat_useri');
-    if (statUseri && cachedUseri !== null) statUseri.textContent = cachedUseri;
-    updateStatsBarVisibility(cachedUseri || 0);
     restoreIndexState();
     // Refresh în background fără să blocheze UI
     refreshBaltiInBackground();
@@ -1357,14 +1379,6 @@ async function loadBaltiFromSupabase() {
   renderMapMarkers();
   renderBalti();
   loadHof();
-  // Număr useri înregistrați activi (fără conturi marcate ca șterse)
-  const { count } = await sb.from('user_profiles_public')
-    .select('id', { count: 'exact', head: true })
-    .is('deleted_at', null);
-  const statUseri = document.getElementById('stat-useri');
-  if (statUseri) statUseri.textContent = count || 0;
-  updateStatsBarVisibility(count || 0);
-  CACHE.set('stat_useri', count || 0, 60);
   // Restaurează starea paginii dacă userul vine din altă pagină
   restoreIndexState();
 }
@@ -1395,10 +1409,10 @@ async function refreshBaltiInBackground() {
 function renderMapMarkers() {
   const isAdmin = currentRole === 'zoda_admin';
   BALTI.forEach(b => {
-    const visible = isAdmin || b.vizibilitate === 'public';
+    const visible = isAdmin || b.vizibilitate === 'public' || b.vizibilitate === 'basic';
     if (!b.lat || !b.lng) return;
     if (!b._marker) {
-      const m = L.marker([b.lat, b.lng], { icon: makeMarker(false) })
+      const m = L.marker([b.lat, b.lng], { icon: makeMarker(false, b.vizibilitate === 'basic') })
         .bindPopup(popHtml(b), { maxWidth: 240, minWidth: 220 })
         .bindTooltip(b.nume, { permanent: false, direction: 'top', offset: [0, -44], className: 'balta-tooltip' });
       m.on('click', () => { flyToBalta(b.id); });
@@ -1412,11 +1426,35 @@ function renderMapMarkers() {
       if (map.hasLayer(b._marker)) map.removeLayer(b._marker);
     }
   });
-  const publicCount  = BALTI.filter(b => b.vizibilitate === 'public').length;
-  const visibleCount = isAdmin ? BALTI.length : publicCount;
-  const statChips = document.querySelectorAll('.stat-chip strong');
-  if (statChips[0]) statChips[0].textContent = visibleCount;
+  const publicOnlyCount = BALTI.filter(b => b.vizibilitate === 'public').length;
+  const registeredCount = BALTI.filter(b => b.vizibilitate === 'public' || b.vizibilitate === 'basic').length;
+  const visibleCount = isAdmin ? BALTI.length : registeredCount;
+  const statInreg = document.getElementById('stat-inregistrate');
+  const statPub = document.getElementById('stat-publice');
+  if (statInreg) statInreg.textContent = visibleCount;
+  if (statPub) statPub.textContent = publicOnlyCount;
 }
+
+function togglePublicBaltiDropdown(e) {
+  if (e) e.stopPropagation();
+  const dd = document.getElementById('public-balti-dropdown');
+  const willOpen = dd.style.display !== 'block';
+  if (willOpen) {
+    const list = document.getElementById('public-balti-list');
+    const publicBalti = BALTI.filter(b => b.vizibilitate === 'public').sort((a, b) => a.nume.localeCompare(b.nume, 'ro'));
+    list.innerHTML = publicBalti.length
+      ? publicBalti.map(b => `<a href="balta.html?id=${b.id}">🎣 ${escH(b.nume)} <span style="color:#4b5563;font-size:11px;">· ${escH(b.judet)}</span></a>`).join('')
+      : '<div style="padding:14px;color:#4b5563;font-size:12px;">Momentan nicio baltă publică.</div>';
+  }
+  dd.style.display = willOpen ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  const chip = document.getElementById('stat-publice-chip');
+  const dd = document.getElementById('public-balti-dropdown');
+  if (dd && dd.style.display === 'block' && chip && !chip.contains(e.target)) {
+    dd.style.display = 'none';
+  }
+});
 
 
 window.addEventListener('load', () => {
@@ -1967,7 +2005,7 @@ async function saveEditBalta() {
 // ── MODAL INREGISTRARE BALTA ──────────────────────────────────────────────────
 var _platSettings = null;
 
-async function openRegModal() {
+async function openRegModal(claimNume, claimId) {
   document.getElementById('reg-modal').style.display = 'flex';
   if(!_platSettings) {
     document.getElementById('reg-loading').style.display = 'block';
@@ -1979,11 +2017,26 @@ async function openRegModal() {
   var email = s.contact_email || '';
   var phone = s.contact_phone || '';
   var wa    = s.contact_whatsapp || '';
-  var waMsg = encodeURIComponent('Bună ziua! Doresc să înregistrez balta mea pe Zoda.');
+
+  var titleEl = document.querySelector('#reg-modal [style*="font-size:18px;font-weight:900"]');
+  var subEl = titleEl ? titleEl.nextElementSibling : null;
+  var waText, mailSubject;
+  if (claimNume) {
+    if (titleEl) titleEl.textContent = '🔍 Revendică ' + claimNume;
+    if (subEl) subEl.textContent = 'Ești administratorul acestei bălți? Contactează-ne să preiei controlul complet.';
+    waText = 'Bună ziua! Sunt administratorul bălții "' + claimNume + '" (Zoda ID ' + (claimId || '—') + ') și vreau să preiau contul de pe Zoda.';
+    mailSubject = 'Revendicare baltă: ' + claimNume;
+  } else {
+    if (titleEl) titleEl.textContent = '📋 Înregistrează balta ta';
+    if (subEl) subEl.textContent = 'Contactează-ne și te adăugăm pe platformă';
+    waText = 'Bună ziua! Doresc să înregistrez balta mea pe Zoda.';
+    mailSubject = 'Înregistrare baltă nouă pe Zoda';
+  }
+  var waMsg = encodeURIComponent(waText);
 
   var eEl = document.getElementById('reg-email-link');
   eEl.textContent = email || 'Indisponibil';
-  eEl.href = email ? 'mailto:' + email : '#';
+  eEl.href = email ? 'mailto:' + email + '?subject=' + encodeURIComponent(mailSubject) : '#';
 
   var pEl = document.getElementById('reg-phone-link');
   pEl.textContent = phone || 'Indisponibil';
