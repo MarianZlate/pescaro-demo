@@ -939,6 +939,48 @@ document.addEventListener('touchstart', function(e) {
   }
 }, { passive: true });
 
+// Pinch-to-zoom PRIN overlay-ul de "apasă pentru interacțiune" — un gest cu 2
+// degete nu se poate confunda niciodată cu scroll de pagină (ăla e mereu cu un
+// singur deget), deci îl lăsăm să funcționeze direct, fără tap în prealabil.
+// Notă tehnică: nu putem doar "ascunde overlay-ul și lăsăm Leaflet să preia" —
+// evenimentele touch rămân legate de elementul pe care a început gestul
+// (touchstart), indiferent dacă îl ascundem la mijloc. De-asta calculăm
+// pinch-ul manual, direct pe overlay, și-l aplicăm pe hartă cu setZoomAround.
+(function initPinchThroughOverlay() {
+  var overlay = document.getElementById('map-touch-overlay');
+  if (!overlay) return;
+  var pinchStartDist = null, pinchStartZoom = null, pinchCenter = null;
+
+  function dist(touches) {
+    var dx = touches[0].clientX - touches[1].clientX;
+    var dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  overlay.addEventListener('touchstart', function(e) {
+    if (e.touches.length >= 2 && map) {
+      activateMap(); // activăm harta pentru restul gesturilor (drag, tap viitor etc.)
+      pinchStartDist = dist(e.touches);
+      pinchStartZoom = map.getZoom();
+      var rect = document.getElementById('map').getBoundingClientRect();
+      var x = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      var y = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      pinchCenter = map.containerPointToLatLng([x, y]);
+    }
+  }, { passive: true });
+
+  overlay.addEventListener('touchmove', function(e) {
+    if (e.touches.length >= 2 && pinchStartDist && map) {
+      var scale = dist(e.touches) / pinchStartDist;
+      map.setZoomAround(pinchCenter, pinchStartZoom + Math.log2(scale));
+    }
+  }, { passive: true });
+
+  overlay.addEventListener('touchend', function(e) {
+    if (e.touches.length < 2) pinchStartDist = null;
+  }, { passive: true });
+})();
+
 function initMap() {
   map = L.map('map', { center: [45.5, 24.8], zoom: 7, preferCanvas: true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
