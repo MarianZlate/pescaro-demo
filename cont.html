@@ -327,6 +327,19 @@ button{font-family:inherit;}
 .notif-chevron{font-size:22px;color:var(--text-dim);flex-shrink:0;margin-left:4px;transition:transform .22s;line-height:1;}
 .notif-chevron.open{transform:rotate(180deg);}
 .mark-all-btn{background:transparent;border:1px solid var(--border);color:var(--text-faint);font-size:11px;font-weight:600;padding:6px 13px;border-radius:var(--r-xs);cursor:pointer;transition:all .18s;flex-shrink:0;}
+.urm-tab-btn{background:transparent;border:1px solid var(--border);color:var(--text-faint);font-size:12px;font-weight:700;padding:8px 14px;border-radius:var(--r-xs);cursor:pointer;transition:all .18s;}
+.urm-tab-btn.active{background:rgba(163,230,53,.1);border-color:rgba(163,230,53,.35);color:#a3e635;}
+.urm-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.urm-item:last-child{border-bottom:none;}
+.urm-item-name{font-size:13px;color:var(--text);font-weight:600;cursor:pointer;}
+.urm-item-sub{font-size:11px;color:var(--text-faint);margin-top:2px;}
+.urm-unfollow-btn{background:transparent;border:1px solid var(--border);color:#ef4444;font-size:11px;font-weight:600;padding:6px 10px;border-radius:7px;cursor:pointer;}
+.ev-item{display:block;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;text-decoration:none;}
+.ev-item:last-child{border-bottom:none;}
+.ev-item-msg{font-size:13px;color:var(--text);line-height:1.4;}
+.ev-item-time{font-size:10.5px;color:var(--text-faint);margin-top:3px;}
+.ev-item.necitit .ev-item-msg{font-weight:700;}
+.ev-item.necitit::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#a3e635;margin-right:6px;vertical-align:middle;}
 .mark-all-btn:hover{border-color:var(--lime);color:var(--lime);}
 .notif-item{display:flex;gap:11px;align-items:flex-start;padding:13px 4px;border-bottom:1px solid var(--line);cursor:default;border-radius:var(--r-sm);transition:background .15s;}
 .notif-item[onclick]:hover{background:rgba(255,255,255,.025);}
@@ -542,6 +555,44 @@ button{font-family:inherit;}
       </div>
       <div id="notif-list-cont"><div class="notif-empty-msg">Se încarcă...</div></div>
       <div id="notif-pager" class="notif-pager"></div>
+    </div>
+  </div>
+
+  <!-- ── ACTIVITATE DIN URMĂRIRI (evenimente) ── -->
+  <div class="section" id="section-evenimente-urmariri">
+    <div class="section-hdr" onclick="toggleEvenimenteUrmaririPanel()" style="cursor:pointer;">
+      <span class="section-icon">🔔</span>
+      <div style="flex:1;">
+        <div class="section-title">Activitate din urmăriri</div>
+        <div class="section-sub">Ce s-a întâmplat la bălțile și pescarii pe care-i urmărești</div>
+      </div>
+      <span class="notif-chevron" id="evenimente-chevron">▾</span>
+    </div>
+    <div class="section-body" id="evenimente-body" style="display:none;padding-top:6px;padding-bottom:14px;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="urm-tab-btn active" id="ev-tab-balta" onclick="switchEvenimenteTab('balta')">🎣 Bălți urmărite</button>
+        <button class="urm-tab-btn" id="ev-tab-pescar" onclick="switchEvenimenteTab('pescar')">👤 Pescari urmăriți</button>
+      </div>
+      <div id="evenimente-list"><div class="notif-empty-msg">Se încarcă...</div></div>
+    </div>
+  </div>
+
+  <!-- ── URMĂRESC (gestionare) ── -->
+  <div class="section" id="section-urmariri">
+    <div class="section-hdr" onclick="toggleUrmaririPanel()" style="cursor:pointer;">
+      <span class="section-icon">🔖</span>
+      <div style="flex:1;">
+        <div class="section-title">Urmăresc</div>
+        <div class="section-sub" id="urmariri-count-sub">Bălți și pescari pe care îi urmărești</div>
+      </div>
+      <span class="notif-chevron" id="urmariri-chevron">▾</span>
+    </div>
+    <div class="section-body" id="urmariri-body" style="display:none;padding-top:6px;padding-bottom:14px;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="urm-tab-btn active" id="urm-tab-balta" onclick="switchUrmaririTab('balta')">🎣 Bălți (<span id="urm-count-balti">0</span>)</button>
+        <button class="urm-tab-btn" id="urm-tab-pescar" onclick="switchUrmaririTab('pescar')">👤 Pescari (<span id="urm-count-pescari">0</span>)</button>
+      </div>
+      <div id="urmariri-list"><div class="notif-empty-msg">Se încarcă...</div></div>
     </div>
   </div>
 
@@ -946,6 +997,14 @@ async function boot() {
       }, 300);
     }
   }
+
+  // Deep-link din banda de "activitate nouă în urmăriri" de pe index.html
+  if (new URLSearchParams(location.search).get('scroll') === 'evenimente') {
+    toggleEvenimenteUrmaririPanel();
+    setTimeout(() => {
+      document.getElementById('section-evenimente-urmariri')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  }
 }
 
 // ── NOTIFICĂRI ────────────────────────────────────────────────────────────────
@@ -1088,6 +1147,194 @@ function escH(str) {
 }
 
 // ── BALTA ADMIN ───────────────────────────────────────────────────────────────
+// ── URMĂRIRI (widget de gestionare: bălți + pescari urmăriți) ────────────────
+var _urmaririIncarcate = false;
+var _urmaririTabActiv = 'balta';
+var _urmaririBaltiCache = [];
+var _urmaririPescariCache = [];
+
+function toggleUrmaririPanel() {
+  var body = document.getElementById('urmariri-body');
+  var chevron = document.getElementById('urmariri-chevron');
+  var open = body.style.display !== 'block';
+  body.style.display = open ? 'block' : 'none';
+  chevron.textContent = open ? '▴' : '▾';
+  if (open && !_urmaririIncarcate) { _urmaririIncarcate = true; loadUrmariri(); }
+}
+
+async function loadUrmariri() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const [{ data: balti }, { data: pescari }] = await Promise.all([
+    sb.from('urmariri_balti').select('balta_id, balti(id, nume, judet)').eq('user_id', session.user.id).order('created_at', { ascending: false }),
+    sb.from('urmariri_pescari').select('pescar_zoda_id').eq('user_id', session.user.id).order('created_at', { ascending: false }),
+  ]);
+
+  _urmaririBaltiCache = (balti || []).filter(b => b.balti).map(b => b.balti);
+  document.getElementById('urm-count-balti').textContent = _urmaririBaltiCache.length;
+
+  const zodaIds = (pescari || []).map(p => p.pescar_zoda_id);
+  let profiluri = [];
+  if (zodaIds.length) {
+    const { data } = await sb.from('user_profiles').select('zoda_id, username, avatar_url').in('zoda_id', zodaIds);
+    profiluri = data || [];
+  }
+  _urmaririPescariCache = profiluri;
+  document.getElementById('urm-count-pescari').textContent = _urmaririPescariCache.length;
+
+  renderUrmaririTab();
+}
+
+function switchUrmaririTab(tip) {
+  _urmaririTabActiv = tip;
+  document.getElementById('urm-tab-balta').classList.toggle('active', tip === 'balta');
+  document.getElementById('urm-tab-pescar').classList.toggle('active', tip === 'pescar');
+  renderUrmaririTab();
+}
+
+function renderUrmaririTab() {
+  const list = document.getElementById('urmariri-list');
+  if (_urmaririTabActiv === 'balta') {
+    if (!_urmaririBaltiCache.length) {
+      list.innerHTML = '<div class="notif-empty-msg">Nu urmărești nicio baltă încă. Apasă „☆ Urmărește” pe pagina unei bălți.</div>';
+      return;
+    }
+    list.innerHTML = _urmaririBaltiCache.map(b => `
+      <div class="urm-item">
+        <div>
+          <div class="urm-item-name" onclick="location.href='balta.html?id=${b.id}'">${escH(b.nume)}</div>
+          <div class="urm-item-sub">📍 ${escH(b.judet||'')}</div>
+        </div>
+        <button class="urm-unfollow-btn" onclick="nuMaiUrmarestBalta(${b.id})">Nu mai urmări</button>
+      </div>`).join('');
+  } else {
+    if (!_urmaririPescariCache.length) {
+      list.innerHTML = '<div class="notif-empty-msg">Nu urmărești niciun pescar încă. Apasă „+ Urmărește” pe profilul unui pescar.</div>';
+      return;
+    }
+    list.innerHTML = _urmaririPescariCache.map(p => `
+      <div class="urm-item">
+        <div class="urm-item-name" onclick="location.href='pescar.html?id=${escH(p.zoda_id)}'">${escH(p.username || p.zoda_id)}</div>
+        <button class="urm-unfollow-btn" onclick="nuMaiUrmarestePescar('${escH(p.zoda_id)}')">Nu mai urmări</button>
+      </div>`).join('');
+  }
+}
+
+async function nuMaiUrmarestBalta(id) {
+  await sb.rpc('nu_mai_urmareste_balta', { p_balta_id: id });
+  _urmaririBaltiCache = _urmaririBaltiCache.filter(b => b.id !== id);
+  document.getElementById('urm-count-balti').textContent = _urmaririBaltiCache.length;
+  renderUrmaririTab();
+}
+async function nuMaiUrmarestePescar(zodaId) {
+  await sb.rpc('nu_mai_urmareste_pescar', { p_zoda_id: zodaId });
+  _urmaririPescariCache = _urmaririPescariCache.filter(p => p.zoda_id !== zodaId);
+  document.getElementById('urm-count-pescari').textContent = _urmaririPescariCache.length;
+  renderUrmaririTab();
+}
+
+// ── ACTIVITATE DIN URMĂRIRI (evenimente) ─────────────────────────────────────
+var _evenimenteIncarcate = false;
+var _evenimenteTabActiv = 'balta';
+var _evenimenteBaltaCache = [];
+var _evenimentePescarCache = [];
+var _evenimenteBaltaAfisate = 5;
+var _evenimentePescarAfisate = 5;
+
+function toggleEvenimenteUrmaririPanel() {
+  var body = document.getElementById('evenimente-body');
+  var chevron = document.getElementById('evenimente-chevron');
+  var open = body.style.display !== 'block';
+  body.style.display = open ? 'block' : 'none';
+  chevron.textContent = open ? '▴' : '▾';
+  if (open && !_evenimenteIncarcate) { _evenimenteIncarcate = true; loadEvenimenteUrmariri(); }
+  else if (open) { marcheazaEvenimenteTabCurent(); }
+}
+
+async function loadEvenimenteUrmariri() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const { data } = await sb.from('evenimente_urmariri').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
+  const toate = data || [];
+  _evenimenteBaltaCache = toate.filter(e => e.sursa === 'balta');
+  _evenimentePescarCache = toate.filter(e => e.sursa === 'pescar');
+  renderEvenimenteTab();
+  marcheazaEvenimenteTabCurent();
+}
+
+function switchEvenimenteTab(sursa) {
+  _evenimenteTabActiv = sursa;
+  document.getElementById('ev-tab-balta').classList.toggle('active', sursa === 'balta');
+  document.getElementById('ev-tab-pescar').classList.toggle('active', sursa === 'pescar');
+  renderEvenimenteTab();
+  marcheazaEvenimenteTabCurent();
+}
+
+function urlEvenimentUrmarire(ev) {
+  if (ev.tip === 'record_stand' && ev.balta_id && ev.stand_id) {
+    return 'balta.html?id=' + ev.balta_id + '&stand=' + ev.stand_id;
+  }
+  if (ev.tip === 'top10_alltime' && ev.balta_id) {
+    return 'balta.html?id=' + ev.balta_id + '&scroll=top10';
+  }
+  if (ev.tip === 'top10_lunar' && ev.balta_id) {
+    return 'balta.html?id=' + ev.balta_id + '&scroll=top10lunar';
+  }
+  return ev.balta_id ? 'balta.html?id=' + ev.balta_id : '#';
+}
+
+function timpRelativ(dataStr) {
+  var diff = Date.now() - new Date(dataStr).getTime();
+  var min = Math.floor(diff / 60000);
+  if (min < 60) return 'acum ' + min + ' min';
+  var ore = Math.floor(min / 60);
+  if (ore < 24) return 'acum ' + ore + (ore === 1 ? ' oră' : ' ore');
+  var zile = Math.floor(ore / 24);
+  return 'acum ' + zile + (zile === 1 ? ' zi' : ' zile');
+}
+
+function renderEvenimenteTab() {
+  const list = document.getElementById('evenimente-list');
+  const cache = _evenimenteTabActiv === 'balta' ? _evenimenteBaltaCache : _evenimentePescarCache;
+  const afisate = _evenimenteTabActiv === 'balta' ? _evenimenteBaltaAfisate : _evenimentePescarAfisate;
+
+  if (!cache.length) {
+    list.innerHTML = '<div class="notif-empty-msg">' +
+      (_evenimenteTabActiv === 'balta' ? 'Nicio activitate încă de la bălțile urmărite.' : 'Nicio activitate încă de la pescarii urmăriți.') +
+      '</div>';
+    return;
+  }
+
+  const vizibile = cache.slice(0, afisate);
+  let html = vizibile.map(ev => `
+    <a class="ev-item ${!ev.citit_la ? 'necitit' : ''}" href="${urlEvenimentUrmarire(ev)}">
+      <div class="ev-item-msg">${escH(ev.mesaj)}</div>
+      <div class="ev-item-time">${timpRelativ(ev.created_at)}</div>
+    </a>`).join('');
+
+  if (cache.length > afisate) {
+    html += `<div style="text-align:center;padding-top:8px;">
+      <button class="mark-all-btn" onclick="maiMulteEvenimente('${_evenimenteTabActiv}')">Vezi mai multe (${cache.length - afisate})</button>
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+
+function maiMulteEvenimente(sursa) {
+  if (sursa === 'balta') _evenimenteBaltaAfisate += 10;
+  else _evenimentePescarAfisate += 10;
+  renderEvenimenteTab();
+}
+
+async function marcheazaEvenimenteTabCurent() {
+  try {
+    await sb.rpc('marcheaza_evenimente_vazute', { p_sursa: _evenimenteTabActiv });
+    const cache = _evenimenteTabActiv === 'balta' ? _evenimenteBaltaCache : _evenimentePescarCache;
+    cache.forEach(ev => { if (!ev.citit_la) ev.citit_la = new Date().toISOString(); });
+  } catch (e) {}
+}
+
 async function loadBaltiAdmin() {
   const listEl = document.getElementById('balti-admin-list');
   const zodaId = currentProfile?.zoda_id;
