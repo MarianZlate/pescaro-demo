@@ -1878,14 +1878,22 @@ function scrollLaSectiuneDinURL() {
   var idMap = { 'top10': 'top10-card', 'top10lunar': 'top10-lunar-card' };
   var elId = idMap[scrollTarget];
   if (!elId) return;
-  setTimeout(function() {
+
+  // loadHallOfFame()/loadTop10Lunar() rulează "fire-and-forget" (fără await)
+  // și pot termina DUPĂ acest punct — asteptăm (polling) până secțiunea chiar
+  // devine vizibilă, în loc de un singur delay fix care poate rata momentul.
+  var incercari = 0;
+  (function asteapta() {
     var el = document.getElementById(elId);
     if (el && el.style.display !== 'none') {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       el.style.outline = '2px solid #a3e635';
       setTimeout(function() { el.style.outline = ''; }, 2000);
+      return;
     }
-  }, 600);
+    incercari++;
+    if (incercari < 20) setTimeout(asteapta, 300); // max ~6 secunde de asteptare
+  })();
 }
 
 function openInfoOverlay(tip) {
