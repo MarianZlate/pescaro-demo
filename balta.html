@@ -398,6 +398,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <button id="btn-regulament" onclick="openInfoOverlay('regulament')" style="display:none;align-items:center;gap:7px;background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.25);border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">📋 Regulament</button>
     <button id="btn-waze" onclick="" style="display:none;align-items:center;gap:7px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🚗 Waze</button>
     <button id="btn-gmaps" onclick="" style="display:none;align-items:center;gap:7px;background:rgba(66,133,244,.08);border:1px solid rgba(66,133,244,.25);border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🗺️ Google Maps</button>
+    <button id="btn-urmareste" onclick="toggleUrmarireBalta()" style="display:none;align-items:center;gap:6px;background:rgba(163,230,53,.08);border:1px solid rgba(163,230,53,.25);border-radius:8px;padding:7px 12px;color:#a3e635;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">☆ Urmărește</button>
   </div>
 
   <!-- Edit bar (only for admins) -->
@@ -781,6 +782,8 @@ window.addEventListener('load', async function() {
   if (standId && !isNaN(standId) && ST.some(function(s) { return s.id === standId; })) {
     openOverlay(standId);
   }
+  // Deep-link dintr-o notificare de urmărire (top10/hall of fame) — scroll automat
+  scrollLaSectiuneDinURL();
 });
 
 // Wrapper cu retry robust — încearcă loadBalta de până la 3 ori,
@@ -1087,6 +1090,11 @@ function renderPage(hartaUrl) {
   }
   if (b.regulament && b.regulament.trim()) {
     document.getElementById('btn-regulament').style.display = 'flex';
+  }
+
+  // Buton "Urmărește" — doar pentru utilizatori logați
+  if (BALTA_USER) {
+    initButonUrmarireBalta(b.id);
   }
 
   // Listare de bază (neverificată) — banner de revendicare (doar dacă nu are
@@ -1825,6 +1833,61 @@ function closeOverlay() {
 }
 
 // ── OVERLAY GENERIC — TARIFE / REGULAMENT ──────────────────────────────────────
+// ── URMĂREȘTE BALTA ──────────────────────────────────────────────────────────
+var URMARESC_BALTA_CURENTA = false;
+async function initButonUrmarireBalta(baltaId) {
+  var btn = document.getElementById('btn-urmareste');
+  if (!btn) return;
+  try {
+    const { data } = await sb.from('urmariri_balti').select('id').eq('user_id', BALTA_USER.id).eq('balta_id', baltaId).maybeSingle();
+    URMARESC_BALTA_CURENTA = !!data;
+    setButonUrmarireUI(btn);
+    btn.style.display = 'flex';
+  } catch (e) {}
+}
+function setButonUrmarireUI(btn) {
+  if (URMARESC_BALTA_CURENTA) {
+    btn.innerHTML = '★ Urmărești';
+    btn.style.background = 'rgba(163,230,53,.18)';
+  } else {
+    btn.innerHTML = '☆ Urmărește';
+    btn.style.background = 'rgba(163,230,53,.08)';
+  }
+}
+async function toggleUrmarireBalta() {
+  if (!BALTA_USER) { window.location.href = 'cont.html'; return; }
+  var btn = document.getElementById('btn-urmareste');
+  btn.style.pointerEvents = 'none';
+  try {
+    if (URMARESC_BALTA_CURENTA) {
+      await sb.rpc('nu_mai_urmareste_balta', { p_balta_id: BALTA.id });
+      URMARESC_BALTA_CURENTA = false;
+    } else {
+      await sb.rpc('urmareste_balta', { p_balta_id: BALTA.id });
+      URMARESC_BALTA_CURENTA = true;
+    }
+    setButonUrmarireUI(btn);
+  } catch (e) {}
+  btn.style.pointerEvents = '';
+}
+
+// ── SCROLL AUTOMAT LA SECȚIUNE (venit dintr-o notificare de urmărire) ──────
+function scrollLaSectiuneDinURL() {
+  var scrollTarget = new URLSearchParams(location.search).get('scroll');
+  if (!scrollTarget) return;
+  var idMap = { 'top10': 'top10-card', 'top10lunar': 'top10-lunar-card' };
+  var elId = idMap[scrollTarget];
+  if (!elId) return;
+  setTimeout(function() {
+    var el = document.getElementById(elId);
+    if (el && el.style.display !== 'none') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.style.outline = '2px solid #a3e635';
+      setTimeout(function() { el.style.outline = ''; }, 2000);
+    }
+  }, 600);
+}
+
 function openInfoOverlay(tip) {
   if (!BALTA) return;
   const titluri = { tarife: '💰 Tarife', regulament: '📋 Regulament' };
