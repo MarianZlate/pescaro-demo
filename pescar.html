@@ -219,6 +219,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <button onclick="shareProfile()" id="share-profile-btn" title="Distribuie profilul" class="hero-share-btn">
         🔗 <span>Distribuie profilul</span>
       </button>
+      <button onclick="toggleUrmarirePescar()" id="btn-urmareste-pescar" title="Urmărește acest pescar" class="hero-share-btn" style="display:none;">
+        ☆ <span>Urmărește</span>
+      </button>
       <div id="share-toast" class="hero-share-toast">✓ Link copiat!</div>
     </div>
   </div>
@@ -327,6 +330,55 @@ function shareProfile() {
       }, 2000);
     }
   });
+}
+
+// ── URMĂREȘTE PESCAR ─────────────────────────────────────────────────────────
+var URMARESC_PESCAR_CURENT = false;
+var PESCAR_VIZUALIZAT_ZODA_ID = null;
+
+async function initButonUrmarirePescar(zodaId) {
+  const btn = document.getElementById('btn-urmareste-pescar');
+  if (!btn) return;
+  PESCAR_VIZUALIZAT_ZODA_ID = zodaId;
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session?.user) return; // vizitator nelogat — nu arătăm butonul
+
+    const { data: profilPropriu } = await sb.from('user_profiles').select('zoda_id').eq('id', session.user.id).single();
+    if (profilPropriu?.zoda_id === zodaId) return; // nu te poți urmări pe tine însuți
+
+    const { data } = await sb.from('urmariri_pescari').select('id').eq('user_id', session.user.id).eq('pescar_zoda_id', zodaId).maybeSingle();
+    URMARESC_PESCAR_CURENT = !!data;
+    setButonUrmarirePescarUI(btn);
+    btn.style.display = 'flex';
+  } catch (e) {}
+}
+function setButonUrmarirePescarUI(btn) {
+  if (URMARESC_PESCAR_CURENT) {
+    btn.innerHTML = '★ <span>Urmărești</span>';
+    btn.style.color = '#a3e635';
+    btn.style.borderColor = 'rgba(163,230,53,.4)';
+  } else {
+    btn.innerHTML = '☆ <span>Urmărește</span>';
+    btn.style.color = '#94a3b8';
+    btn.style.borderColor = '#1e293b';
+  }
+}
+async function toggleUrmarirePescar() {
+  const btn = document.getElementById('btn-urmareste-pescar');
+  btn.style.pointerEvents = 'none';
+  try {
+    if (URMARESC_PESCAR_CURENT) {
+      await sb.rpc('nu_mai_urmareste_pescar', { p_zoda_id: PESCAR_VIZUALIZAT_ZODA_ID });
+      URMARESC_PESCAR_CURENT = false;
+    } else {
+      await sb.rpc('urmareste_pescar', { p_zoda_id: PESCAR_VIZUALIZAT_ZODA_ID });
+      URMARESC_PESCAR_CURENT = true;
+    }
+    setButonUrmarirePescarUI(btn);
+  } catch (e) {}
+  btn.style.pointerEvents = '';
 }
 
 function realizareRow(opts) {
@@ -509,6 +561,7 @@ async function loadPescarData(zodaId) {
 
   renderHero(profile, steleData);
   renderRealizari(steleLogRaw || [], recorduriActive || [], top10Sortat, standuriTrecuteMap, hofActiveMap, hofBaltaIds);
+  initButonUrmarirePescar(zodaId);
 
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('hdr').style.display = 'block';
