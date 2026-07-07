@@ -560,6 +560,21 @@ nav{display:flex;align-items:center;gap:6px;}
   <!-- SIDEBAR -->
   <div id="sidebar">
 
+    <!-- CĂUTĂ PESCARI DE URMĂRIT -->
+    <div class="hof-card" id="cauta-pescari-card" style="display:none;">
+      <div class="hof-header">
+        <div>
+          <div class="hof-title">🔍 Caută pescari</div>
+          <div class="hof-sub">Găsește și urmărește alți pescari</div>
+        </div>
+      </div>
+      <div style="position:relative;padding:0 16px 14px;">
+        <input type="text" id="cauta-pescari-input" oninput="cautaPescariUrmarire(this.value)" placeholder="Nume sau ZODA-ID..."
+          style="width:100%;background:#0a0f1a;border:1px solid #1e293b;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        <div id="cauta-pescari-dropdown" style="display:none;position:absolute;top:100%;left:16px;right:16px;background:#111827;border:1px solid #1e293b;border-radius:10px;margin-top:4px;max-height:280px;overflow-y:auto;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.5);"></div>
+      </div>
+    </div>
+
     <!-- HALL OF FAME preview -->
     <div class="hof-card">
       <div class="hof-header">
@@ -3089,12 +3104,15 @@ async function doLogout() {
   await sb.auth.signOut();
 }
 
+var MY_ZODA_ID = null;
 async function updateNavForUser(user) {
   const area = document.getElementById('nav-auth-area');
   if(!user) {
     area.innerHTML = `<button class="nav-primary" onclick="openAuthModal()">Conectare</button>`;
     currentRole = 'user';
     _roleCache  = null;
+    MY_ZODA_ID  = null;
+    ascundeCautarePescari();
     return;
   }
 
@@ -3107,7 +3125,10 @@ async function updateNavForUser(user) {
   }
 
   // Citim profilul pentru username + avatar
-  const { data: profile } = await sb.from('user_profiles').select('username,avatar_url').eq('id', user.id).single();
+  const { data: profile } = await sb.from('user_profiles').select('username,avatar_url,zoda_id').eq('id', user.id).single();
+  MY_ZODA_ID = profile?.zoda_id || null;
+  var cautaCard = document.getElementById('cauta-pescari-card');
+  if (cautaCard) cautaCard.style.display = 'block';
   const username  = profile?.username || user.email.split('@')[0];
   const avatarUrl = profile?.avatar_url || '';
   const initials  = username.slice(0, 2).toUpperCase();
@@ -3148,6 +3169,79 @@ async function updateNavForUser(user) {
 
 
 // ── BANDĂ ACTIVITATE DIN URMĂRIRI ─────────────────────────────────────────────
+// ── CĂUTĂ ȘI URMĂREȘTE PESCARI (widget sub hartă) ────────────────────────────
+var _urmaririMele = null; // set de zoda_id-uri deja urmărite, populat lazy la prima căutare
+var _cautaPescariTimeout = null;
+
+function ascundeCautarePescari() {
+  var card = document.getElementById('cauta-pescari-card');
+  if (card) card.style.display = 'none';
+  _urmaririMele = null;
+}
+
+async function cautaPescariUrmarire(q) {
+  clearTimeout(_cautaPescariTimeout);
+  const dd = document.getElementById('cauta-pescari-dropdown');
+  const query = q.trim();
+  if (!query) { dd.style.display = 'none'; return; }
+
+  _cautaPescariTimeout = setTimeout(async () => {
+    dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:#4b5563;">Se caută...</div>';
+    dd.style.display = 'block';
+
+    if (_urmaririMele === null && currentUser) {
+      const { data } = await sb.from('urmariri_pescari').select('pescar_zoda_id').eq('user_id', currentUser.id);
+      _urmaririMele = new Set((data || []).map(u => u.pescar_zoda_id));
+    }
+
+    const { data } = await sb.from('user_profiles_public')
+      .select('zoda_id, username, avatar_url')
+      .or(`username.ilike.%${query}%,zoda_id.ilike.%${query}%`)
+      .is('deleted_at', null)
+      .limit(8);
+
+    const rezultate = (data || []).filter(u => u.zoda_id !== MY_ZODA_ID);
+    if (!rezultate.length) {
+      dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:#4b5563;">Niciun pescar găsit.</div>';
+      return;
+    }
+    dd.innerHTML = rezultate.map(u => {
+      const dejaUrmarit = _urmaririMele && _urmaririMele.has(u.zoda_id);
+      const initials = (u.username || '?').slice(0, 2).toUpperCase();
+      const avatarHtml = u.avatar_url
+        ? `<img src="${u.avatar_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" alt=""/>`
+        : `<div style="width:32px;height:32px;border-radius:50%;background:#1a6b3a;color:#a3e635;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">${initials}</div>`;
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid #1e293b;gap:10px;">
+          <a href="pescar.html?id=${escH(u.zoda_id)}" style="display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;">
+            ${avatarHtml}
+            <div style="min-width:0;">
+              <div style="font-size:13px;color:#e2e8f0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(u.username || u.zoda_id)}</div>
+              <div style="font-size:10.5px;color:#4b5563;">${escH(u.zoda_id)}</div>
+            </div>
+          </a>
+          ${dejaUrmarit
+            ? '<span style="font-size:11px;color:#4b5563;white-space:nowrap;">✓ Urmărit</span>'
+            : `<button onclick="urmarestePescarDinIndex('${escH(u.zoda_id)}','${escH(u.username||u.zoda_id).replace(/'/g,"\\'")}')" style="background:#166534;color:#fff;font-weight:700;font-size:11px;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">+ Urmărește</button>`}
+        </div>`;
+    }).join('');
+  }, 250);
+}
+
+async function urmarestePescarDinIndex(zodaId, username) {
+  if (!currentUser) { openAuthModal(); return; }
+  await sb.rpc('urmareste_pescar', { p_zoda_id: zodaId });
+  if (_urmaririMele) _urmaririMele.add(zodaId);
+  cautaPescariUrmarire(document.getElementById('cauta-pescari-input').value);
+}
+document.addEventListener('click', function(e) {
+  const card = document.getElementById('cauta-pescari-card');
+  const dd = document.getElementById('cauta-pescari-dropdown');
+  if (card && dd && dd.style.display === 'block' && !card.contains(e.target)) {
+    dd.style.display = 'none';
+  }
+});
+
 async function verificaEvenimenteUrmariri(userId) {
   const banner = document.getElementById('urmariri-banner');
   if (!banner) return;
