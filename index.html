@@ -1240,8 +1240,8 @@ async function goToAdmin(e) {
   window.location.href = 'admin.html';
 }
 
-function openHof()  { document.getElementById('hof-modal').classList.add('open'); }
-function closeHof() { document.getElementById('hof-modal').classList.remove('open'); }
+function openHof()  { document.getElementById('hof-modal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeHof() { document.getElementById('hof-modal').classList.remove('open'); document.body.style.overflow = ''; }
 
 // ── ISTORIC BALTI VIZITATE (personal — din cont dacă ești logat, altfel local) ─
 async function renderBalti() {
@@ -2944,8 +2944,8 @@ let currentUser = null;
 let currentRole = 'user';
 let _roleCache  = null; // cache: { userId, rol } — evită query repetate
 
-function openAuthModal()  { document.getElementById('auth-modal').classList.add('open'); }
-function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); authClearMsg(); }
+function openAuthModal()  { document.getElementById('auth-modal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); authClearMsg(); document.body.style.overflow = ''; }
 
 function authSwitchTab(tab) {
   document.getElementById('pane-login').style.display    = tab === 'login'    ? 'block' : 'none';
