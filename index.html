@@ -408,6 +408,16 @@ nav{display:flex;align-items:center;gap:6px;}
   </div>
 </div>
 
+<!-- BANDĂ ACTIVITATE DIN URMĂRIRI — apare doar dacă există evenimente nevăzute -->
+<div id="urmariri-banner" onclick="mergiLaEvenimenteUrmariri()" style="display:none;background:#1e3a2e;border-bottom:1px solid #166534;cursor:pointer;">
+  <div style="max-width:1400px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#a3e635;font-weight:600;">
+    <span>🔔</span>
+    <span style="flex:1;" id="urmariri-banner-text">Activitate nouă în urmăriri</span>
+    <span style="font-weight:800;">→</span>
+    <button onclick="event.stopPropagation();inchideUrmaririBanner();" style="background:transparent;border:none;color:#4b7a52;font-size:15px;cursor:pointer;padding:2px 6px;line-height:1;">✕</button>
+  </div>
+</div>
+
 <!-- HERO + SEARCH -->
 <div id="hero">
   <h1 class="hero-title">Pescuiește pregătit,<br/><span style="color:#8BC34A">nu la întâmplare.</span></h1>
@@ -3133,8 +3143,35 @@ async function updateNavForUser(user) {
     </div>`;
   // Re-renderăm markerii după ce știm rolul
   if (BALTI.length) { renderMapMarkers(); renderBalti(); }
+  verificaEvenimenteUrmariri(user.id);
 }
 
+
+// ── BANDĂ ACTIVITATE DIN URMĂRIRI ─────────────────────────────────────────────
+async function verificaEvenimenteUrmariri(userId) {
+  const banner = document.getElementById('urmariri-banner');
+  if (!banner) return;
+  try {
+    const { count } = await sb.from('evenimente_urmariri')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId).is('citit_la', null);
+    if (count > 0) {
+      document.getElementById('urmariri-banner-text').textContent =
+        count === 1 ? 'Activitate nouă în urmăriri' : `${count} activități noi în urmăriri`;
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch (e) {}
+}
+function mergiLaEvenimenteUrmariri() {
+  saveIndexState();
+  window.location.href = 'cont.html?scroll=evenimente';
+}
+async function inchideUrmaririBanner() {
+  document.getElementById('urmariri-banner').style.display = 'none';
+  try { await sb.rpc('marcheaza_evenimente_vazute', { p_sursa: null }); } catch (e) {}
+}
 
 // ── NOTIFICĂRI ────────────────────────────────────────────────────────────────
 let _notifPanelOpen = false;
