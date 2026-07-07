@@ -2359,5 +2359,135 @@ document.addEventListener('keydown', function(e) {
 })();
 </script>
 
+<style>
+#promo-bar{display:none;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:4000;background:#111827;border-top:1px solid #1e293b;box-shadow:0 -6px 24px rgba(0,0,0,.5);padding:8px 10px;transition:bottom .2s;}
+#promo-bar.show{display:flex;}
+#promo-bar-top{display:flex;align-items:center;gap:8px;width:100%;}
+#promo-bar-inner{display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;}
+#promo-img{width:80px;height:45px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#0a0f1a;}
+.promo-bar-text{min-width:0;flex:1;text-align:center;}
+.promo-bar-tag{font-size:8px;font-weight:700;color:#64748b;letter-spacing:.05em;display:block;text-transform:uppercase;}
+.promo-title{font-size:12px;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.promo-sub{font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#promo-dots{display:flex;gap:4px;justify-content:center;margin-top:6px;}
+.promo-dot{width:5px;height:5px;border-radius:50%;background:#334155;cursor:pointer;transition:background .2s,transform .2s;flex-shrink:0;}
+.promo-dot.active{background:#a3e635;transform:scale(1.2);}
+#promo-bar-close{background:transparent;border:none;color:#4b5563;font-size:18px;line-height:1;cursor:pointer;padding:6px;flex-shrink:0;}
+#promo-bar-close:hover{color:#94a3b8;}
+</style>
+<div id="promo-bar">
+  <div id="promo-bar-top">
+    <div id="promo-bar-inner" onclick="promoItemClick()">
+      <img id="promo-img" src="" alt=""/>
+      <div class="promo-bar-text">
+        <span class="promo-bar-tag">Publicitate</span>
+        <div class="promo-title" id="promo-title"></div>
+        <div class="promo-sub" id="promo-sub"></div>
+      </div>
+    </div>
+    <button id="promo-bar-close" onclick="closePromoBar(event)" aria-label="Închide">✕</button>
+  </div>
+  <div id="promo-dots"></div>
+</div>
+<script>
+(function(){
+  var PROMO_ITEMS = [];
+  var promoIdx = 0;
+  var promoTimer = null;
+
+  function repositionPromoBar(){
+    var bar = document.getElementById('promo-bar');
+    var cookie = document.getElementById('cookie-notice');
+    if(!bar) return;
+    if(cookie && cookie.classList.contains('show')){
+      bar.style.bottom = cookie.offsetHeight + 'px';
+    } else {
+      bar.style.bottom = '0';
+    }
+  }
+
+  function startPromoTimer(){
+    if(promoTimer) clearInterval(promoTimer);
+    if(PROMO_ITEMS.length > 1){
+      promoTimer = setInterval(function(){ showPromoItem((promoIdx + 1) % PROMO_ITEMS.length); }, 7000);
+    }
+  }
+
+  async function loadPromoItems(){
+    try{
+      var bar = document.getElementById('promo-bar');
+      if(!bar) return;
+      if(sessionStorage.getItem('zoda_promo_bar_closed')) return; // închis manual în sesiunea asta
+      var azi = new Date().toISOString().slice(0, 10);
+      var res = await sb.from('reclame').select('*')
+        .eq('activ', true)
+        .lte('data_start', azi)
+        .gte('data_sfarsit', azi)
+        .order('sort_order', { ascending: true });
+      var data = res.data;
+      if(!data || !data.length) return;
+      PROMO_ITEMS = data;
+      bar.classList.add('show');
+      repositionPromoBar();
+      renderPromoDots();
+      showPromoItem(0);
+      startPromoTimer();
+    }catch(e){}
+  }
+
+  function renderPromoDots(){
+    var wrap = document.getElementById('promo-dots');
+    if(!wrap) return;
+    if(PROMO_ITEMS.length <= 1){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = PROMO_ITEMS.map(function(b, i){
+      return '<span class="promo-dot' + (i===0?' active':'') + '" onclick="event.stopPropagation();window.__promoGoTo(' + i + ')"></span>';
+    }).join('');
+  }
+
+  function showPromoItem(idx){
+    promoIdx = idx;
+    var b = PROMO_ITEMS[idx];
+    if(!b) return;
+    var img = document.getElementById('promo-img');
+    var title = document.getElementById('promo-title');
+    var sub = document.getElementById('promo-sub');
+    if(img) img.src = b.imagine_url || '';
+    if(title) title.textContent = b.titlu || '';
+    if(sub) sub.textContent = b.subtitlu || '';
+    document.querySelectorAll('.promo-dot').forEach(function(d, i){ d.classList.toggle('active', i === idx); });
+    try { Promise.resolve(sb.rpc('increment_reclama_afisare', { reclama_id: b.id })).catch(function(){}); } catch(e) {}
+  }
+
+  window.__promoGoTo = function(idx){
+    showPromoItem(idx);
+    startPromoTimer(); // repornim numărătoarea, ca să nu sară imediat după ce ai ales manual
+  };
+
+  window.promoItemClick = function(){
+    var b = PROMO_ITEMS[promoIdx];
+    if(!b) return;
+    window.open(b.link_destinatie, '_blank', 'noopener');
+    try { Promise.resolve(sb.rpc('increment_reclama_click', { reclama_id: b.id })).catch(function(){}); } catch(e) {}
+  };
+
+  window.closePromoBar = function(e){
+    if(e) e.stopPropagation();
+    var bar = document.getElementById('promo-bar');
+    if(bar) bar.classList.remove('show');
+    if(promoTimer) clearInterval(promoTimer);
+    try { sessionStorage.setItem('zoda_promo_bar_closed', '1'); } catch(err) {}
+  };
+
+  // Dacă bannerul de cookie-uri apare/dispare, realiniem bara de reclamă deasupra lui
+  if(window.zodaAcceptCookieNotice){
+    var _origAccept = window.zodaAcceptCookieNotice;
+    window.zodaAcceptCookieNotice = function(){ _origAccept(); repositionPromoBar(); };
+  }
+
+  if(document.readyState === 'complete') loadPromoItems();
+  else window.addEventListener('load', loadPromoItems);
+})();
+</script>
+
 </body>
 </html>
