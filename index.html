@@ -323,7 +323,10 @@ nav{display:flex;align-items:center;gap:6px;}
   #search-input{font-size:15px;}
   #stats-bar{padding:0;}
   .stat-chip{padding:5px 20px;font-size:14px;}
-  #main{padding:0 24px 60px;grid-template-columns:1fr 400px;gap:24px;}
+  #main{padding:0 24px 60px;grid-template-columns:1fr 400px;grid-template-rows:auto 1fr;grid-template-areas:"search ." "mapcol sidebar";gap:14px 24px;}
+  #map-col{grid-area:mapcol;}
+  #sidebar{grid-area:sidebar;}
+  #search-wrap{grid-area:search;margin:0 auto 10px;}
   #map-wrap{border-radius:16px;margin:0;}
   #map{height:480px;}
   #sidebar{display:flex;flex-direction:column;gap:16px;align-items:stretch;}
@@ -434,14 +437,6 @@ nav{display:flex;align-items:center;gap:6px;}
     <span>👤 Profil Pescar</span>
   </p>
 
-  <div id="search-wrap">
-    <div id="search-box">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input id="search-input" type="text" placeholder="Caută baltă sau județ..." oninput="onSearch(this.value)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" name="zoda-search-query" data-form-type="other" data-lpignore="true" data-1p-ignore="true"/>
-      <button id="clear-btn" onclick="clearSearch()">✕</button>
-    </div>
-    <div id="dropdown"></div>
-  </div>
 </div>
 
 <!-- MODAL INREGISTRARE BALTA -->
@@ -530,9 +525,17 @@ nav{display:flex;align-items:center;gap:6px;}
 <!-- MAIN -->
 <div id="main">
 
+  <div id="search-wrap">
+    <div id="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="search-input" type="text" placeholder="Caută baltă sau județ..." oninput="onSearch(this.value)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" name="zoda-search-query" data-form-type="other" data-lpignore="true" data-1p-ignore="true"/>
+      <button id="clear-btn" onclick="clearSearch()">✕</button>
+    </div>
+    <div id="dropdown"></div>
+  </div>
 
   <!-- HARTA -->
-  <div>
+  <div id="map-col">
     <!-- STATS BAR -->
     <div id="stats-bar">
     <div class="stats-inner">
