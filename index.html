@@ -562,7 +562,7 @@ nav{display:flex;align-items:center;gap:6px;}
   <div id="sidebar">
 
     <!-- CĂUTĂ PESCARI DE URMĂRIT -->
-    <div class="hof-card" id="cauta-pescari-card" style="display:none;grid-column:1 / -1;">
+    <div class="hof-card" id="cauta-pescari-card" style="display:none;grid-column:1 / -1;overflow:visible;">
       <div class="hof-header">
         <div>
           <div class="hof-title">🔍 Caută pescari</div>
@@ -572,7 +572,7 @@ nav{display:flex;align-items:center;gap:6px;}
       <div style="position:relative;padding:0 16px 14px;">
         <input type="text" id="cauta-pescari-input" oninput="cautaPescariUrmarire(this.value)" placeholder="Nume sau ZODA-ID..."
           style="width:100%;background:#0a0f1a;border:1px solid #1e293b;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;"/>
-        <div id="cauta-pescari-dropdown" style="display:none;position:absolute;top:100%;left:16px;right:16px;background:#111827;border:1px solid #1e293b;border-radius:10px;margin-top:4px;max-height:280px;overflow-y:auto;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.5);"></div>
+        <div id="cauta-pescari-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #1e293b;border-radius:10px;max-height:280px;overflow-y:auto;z-index:900;box-shadow:0 8px 24px rgba(0,0,0,.5);"></div>
       </div>
     </div>
 
@@ -3229,6 +3229,11 @@ async function cautaPescariUrmarire(q) {
   if (!query) { dd.style.display = 'none'; return; }
 
   _cautaPescariTimeout = setTimeout(async () => {
+    var inputEl = document.getElementById('cauta-pescari-input');
+    var r = inputEl.getBoundingClientRect();
+    dd.style.top = (r.bottom + 4) + 'px';
+    dd.style.left = r.left + 'px';
+    dd.style.width = r.width + 'px';
     dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:#4b5563;">Se caută...</div>';
     dd.style.display = 'block';
 
