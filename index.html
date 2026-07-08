@@ -323,11 +323,11 @@ nav{display:flex;align-items:center;gap:6px;}
   #search-input{font-size:15px;}
   #stats-bar{padding:0;}
   .stat-chip{padding:5px 20px;font-size:14px;}
-  #main{padding:0 24px 60px;grid-template-columns:1fr 400px;grid-template-rows:auto 1fr;grid-template-areas:"search ." "mapcol sidebar";gap:14px 24px;}
-  #map-col{grid-area:mapcol;}
+  #main{padding:0 24px 60px;grid-template-columns:1fr 400px;grid-template-rows:auto auto 1fr;grid-template-areas:"search ." "statsbar ." "mapwrap sidebar";gap:14px 24px;}
+  #stats-bar{grid-area:statsbar;}
+  #map-wrap{grid-area:mapwrap;border-radius:16px;margin:0;}
   #sidebar{grid-area:sidebar;}
-  #search-wrap{grid-area:search;margin:0 auto 10px;}
-  #map-wrap{border-radius:16px;margin:0;}
+  #search-wrap{grid-area:search;max-width:100%;margin:0 0 10px;}
   #map{height:480px;}
   #sidebar{display:flex;flex-direction:column;gap:16px;align-items:stretch;}
   .hof-card,.balti-card{min-width:unset;}
@@ -535,7 +535,6 @@ nav{display:flex;align-items:center;gap:6px;}
   </div>
 
   <!-- HARTA -->
-  <div id="map-col">
     <!-- STATS BAR -->
     <div id="stats-bar">
     <div class="stats-inner">
@@ -557,7 +556,6 @@ nav{display:flex;align-items:center;gap:6px;}
     <div id="map-touch-overlay" onclick="activateMap()">
       <div class="mto-inner"><span class="mto-icon">👆</span> Apasă pentru a interacționa cu harta</div>
     </div>
-  </div>
   </div>
 
   <!-- SIDEBAR -->
