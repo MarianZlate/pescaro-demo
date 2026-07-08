@@ -1324,7 +1324,7 @@ async function renderBalti() {
     } catch(e) { istoric = []; }
   }
 
-  document.getElementById('balti-count').textContent = istoric.length;
+  document.getElementById('balti-count').textContent = Math.min(istoric.length, 5);
 
   document.getElementById('balti-list').innerHTML = istoric.slice(0, 5).map((b, idx) => {
     return `<div class="balta-row" data-id="${b.id}" onclick="__goToBalta(${b.id})" style="cursor:pointer;">
