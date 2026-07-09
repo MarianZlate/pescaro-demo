@@ -189,6 +189,15 @@ th,td{padding:8px 6px;}
   .zodaid-mobile-inline{display:none;}
   .balti-table td,
   .users-table td{padding:12px 14px;}
+  /* Coloanele cu conținut scurt restrânse, ca spațiul eliberat să meargă la Nume/Acțiuni */
+  .balti-table .col-id{width:4%;}
+  .balti-table .col-judet{width:10%;}
+  .balti-table .col-standuri{width:7%;}
+  .balti-table .col-harta{width:6%;}
+  .balti-table .col-zodaid{width:10%;}
+  .balti-table .col-status{width:9%;}
+  .balti-table .col-nume{width:24%;}
+  .balti-table .col-actiuni{width:30%;}
 }
 .vis-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
 .vis-public{background:#0d1f12;color:#a3e635;border:1px solid #1a3020;}
@@ -486,13 +495,13 @@ th,td{padding:8px 6px;}
         <thead>
           <tr>
             <th class="col-id">ID</th>
-            <th>Nume baltă</th>
+            <th class="col-nume">Nume baltă</th>
             <th class="col-judet">Județ</th>
             <th class="col-standuri">Standuri</th>
             <th class="col-harta">Hartă</th>
             <th class="col-zodaid">Admin (ZODA-ID)</th>
-            <th>Status</th>
-            <th>Acțiuni</th>
+            <th class="col-status">Status</th>
+            <th class="col-actiuni">Acțiuni</th>
           </tr>
         </thead>
         <tbody id="balti-tbody">
@@ -2299,7 +2308,7 @@ function renderBaltiTable() {
   tbody.innerHTML = sorted.map(b => `
     <tr>
       <td class="col-id" style="color:#4b5563;font-size:11px;">#${b.id}</td>
-      <td>
+      <td class="col-nume">
         <strong style="color:#f1f5f9;">${escH(b.nume)}</strong>
         <div class="zodaid-mobile-inline" style="font-family:monospace;font-size:10.5px;margin-top:2px;${b.admin_zoda_id ? 'color:#94a3b8;' : 'color:#4b5563;'}">${b.admin_zoda_id ? '👤 ' + escH(b.admin_zoda_id) : '👤 fără admin'}</div>
       </td>
@@ -2307,14 +2316,14 @@ function renderBaltiTable() {
       <td class="col-standuri" style="color:#64748b;">🎣 ${standuriCount[b.id] || 0}</td>
       <td class="col-harta" style="${hasHarta.has(b.id) ? 'color:#a3e635;font-weight:700;' : 'color:#ef4444;'}">${hasHarta.has(b.id) ? 'Da' : 'Nu'}</td>
       <td class="col-zodaid" style="font-family:monospace;font-size:11px;${b.admin_zoda_id ? 'color:#94a3b8;' : 'color:#4b5563;'}">${b.admin_zoda_id ? escH(b.admin_zoda_id) : '—'}</td>
-      <td>
+      <td class="col-status">
         ${b.vizibilitate === 'public'
           ? '<span class="vis-badge vis-public">🌍 Publică</span>'
           : b.vizibilitate === 'basic'
             ? '<span class="vis-badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.35);">🔍 Basic</span>'
             : '<span class="vis-badge vis-unlisted">🔒 Unlisted</span>'}
       </td>
-      <td>
+      <td class="col-actiuni">
         <div class="action-btns">
           ${b.vizibilitate === 'public'
             ? `<button class="btn-unlist" onclick="setBaltaVis(${b.id},'basic')">🔍 Basic</button>`
