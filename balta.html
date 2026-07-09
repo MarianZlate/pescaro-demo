@@ -95,6 +95,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
 .amb-pin-marker{position:absolute;transform:translate(-50%,-100%);width:30px;height:40px;cursor:grab;pointer-events:all;z-index:50;filter:drop-shadow(0 3px 8px rgba(0,0,0,.6));}
 .amb-pin-marker.dragging{cursor:grabbing;}
+.preview-pin-marker{position:absolute;transform:translate(-50%,-100%);pointer-events:none;z-index:60;filter:drop-shadow(0 0 6px rgba(124,58,237,.9));animation:previewPulse 1.4s ease-in-out infinite;}
+@keyframes previewPulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+#preview-submisie-panel{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6000;background:#1a1230;border:1.5px solid #7c3aed;border-radius:12px;padding:14px 18px;max-width:calc(100vw - 32px);width:380px;box-shadow:0 12px 32px rgba(0,0,0,.6);}
 .stand-pin svg{display:block;}
 .stand-pin.dragging{cursor:grabbing!important;}
 .stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
@@ -952,6 +955,63 @@ async function renderAmbasadorCredit(ambasadorZodaId) {
   } catch(e) { el.style.display = 'none'; }
 }
 
+async function checkPreviewSubmisie() {
+  var submisieId = new URLSearchParams(location.search).get('preview_submisie');
+  if (!submisieId) return;
+
+  const { data: s, error } = await sb.from('ambasador_submisii')
+    .select('*, standuri(nume, adancime, distanta, latime)')
+    .eq('id', submisieId)
+    .single();
+
+  if (error || !s) return; // RLS blochează dacă nu ești zoda_admin — eșuează silențios, nu deranjează vizitatorii normali
+
+  // Marker distinct (mov, pulsând) la poziția propusă, dacă a fost trimisă una
+  if (s.pozitie && s.pozitie.x != null && s.pozitie.y != null) {
+    var layer = document.getElementById('pins-layer');
+    if (layer) {
+      var marker = document.createElement('div');
+      marker.className = 'preview-pin-marker';
+      marker.style.left = s.pozitie.x + '%';
+      marker.style.top  = s.pozitie.y + '%';
+      marker.innerHTML = '<svg width="26" height="34" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="9" r="8" fill="#7c3aed" stroke="#c4b5fd" stroke-width="1.5"/><text x="10" y="12.5" text-anchor="middle" font-size="8" font-weight="900" fill="#fff">?</text><path d="M10 17 L10 27" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/></svg>';
+      layer.appendChild(marker);
+    }
+  }
+
+  // Panou de comparație — ce a propus ambasadorul vs ce e acum
+  var cur = s.standuri || {};
+  var randuri = [
+    { label: 'Nume',     nou: s.nume,     vechi: cur.nume },
+    { label: 'Adâncime', nou: s.adancime != null ? s.adancime + ' m' : null, vechi: cur.adancime != null ? cur.adancime + ' m' : null },
+    { label: 'Distanță', nou: s.distanta != null ? s.distanta + ' m' : null, vechi: cur.distanta != null ? cur.distanta + ' m' : null },
+    { label: 'Lățime',   nou: s.latime   != null ? s.latime   + ' m' : null, vechi: cur.latime   != null ? cur.latime   + ' m' : null },
+  ].filter(function(r) { return r.nou != null; });
+
+  var panel = document.createElement('div');
+  panel.id = 'preview-submisie-panel';
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
+      <div style="font-weight:800;font-size:13px;color:#c4b5fd;">👁️ Previzualizare submisie ambasador</div>
+      <button onclick="this.closest('#preview-submisie-panel').remove(); document.querySelectorAll('.preview-pin-marker').forEach(m=>m.remove());" style="background:transparent;border:none;color:#94a3b8;font-size:16px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="font-size:11px;color:#a78bfa;margin-bottom:10px;">${s.stand_id ? 'Editare stand existent' : '🆕 Propunere de stand nou'}${s.pozitie ? ' · 📍 marker-ul mov de pe hartă = poziția propusă' : ''}</div>
+    ${randuri.length ? randuri.map(function(r) {
+      return `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-top:1px solid rgba(124,58,237,.25);">
+        <span style="color:#c4b5fd;">${r.label}</span>
+        <span style="color:#e2e8f0;">${r.vechi ? '<span style="color:#64748b;text-decoration:line-through;">' + escHtmlPreview(r.vechi) + '</span> → ' : ''}<b>${escHtmlPreview(r.nou)}</b></span>
+      </div>`;
+    }).join('') : '<div style="font-size:12px;color:#64748b;">Fără modificări de text — doar poză și/sau poziție.</div>'}
+    ${s.foto_url ? `<div style="margin-top:10px;"><img src="${escHtmlPreview(s.foto_url)}" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;"/></div>` : ''}
+  `;
+  document.body.appendChild(panel);
+  scrollToMap();
+}
+
+function escHtmlPreview(v) {
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 async function checkAdminAndShowBar() {
   // Citim sesiunea din localStorage (zoda-auth) — fără token în URL
   var { data: { session } } = await sb.auth.getSession();
@@ -1012,6 +1072,7 @@ async function loadBalta(id) {
     loadHallOfFame(id);
     if (new URLSearchParams(location.search).get('edit') === '1') {
       checkAdminAndShowBar();
+      checkPreviewSubmisie();
     }
     // Refresh în background
     setTimeout(function() { refreshBaltaInBackground(id, cacheKey); }, 100);
@@ -1104,6 +1165,7 @@ async function loadBalta(id) {
   var editParam = new URLSearchParams(location.search).get('edit') === '1';
   if (editParam) {
     checkAdminAndShowBar();
+    checkPreviewSubmisie();
   }
 
   // Randează UI
