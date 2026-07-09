@@ -1927,6 +1927,19 @@ async function ambAssignConfirm(baltaId, baltaNume) {
   if (error) { showToast('❌ Eroare: ' + error.message, true); return; }
   showToast('✅ Legat ca ambasador la „' + baltaNume + '".');
   closeAmbAssignModal();
+
+  // Notificăm userul, ca să vadă imediat că are o baltă nouă de documentat
+  try {
+    const { data: prof } = await sb.from('user_profiles').select('id').eq('zoda_id', _ambAssignZodaId).single();
+    if (prof?.id) {
+      await sb.from('notificari').insert({
+        user_id: prof.id,
+        tip: 'ambasador_asignat',
+        mesaj: `🎥 Ai fost desemnat ambasador pentru balta „${baltaNume}"! Intră în cont ca să începi să documentezi standurile.`,
+        meta: { balta_id: baltaId }
+      });
+    }
+  } catch(e) {}
 }
 
 // ── VIEW-ONLY ISTORIC ──────────────────────────────────────────────────────
@@ -2685,12 +2698,32 @@ async function setUserRole(userId, rol) {
     showToast('⛔ Contul de admin suprem nu poate fi modificat.', true);
     return;
   }
+  const rolVechi = _usersRoleMap[userId] || 'user';
   const { error } = await sb.from('user_roles').upsert({ id: userId, rol }, { onConflict: 'id' });
   if(error) { showToast('Eroare: ' + error.message, true); return; }
   const msg = rol === 'zoda_admin'       ? '⭐ Zoda Admin acordat!'
             : rol === 'balta_admin' ? '🏊 Baltă Admin acordat!'
             : '✓ Rol revocat — utilizator normal';
   showToast(msg);
+
+  // Notificăm userul direct, în clopoțelul lui de pe zoda.ro, ca să știe imediat
+  // de schimbare — indiferent dacă a fost promovat sau degradat din rolul avut.
+  if (rolVechi !== rol) {
+    const mesajNotif = rol === 'zoda_admin'
+      ? '⭐ Ai fost promovat la Zoda Admin! Ai acum acces complet la panoul de administrare.'
+      : rol === 'balta_admin'
+        ? '🏊 Ai fost promovat la Administrator de baltă! Poți gestiona balta ta și aproba capturi din contul tău.'
+        : `Rolul tău de ${rolVechi === 'zoda_admin' ? 'Zoda Admin' : 'Administrator de baltă'} a fost revocat — ai revenit la un cont obișnuit.`;
+    try {
+      await sb.from('notificari').insert({
+        user_id: userId,
+        tip: rol === 'user' ? 'rol_revocat' : 'rol_promovat',
+        mesaj: mesajNotif,
+        meta: { rol_nou: rol, rol_vechi: rolVechi }
+      });
+    } catch(e) {}
+  }
+
   loadUsers();
 }
 
