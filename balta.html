@@ -83,12 +83,18 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 /* MAP WRAP */
 #map-wrap{position:relative;border:1px solid #1e293b;border-radius:14px;overflow:hidden;background:#0d1520;user-select:none;width:100%;max-width:100%;}
+/* #ov-edit-section stă în interiorul #map-wrap (user-select:none, pt drag pe hartă) —
+   aici redăm selecția de text, altfel nu poți selecta/șterge cu mouse-ul sau tap din
+   câmpurile de nume/adâncime/distanță/lățime ale standului. */
+#ov-edit-section, #ov-edit-section input, #ov-edit-section textarea{user-select:text;-webkit-user-select:text;}
 #img-pins-wrap{position:relative;width:100%;display:flex;align-items:center;justify-content:center;background:#0a0f1a;}
 #lake-img{display:block;width:100%;height:auto;pointer-events:none;}
 #pins-layer{position:absolute;pointer-events:none;}
 
 /* STAND PINS */
 .stand-pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;pointer-events:all;}
+.amb-pin-marker{position:absolute;transform:translate(-50%,-100%);width:30px;height:40px;cursor:grab;pointer-events:all;z-index:50;filter:drop-shadow(0 3px 8px rgba(0,0,0,.6));}
+.amb-pin-marker.dragging{cursor:grabbing;}
 .stand-pin svg{display:block;}
 .stand-pin.dragging{cursor:grabbing!important;}
 .stand-pin.dragging svg{filter:drop-shadow(0 0 8px rgba(124,58,237,.9))!important;}
@@ -391,6 +397,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div>
         <div id="ib-name" style="font-weight:800;font-size:15px;color:#f1f5f9;">—</div>
         <div id="ib-loc" style="font-size:11px;color:#64748b;"></div>
+        <div id="ib-ambasador-credit" style="font-size:10.5px;color:#64748b;margin-top:2px;display:none;"></div>
       </div>
     </div>
     <a id="btn-tel" href="#" style="display:none;align-items:center;gap:7px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:7px 12px;text-decoration:none;color:#f1f5f9;font-size:13px;font-weight:600;white-space:nowrap;">📞 <span id="tel-txt"></span></a>
@@ -463,6 +470,66 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <span id="einfo-status" style="font-size:12px;color:#64748b;"></span>
       </div>
     </div>
+  </div>
+
+  <!-- Panou ambasador — doar poze + detalii stand, orice trimitere merge la aprobare -->
+  <div id="ambasador-bar" style="display:none;background:#111827;border:1px solid #1a6b3a;border-radius:12px;margin-top:10px;overflow:hidden;">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid #1e293b;">
+      <span style="font-size:20px;">🎥</span>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:13px;color:#a3e635;">Mod ambasador</div>
+        <div style="font-size:11px;color:#64748b;">Poți propune poze și detalii de stand. Fiecare trimitere așteaptă aprobarea echipei Zoda.</div>
+      </div>
+    </div>
+    <div style="padding:14px;display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">STAND</label>
+        <select id="amb-stand-select" onchange="ambSelectStand()" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;">
+          <option value="">+ Stand nou</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">NUME STAND</label>
+          <input type="text" id="amb-nume" placeholder="ex: Stand 14" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">ADÂNCIME (m)</label>
+          <input type="number" step="0.1" id="amb-adancime" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">DISTANȚĂ (m)</label>
+          <input type="number" id="amb-distanta" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">LĂȚIME (m)</label>
+          <input type="number" id="amb-latime" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">FOTO STAND</label>
+        <div onclick="document.getElementById('amb-foto-input').click()" style="margin-top:5px;border:1.5px dashed #1e293b;border-radius:10px;padding:16px;text-align:center;cursor:pointer;">
+          <div id="amb-foto-preview-wrap">
+            <div style="font-size:22px;">📷</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:4px;">Click sau trage poza aici</div>
+          </div>
+          <img id="amb-foto-preview" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:8px;"/>
+        </div>
+        <input type="file" id="amb-foto-input" accept="image/*" style="display:none;" onchange="ambOnFotoSelect(this)"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;">POZIȚIE PE HARTĂ</label>
+        <button onclick="ambTogglePozitionare()" id="amb-poz-btn" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px;color:#94a3b8;font-size:12.5px;font-weight:600;cursor:pointer;">📍 Poziționează pe hartă</button>
+        <div id="amb-poz-status" style="font-size:11px;color:#4b5563;margin-top:4px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="ambTrimiteSubmisie()" id="amb-trimite-btn" style="background:#166534;color:#fff;font-weight:700;font-size:13px;padding:10px 18px;border:none;border-radius:8px;cursor:pointer;">🚀 Trimite spre aprobare</button>
+        <span id="amb-status" style="font-size:12px;color:#64748b;"></span>
+      </div>
+    </div>
+    <div id="amb-submisii-mele" style="padding:0 14px 14px;"></div>
   </div>
 
   <!-- Map + Sidebar + Top10: wrapper flex pe desktop -->
@@ -770,6 +837,7 @@ var BALTA = null;     // row din tabela balti
 var WA_FALLBACK_DIGITS = ''; // cifrele telefonului, cand e introdus complet cu indicativ, folosite ca fallback pt WhatsApp/Tarife
 var WORKER_R2_UPLOAD = 'https://zoda-r2-upload.marianzlate90.workers.dev';
 var CAN_EDIT = false; // true daca userul curent (zoda_admin sau balta_admin al acestei balti) poate edita
+var IS_AMBASADOR = false; // true daca userul curent e ambasadorul acestei balti (doar poze/video/detalii stand, cu aprobare)
 var ST = [];          // standuri cu pozitii + poze
 var CAPTURES = [];    // capturi (viitor: tabela captures)
 var selId = null, editMode = false;
@@ -866,6 +934,23 @@ var CACHE = {
   }
 };
 
+// Creditare publică — vizibilă tuturor, indiferent dacă vizitatorul e logat.
+// Nu verifică nimic legat de identitate, doar afișează numele legat de baltă.
+async function renderAmbasadorCredit(ambasadorZodaId) {
+  var el = document.getElementById('ib-ambasador-credit');
+  if (!el) return;
+  if (!ambasadorZodaId) { el.style.display = 'none'; return; }
+  try {
+    var { data } = await sb.from('user_profiles_public').select('username').eq('zoda_id', ambasadorZodaId).single();
+    if (data?.username) {
+      el.textContent = '🎥 Conținut media: ' + data.username;
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  } catch(e) { el.style.display = 'none'; }
+}
+
 async function checkAdminAndShowBar() {
   // Citim sesiunea din localStorage (zoda-auth) — fără token în URL
   var { data: { session } } = await sb.auth.getSession();
@@ -895,6 +980,18 @@ async function checkAdminAndShowBar() {
       document.getElementById('einfo-facebook').value = BALTA.facebook || '';
       document.getElementById('einfo-tarife').value = BALTA.tarife || '';
       document.getElementById('einfo-regulament').value = BALTA.regulament || '';
+    }
+  }
+
+  // Verificăm separat dacă userul curent e ambasadorul acestei bălți — rol distinct,
+  // fără drepturi de administrare, doar poate propune poze/detalii de stand spre aprobare.
+  if (BALTA.ambasador_zoda_id) {
+    var apRes = await sb.from('user_profiles').select('zoda_id').eq('id', user.id).single();
+    if (apRes.data?.zoda_id && apRes.data.zoda_id === BALTA.ambasador_zoda_id) {
+      IS_AMBASADOR = true;
+      var ambBar = document.getElementById('ambasador-bar');
+      if (ambBar) ambBar.style.display = 'flex';
+      ambInitPanel();
     }
   }
 }
@@ -1097,6 +1194,7 @@ function renderPage(hartaUrl) {
   document.getElementById('hdr-balta-loc').textContent = b.adresa ? '📍 ' + b.adresa : (b.judet ? '📍 ' + b.judet : '');
   document.getElementById('ib-name').textContent = b.nume;
   document.getElementById('ib-loc').textContent = (b.adresa || b.judet || '');
+  renderAmbasadorCredit(b.ambasador_zoda_id);
 
   // Butoane contact
   if (b.telefon) {
@@ -1834,6 +1932,232 @@ async function deleteOverlayStandFoto(pozaId) {
   } catch (e) {
     alert('Eroare la ștergerea pozei.');
   }
+}
+
+// ── PANOU AMBASADOR — poze + detalii stand, totul trece prin aprobare ───────
+var _ambFotoUrl = null;
+var _ambPozitie = null;      // {x,y} propus de ambasador, null = nemodificat
+var _ambPozActiva = false;   // true cât timp markerul de poziționare e vizibil/draggabil
+
+function ambInitPanel() {
+  var sel = document.getElementById('amb-stand-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">+ Stand nou</option>' +
+    ST.map(function(s) { return '<option value="' + s.id + '">' + (s.n || 'Stand ' + s.id) + '</option>'; }).join('');
+  ambSelectStand();
+  ambLoadSubmisiiMele();
+}
+
+function ambSelectStand() {
+  var sel = document.getElementById('amb-stand-select');
+  var standId = sel.value ? parseInt(sel.value) : null;
+  var s = standId ? ST.find(function(x) { return x.id === standId; }) : null;
+  document.getElementById('amb-nume').value     = s ? (s.n || '') : '';
+  document.getElementById('amb-adancime').value = s ? (s.ad || '') : '';
+  document.getElementById('amb-distanta').value = s ? (s.di || '') : '';
+  document.getElementById('amb-latime').value   = s ? (s.la || '') : '';
+  _ambFotoUrl = null;
+  _ambPozitie = null;
+  document.getElementById('amb-foto-preview').style.display = 'none';
+  document.getElementById('amb-foto-preview-wrap').style.display = 'block';
+  ambOprestePozitionare();
+}
+
+function ambTogglePozitionare() {
+  if (_ambPozActiva) { ambOprestePozitionare(); return; }
+  _ambPozActiva = true;
+
+  var sel = document.getElementById('amb-stand-select');
+  var standId = sel.value ? parseInt(sel.value) : null;
+  var s = standId ? ST.find(function(x) { return x.id === standId; }) : null;
+  // Poziție de start: cea propusă anterior (dacă a mai umblat la ea), altfel
+  // poziția actuală a standului (dacă are deja una), altfel centrul hărții.
+  var startX = _ambPozitie ? _ambPozitie.x : (s && s.x != null ? s.x : 50);
+  var startY = _ambPozitie ? _ambPozitie.y : (s && s.y != null ? s.y : 50);
+  _ambPozitie = { x: startX, y: startY };
+
+  var layer = document.getElementById('pins-layer');
+  var marker = document.createElement('div');
+  marker.className = 'amb-pin-marker';
+  marker.id = 'amb-pin-marker';
+  marker.style.left = startX + '%';
+  marker.style.top  = startY + '%';
+  marker.innerHTML = pinSVG(s ? (s.n || 'S') : 'NOU', true, false);
+  marker.addEventListener('mousedown',  ambStartDragMarker);
+  marker.addEventListener('touchstart', ambStartDragMarker, { passive: false });
+  layer.appendChild(marker);
+
+  var btn = document.getElementById('amb-poz-btn');
+  btn.textContent = '✓ Gata — am poziționat';
+  btn.style.borderColor = '#a3e635';
+  btn.style.color = '#a3e635';
+  document.getElementById('amb-poz-status').textContent = 'Trage marker-ul portocaliu pe hartă, apoi apasă din nou butonul.';
+  scrollToMap();
+}
+
+function ambOprestePozitionare() {
+  _ambPozActiva = false;
+  var marker = document.getElementById('amb-pin-marker');
+  if (marker) marker.remove();
+  var btn = document.getElementById('amb-poz-btn');
+  if (btn) {
+    if (_ambPozitie) {
+      btn.textContent = '📍 Poziție setată — apasă ca s-o ajustezi';
+      btn.style.borderColor = '#a3e635';
+      btn.style.color = '#a3e635';
+    } else {
+      btn.textContent = '📍 Poziționează pe hartă';
+      btn.style.borderColor = '#1e293b';
+      btn.style.color = '#94a3b8';
+    }
+  }
+  var status = document.getElementById('amb-poz-status');
+  if (status) status.textContent = _ambPozitie ? 'Poziție inclusă în submisie.' : '';
+}
+
+function ambStartDragMarker(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  var marker = document.getElementById('amb-pin-marker');
+  if (!marker) return;
+  marker.classList.add('dragging');
+
+  var isTouch = e.touches !== undefined;
+  var startX  = isTouch ? e.touches[0].clientX : e.clientX;
+  var startY  = isTouch ? e.touches[0].clientY : e.clientY;
+  var origX   = _ambPozitie.x;
+  var origY   = _ambPozitie.y;
+
+  function onMove(ev) {
+    ev.preventDefault();
+    var cx = isTouch ? ev.touches[0].clientX : ev.clientX;
+    var cy = isTouch ? ev.touches[0].clientY : ev.clientY;
+    var img = document.getElementById('lake-img');
+    var iRect = img.getBoundingClientRect();
+    _ambPozitie.x = Math.max(1, Math.min(99, origX + (cx - startX) / iRect.width  * 100));
+    _ambPozitie.y = Math.max(1, Math.min(99, origY + (cy - startY) / iRect.height * 100));
+    marker.style.left = _ambPozitie.x + '%';
+    marker.style.top  = _ambPozitie.y + '%';
+  }
+  function onEnd() {
+    marker.classList.remove('dragging');
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend',  onEnd);
+  }
+  if (isTouch) {
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend',  onEnd);
+  } else {
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onEnd);
+  }
+}
+
+async function ambOnFotoSelect(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var status = document.getElementById('amb-status');
+  status.textContent = 'Se încarcă poza...';
+  status.style.color = '#64748b';
+  try {
+    if (isHeicFile(file)) {
+      status.textContent = 'Se convertește poza (HEIC → JPEG)...';
+      file = await convertToUploadableImage(file);
+      status.textContent = 'Se încarcă poza...';
+    }
+    var fd = new FormData();
+    fd.append('file', file);
+    var resp = await fetch(WORKER_R2_UPLOAD + '?folder=standuri', { method: 'POST', body: fd });
+    var data = await resp.json();
+    if (!resp.ok || !data.url) throw new Error(data.error || 'Eroare upload');
+
+    _ambFotoUrl = data.url;
+    var preview = document.getElementById('amb-foto-preview');
+    preview.src = data.url;
+    preview.style.display = 'block';
+    document.getElementById('amb-foto-preview-wrap').style.display = 'none';
+    status.textContent = '✓ Poză încărcată — nu s-a publicat încă, așteaptă trimiterea spre aprobare.';
+    status.style.color = '#a3e635';
+  } catch (e) {
+    status.textContent = '✕ Eroare la încărcarea pozei.';
+    status.style.color = '#ef4444';
+  }
+  input.value = '';
+}
+
+async function ambTrimiteSubmisie() {
+  var sel = document.getElementById('amb-stand-select');
+  var standId = sel.value ? parseInt(sel.value) : null;
+  var nume     = document.getElementById('amb-nume').value.trim() || null;
+  var adancime = document.getElementById('amb-adancime').value ? parseFloat(document.getElementById('amb-adancime').value) : null;
+  var distanta = document.getElementById('amb-distanta').value ? parseInt(document.getElementById('amb-distanta').value) : null;
+  var latime   = document.getElementById('amb-latime').value ? parseInt(document.getElementById('amb-latime').value) : null;
+  var status = document.getElementById('amb-status');
+
+  if (!nume && adancime == null && distanta == null && latime == null && !_ambFotoUrl && !_ambPozitie) {
+    status.textContent = 'Completează cel puțin un câmp, adaugă o poză sau poziționează pe hartă.';
+    status.style.color = '#f59e0b';
+    return;
+  }
+
+  var btn = document.getElementById('amb-trimite-btn');
+  btn.disabled = true; btn.textContent = '⏳ Se trimite...';
+
+  const { error } = await sb.rpc('trimite_submisie_ambasador', {
+    p_balta_id: BALTA.id,
+    p_stand_id: standId,
+    p_nume: nume,
+    p_adancime: adancime,
+    p_distanta: distanta,
+    p_latime: latime,
+    p_foto_url: _ambFotoUrl,
+    p_pozitie: _ambPozitie ? { x: parseFloat(_ambPozitie.x.toFixed(3)), y: parseFloat(_ambPozitie.y.toFixed(3)) } : null,
+  });
+
+  btn.disabled = false; btn.textContent = '🚀 Trimite spre aprobare';
+
+  if (error) {
+    status.textContent = '✕ Eroare: ' + error.message;
+    status.style.color = '#ef4444';
+    return;
+  }
+
+  status.textContent = '✓ Trimis spre aprobare! Vei vedea statusul mai jos.';
+  status.style.color = '#a3e635';
+  _ambFotoUrl = null;
+  _ambPozitie = null;
+  ambOprestePozitionare();
+  document.getElementById('amb-foto-preview').style.display = 'none';
+  document.getElementById('amb-foto-preview-wrap').style.display = 'block';
+  ambLoadSubmisiiMele();
+}
+
+async function ambLoadSubmisiiMele() {
+  var wrap = document.getElementById('amb-submisii-mele');
+  if (!wrap) return;
+  var { data: { session } } = await sb.auth.getSession();
+  if (!session?.user) return;
+
+  const { data: submisii } = await sb.from('ambasador_submisii')
+    .select('id, nume, status, motiv_respingere, created_at')
+    .eq('ambasador_uid', session.user.id)
+    .eq('balta_id', BALTA.id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (!submisii || !submisii.length) { wrap.innerHTML = ''; return; }
+
+  var iconMap = { pending: '⏳', aprobat: '✅', respins: '❌' };
+  var culoareMap = { pending: '#f59e0b', aprobat: '#a3e635', respins: '#ef4444' };
+
+  wrap.innerHTML = '<div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.05em;margin-bottom:8px;border-top:1px solid #1e293b;padding-top:12px;">SUBMISIILE MELE PENTRU BALTA ASTA</div>' +
+    submisii.map(function(s) {
+      var linie = iconMap[s.status] + ' ' + (s.nume || 'Fără nume') + ' — ' + new Date(s.created_at).toLocaleDateString('ro-RO');
+      var motiv = (s.status === 'respins' && s.motiv_respingere) ? '<div style="font-size:11px;color:#94a3b8;margin-top:2px;margin-left:20px;">Motiv: ' + s.motiv_respingere.replace(/</g,'&lt;') + '</div>' : '';
+      return '<div style="font-size:12.5px;color:' + culoareMap[s.status] + ';margin-bottom:4px;">' + linie + '</div>' + motiv;
+    }).join('');
 }
 
 async function saveOverlayStandDetails() {
