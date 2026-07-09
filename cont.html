@@ -2235,7 +2235,7 @@ function deseneazaCardCaptura(c) {
   }
 
   Promise.all([
-    incarcaImagine(c.foto_url),
+    incarcaImagine(c.foto_url + (c.foto_url.includes('?') ? '&' : '?') + 'cb=' + Date.now()),
     incarcaImagine('zoda-logo.png').catch(() => null), // dacă logo-ul nu se încarcă, continuăm fără el
   ]).then(([fotoImg, logoImg]) => {
     // Poza e vedeta — acoperă tot cardul, fără deformare, fără colțuri rotunjite,
