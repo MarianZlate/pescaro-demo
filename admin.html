@@ -1789,6 +1789,19 @@ async function loadAmbasadori() {
     .eq('status', 'pending')
     .order('created_at', { ascending: true });
 
+  // Rezolvăm username-urile pentru toți ambasadorii implicați (submisii + progres), un singur query
+  const { data: baltiAmbPrefetch } = await sb.from('balti').select('ambasador_zoda_id').not('ambasador_zoda_id', 'is', null);
+  const toateZodaId = new Set([
+    ...(submisii || []).map(s => s.ambasador_zoda_id),
+    ...(baltiAmbPrefetch || []).map(b => b.ambasador_zoda_id),
+  ].filter(Boolean));
+  const numeMap = {};
+  if (toateZodaId.size) {
+    const { data: profiluri } = await sb.from('user_profiles_public').select('zoda_id, username').in('zoda_id', Array.from(toateZodaId));
+    (profiluri || []).forEach(p => { numeMap[p.zoda_id] = p.username; });
+  }
+  const numeAmbasador = zodaId => numeMap[zodaId] ? `${escHtml(numeMap[zodaId])} <span style="font-family:monospace;color:#4b5563;">(${escHtml(zodaId)})</span>` : `<span style="font-family:monospace;">${escHtml(zodaId)}</span>`;
+
   if (subErr) {
     listEl.innerHTML = `<div class="empty-state">Eroare la încărcare: ${escHtml(subErr.message)}</div>`;
   } else if (!submisii || !submisii.length) {
@@ -1799,7 +1812,7 @@ async function loadAmbasadori() {
         <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
           <div>
             <div style="font-weight:700;color:#f1f5f9;font-size:13.5px;">${escHtml(s.balti?.nume || '—')} ${s.standuri?.nume ? '· ' + escHtml(s.standuri.nume) : (s.stand_id ? '' : '· stand nou')}</div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px;">👤 Ambasador: <span style="font-family:monospace;">${escHtml(s.ambasador_zoda_id)}</span> · ${new Date(s.created_at).toLocaleString('ro-RO')}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">👤 Ambasador: ${numeAmbasador(s.ambasador_zoda_id)} · ${new Date(s.created_at).toLocaleString('ro-RO')}</div>
           </div>
         </div>
         ${s.foto_url ? `<img src="${escHtml(s.foto_url)}" style="width:100%;max-width:320px;border-radius:8px;margin-bottom:10px;display:block;"/>` : ''}
@@ -1840,7 +1853,7 @@ async function loadAmbasadori() {
 
   tbody.innerHTML = Object.entries(grupuri).map(([zodaId, g]) => `
     <tr>
-      <td style="font-family:monospace;font-size:12px;">${escHtml(zodaId)}</td>
+      <td style="font-size:12px;">${numeAmbasador(zodaId)}</td>
       <td>${g.balti.map(escHtml).join(', ')} <span style="color:#4b5563;">(${g.balti.length})</span></td>
       <td>${g.aprobate}</td>
       <td>${g.pending > 0 ? `<span style="color:#f59e0b;font-weight:700;">${g.pending}</span>` : '0'}</td>
