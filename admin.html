@@ -1106,6 +1106,13 @@ function roAscii(s) {
     .replace(/Ă/g,'A').replace(/Â/g,'A').replace(/Î/g,'I').replace(/Ș|Ş/g,'S').replace(/Ț|Ţ/g,'T');
 }
 
+// Normalizează diacriticele doar pentru COMPARARE (căutare/filtrare) — nu pentru afișare.
+// Spre deosebire de roAscii() de mai sus (care produce text ASCII afișabil pt. PDF),
+// aici rezultatul nu ajunge niciodată pe ecran, doar e comparat intern.
+function normStr(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function cautaBaltaRaport(query) {
   const dd = document.getElementById('stats-raport-dropdown');
   const q = query.trim().toLowerCase();
@@ -3531,20 +3538,20 @@ function judetClose(){document.getElementById('judet-dropdown').style.display='n
 function judetToggle(){const dd=document.getElementById('judet-dropdown');if(dd.style.display==='none'){document.getElementById('ab-judet-search').focus();judetOpen();}else{judetClose();}}
 function judetSearch(q){judetRenderList(q);document.getElementById('judet-dropdown').style.display='block';document.getElementById('ab-judet').value='';judetFocusIdx=-1;}
 function judetRenderList(q){
-  const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const qn=norm(q.trim());
-  const sw=JUDETE_LIST.filter(j=>norm(j).startsWith(qn));const cn=qn?JUDETE_LIST.filter(j=>!norm(j).startsWith(qn)&&norm(j).includes(qn)):[];
+  const qn=normStr(q.trim());
+  const sw=JUDETE_LIST.filter(j=>normStr(j).startsWith(qn));const cn=qn?JUDETE_LIST.filter(j=>!normStr(j).startsWith(qn)&&normStr(j).includes(qn)):[];
   const sorted=qn?[...sw,...cn]:[...JUDETE_LIST];
   const dd=document.getElementById('judet-dropdown');
   if(!sorted.length){dd.innerHTML='<div style="padding:12px 14px;color:#4b5563;font-size:12px;">Niciun județ găsit</div>';return;}
-  function hl(name,q){if(!q)return name;const n=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const idx=n(name).indexOf(n(q));if(idx<0)return name;return name.slice(0,idx)+'<span class="judet-match">'+name.slice(idx,idx+q.length)+'</span>'+name.slice(idx+q.length);}
-  dd.innerHTML=sorted.map((j,i)=>{const isM=qn&&norm(j).startsWith(qn);return`<div class="judet-opt${isM?' match-first':''}" data-idx="${i}" onclick="judetSelect('${j}')" onmouseenter="judetFocusIdx=${i}">${isM?'📍 ':''}<span>${hl(j,q)}</span></div>`;}).join('');
+  function hl(name,q){if(!q)return name;const idx=normStr(name).indexOf(normStr(q));if(idx<0)return name;return name.slice(0,idx)+'<span class="judet-match">'+name.slice(idx,idx+q.length)+'</span>'+name.slice(idx+q.length);}
+  dd.innerHTML=sorted.map((j,i)=>{const isM=qn&&normStr(j).startsWith(qn);return`<div class="judet-opt${isM?' match-first':''}" data-idx="${i}" onclick="judetSelect('${j}')" onmouseenter="judetFocusIdx=${i}">${isM?'📍 ':''}<span>${hl(j,q)}</span></div>`;}).join('');
 }
 function judetSelect(judet){document.getElementById('ab-judet-search').value=judet;document.getElementById('ab-judet').value=judet;judetClose();if(judet&&JUDETE_COORDS[judet]&&abMap)abMap.flyTo(JUDETE_COORDS[judet],11,{duration:1});}
 function judetKeydown(e){
   const dd=document.getElementById('judet-dropdown');const opts=dd.querySelectorAll('.judet-opt');if(!opts.length)return;
   if(e.key==='ArrowDown'){e.preventDefault();judetFocusIdx=Math.min(judetFocusIdx+1,opts.length-1);opts.forEach((o,i)=>o.classList.toggle('focused',i===judetFocusIdx));opts[judetFocusIdx]?.scrollIntoView({block:'nearest'});}
   else if(e.key==='ArrowUp'){e.preventDefault();judetFocusIdx=Math.max(judetFocusIdx-1,0);opts.forEach((o,i)=>o.classList.toggle('focused',i===judetFocusIdx));opts[judetFocusIdx]?.scrollIntoView({block:'nearest'});}
-  else if(e.key==='Enter'&&judetFocusIdx>=0){e.preventDefault();const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const q=norm(document.getElementById('ab-judet-search').value.trim());const sw=JUDETE_LIST.filter(j=>norm(j).startsWith(q));const cn=JUDETE_LIST.filter(j=>!norm(j).startsWith(q)&&norm(j).includes(q));const sorted=[...sw,...cn];if(sorted[judetFocusIdx])judetSelect(sorted[judetFocusIdx]);}
+  else if(e.key==='Enter'&&judetFocusIdx>=0){e.preventDefault();const q=normStr(document.getElementById('ab-judet-search').value.trim());const sw=JUDETE_LIST.filter(j=>normStr(j).startsWith(q));const cn=JUDETE_LIST.filter(j=>!normStr(j).startsWith(q)&&normStr(j).includes(q));const sorted=[...sw,...cn];if(sorted[judetFocusIdx])judetSelect(sorted[judetFocusIdx]);}
   else if(e.key==='Escape')judetClose();
   else if(e.key==='Tab')judetClose();
 }
