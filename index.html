@@ -3206,6 +3206,24 @@ async function updateNavForUser(user) {
 
   const isAdmin = currentRole === 'zoda_admin';
 
+  // Pentru zoda_admin, agregăm tot ce așteaptă atenție în admin.html — cereri de
+  // publicare bălți, capturi de aprobat, mesaje necitite, submisii de ambasador —
+  // ca să știe dacă are ceva de făcut acolo, fără să intre să verifice manual.
+  let adminPendingCount = 0;
+  if (isAdmin) {
+    try {
+      const [aprobari, capturi, mesaje, ambasadori] = await Promise.all([
+        sb.from('balti').select('id', { count: 'exact', head: true }).not('aprobare_solicitata_at', 'is', null),
+        sb.from('capturi').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        sb.from('contact_messages').select('id', { count: 'exact', head: true }).eq('citit', false),
+        sb.from('ambasador_submisii').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      ]);
+      adminPendingCount = (aprobari.count || 0) + (capturi.count || 0) + (mesaje.count || 0) + (ambasadori.count || 0);
+    } catch(e) {}
+  }
+  const adminBadge = adminPendingCount > 0
+    ? `<span class="nav-bell-badge">${adminPendingCount > 99 ? '99+' : adminPendingCount}</span>` : '';
+
   // Citim numărul de notificări necitite
   let unreadCount = 0;
   try {
@@ -3220,7 +3238,7 @@ async function updateNavForUser(user) {
 
   area.innerHTML = `
     <div class="nav-user">
-      ${isAdmin ? '<a href="#" onclick="goToAdmin(event)" class="nav-admin-badge" style="text-decoration:none;cursor:pointer;" title="Panou de administrare">⚙️ <span class="nav-label">Admin</span></a>' : ''}
+      ${isAdmin ? `<a href="#" onclick="goToAdmin(event)" class="nav-admin-badge" style="text-decoration:none;cursor:pointer;position:relative;" title="Panou de administrare">⚙️ <span class="nav-label">Admin</span>${adminBadge}</a>` : ''}
       <div class="nav-bell" onclick="toggleNotifPanel()" title="Notificări" id="nav-bell-btn">
         🔔${bellBadge}
       </div>
