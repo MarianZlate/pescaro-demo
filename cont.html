@@ -2223,83 +2223,147 @@ function deseneazaCardCaptura(c) {
   const canvas = document.getElementById('card-canvas');
   const ctx = canvas.getContext('2d');
   const W = 1080, H = 1080;
+  const R = 36; // raza colțurilor rotunjite ale întregului card
 
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = function() {
+  function roundedRectPath(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function incarcaImagine(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  Promise.all([
+    incarcaImagine(c.foto_url),
+    incarcaImagine('zoda-logo.png').catch(() => null), // dacă logo-ul nu se încarcă, continuăm fără el
+  ]).then(([fotoImg, logoImg]) => {
+    // Card cu colțuri rotunjite — tot ce desenăm mai jos e "tăiat" la această formă
+    ctx.save();
+    roundedRectPath(0, 0, W, H, R);
+    ctx.clip();
+
     // Poza capturii, decupată să acopere tot pătratul (cover), fără deformare
-    const scale = Math.max(W / img.width, H / img.height);
+    const scale = Math.max(W / fotoImg.width, H / fotoImg.height);
     const sw = W / scale, sh = H / scale;
-    const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+    const sx = (fotoImg.width - sw) / 2, sy = (fotoImg.height - sh) / 2;
+    ctx.drawImage(fotoImg, sx, sy, sw, sh, 0, 0, W, H);
 
-    // Gradient întunecat jos, ca textul să fie lizibil peste orice poză
-    const grad = ctx.createLinearGradient(0, H * 0.45, 0, H);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,.88)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
+    // Vinietă foarte subtilă sus, ca poza să nu se taie brusc la margine
+    const gradSus = ctx.createLinearGradient(0, 0, 0, H * 0.22);
+    gradSus.addColorStop(0, 'rgba(0,0,0,.35)');
+    gradSus.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradSus;
+    ctx.fillRect(0, 0, W, H * 0.22);
 
-    // Greutate — mare, sus în zona de text
+    // Gradient întunecat jos, în trepte multiple — mai fin decât un singur salt
+    const gradJos = ctx.createLinearGradient(0, H * 0.38, 0, H);
+    gradJos.addColorStop(0,   'rgba(4,7,12,0)');
+    gradJos.addColorStop(0.5, 'rgba(4,7,12,.55)');
+    gradJos.addColorStop(1,   'rgba(4,7,12,.94)');
+    ctx.fillStyle = gradJos;
+    ctx.fillRect(0, H * 0.38, W, H * 0.62);
+
+    const marginX = 64;
+
+    // ── Greutatea — numărul mare, cu umbră, plus unitatea alăturată, mai mică ──
     ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.shadowColor = 'rgba(0,0,0,.55)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 4;
+
     ctx.fillStyle = '#a3e635';
-    ctx.font = '900 130px system-ui, sans-serif';
-    ctx.fillText((c.kg || '—') + ' KG', 60, H - 340);
+    ctx.font = '900 148px "Segoe UI", system-ui, sans-serif';
+    const kgText = String(c.kg != null ? c.kg : '—');
+    ctx.fillText(kgText, marginX, H - 358);
+    const kgWidth = ctx.measureText(kgText).width;
 
-    // Specie
+    ctx.font = '800 56px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#eafccb';
+    ctx.fillText('kg', marginX + kgWidth + 16, H - 358);
+
+    // Specie — chip mic, discret, lângă greutate (dacă există)
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 2;
     if (c.specie) {
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = '700 44px system-ui, sans-serif';
-      ctx.fillText(c.specie, 62, H - 275);
+      ctx.font = '700 34px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.fillText('🐟 ' + c.specie, marginX, H - 300);
     }
 
-    // Nume pescar
+    // ── Bloc de text secundar, cu ritm vertical consistent ──
+    let y = H - 218;
+    const lineGap = 46;
+
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 2;
+
+    ctx.font = '800 42px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = '#ffffff';
-    ctx.font = '800 40px system-ui, sans-serif';
-    ctx.fillText(currentProfile?.username || 'Pescar Zoda', 62, H - 210);
+    ctx.fillText(currentProfile?.username || 'Pescar Zoda', marginX, y);
+    y += lineGap;
 
-    // Balta + stand
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 32px system-ui, sans-serif';
-    const baltaLine = (c.balti?.nume || 'Baltă necunoscută') + (c.standuri?.nume ? ' · ' + c.standuri.nume : '');
-    ctx.fillText(baltaLine, 62, H - 165);
+    ctx.font = '600 32px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(226,232,240,.85)';
+    const baltaLine = '📍 ' + (c.balti?.nume || 'Baltă necunoscută') + (c.standuri?.nume ? ' · ' + c.standuri.nume : '');
+    ctx.fillText(baltaLine, marginX, y);
+    y += lineGap * 0.82;
 
-    // Data
     if (c.data_captura) {
-      ctx.fillStyle = '#64748b';
-      ctx.font = '500 28px system-ui, sans-serif';
-      ctx.fillText(new Date(c.data_captura).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }), 62, H - 125);
+      ctx.font = '500 28px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(148,163,184,.85)';
+      ctx.fillText(new Date(c.data_captura).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }), marginX, y);
     }
 
-    // Linie separatoare subtilă
-    ctx.strokeStyle = 'rgba(255,255,255,.15)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // ── Linie separatoare subtilă, deasupra footer-ului ──
+    ctx.strokeStyle = 'rgba(255,255,255,.14)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(60, H - 90);
-    ctx.lineTo(W - 60, H - 90);
+    ctx.moveTo(marginX, H - 96);
+    ctx.lineTo(W - marginX, H - 96);
     ctx.stroke();
 
-    // Logo Zoda — stânga jos
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#a3e635';
-    ctx.font = '900 38px system-ui, sans-serif';
-    ctx.fillText('🎣 Zoda', 60, H - 45);
+    // ── Footer: logo real, stânga · zoda.ro, dreapta — aliniate pe aceeași linie ──
+    const footerY = H - 50;
+    if (logoImg) {
+      const logoH = 46;
+      const logoW = logoH * (logoImg.width / logoImg.height);
+      ctx.drawImage(logoImg, marginX, footerY - logoH * 0.72, logoW, logoH);
+    } else {
+      ctx.font = '900 36px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#a3e635';
+      ctx.fillText('Zoda', marginX, footerY);
+    }
 
-    // zoda.ro — dreapta jos, cu link-ul explicit
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '700 34px system-ui, sans-serif';
-    ctx.fillText('zoda.ro', W - 60, H - 45);
+    ctx.font = '700 32px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.fillText('zoda.ro', W - marginX, footerY);
+
+    ctx.restore(); // scoate clip-ul de colțuri rotunjite
 
     canvas.toBlob(function(blob) {
       _cardBlobCurent = blob;
       document.getElementById('card-status').textContent = '✓ Card generat — gata de trimis';
     }, 'image/jpeg', 0.92);
-  };
-  img.onerror = function() {
+  }).catch(function() {
     document.getElementById('card-status').textContent = '✕ Nu s-a putut încărca poza capturii.';
-  };
-  img.src = c.foto_url;
+  });
 }
 
 async function distribuieCard() {
