@@ -487,6 +487,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <select id="amb-stand-select" onchange="ambSelectStand()" style="width:100%;margin-top:5px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:8px 10px;color:#f1f5f9;font-size:13px;outline:none;cursor:pointer;">
           <option value="">+ Stand nou</option>
         </select>
+        <div id="amb-stand-confirm" style="font-size:11.5px;margin-top:6px;padding:7px 10px;border-radius:7px;"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
@@ -1943,7 +1944,7 @@ function ambInitPanel() {
   var sel = document.getElementById('amb-stand-select');
   if (!sel) return;
   sel.innerHTML = '<option value="">+ Stand nou</option>' +
-    ST.map(function(s) { return '<option value="' + s.id + '">' + (s.n || 'Stand ' + s.id) + '</option>'; }).join('');
+    ST.map(function(s) { return '<option value="' + s.id + '">' + (s.z || 'Stand ' + s.id) + '</option>'; }).join('');
   ambSelectStand();
   ambLoadSubmisiiMele();
 }
@@ -1952,7 +1953,7 @@ function ambSelectStand() {
   var sel = document.getElementById('amb-stand-select');
   var standId = sel.value ? parseInt(sel.value) : null;
   var s = standId ? ST.find(function(x) { return x.id === standId; }) : null;
-  document.getElementById('amb-nume').value     = s ? (s.n || '') : '';
+  document.getElementById('amb-nume').value     = s ? (s.z || '') : '';
   document.getElementById('amb-adancime').value = s ? (s.ad || '') : '';
   document.getElementById('amb-distanta').value = s ? (s.di || '') : '';
   document.getElementById('amb-latime').value   = s ? (s.la || '') : '';
@@ -1961,6 +1962,19 @@ function ambSelectStand() {
   document.getElementById('amb-foto-preview').style.display = 'none';
   document.getElementById('amb-foto-preview-wrap').style.display = 'block';
   ambOprestePozitionare();
+
+  var confirmEl = document.getElementById('amb-stand-confirm');
+  if (s) {
+    confirmEl.style.background = 'rgba(245,158,11,.1)';
+    confirmEl.style.border = '1px solid rgba(245,158,11,.3)';
+    confirmEl.style.color = '#f59e0b';
+    confirmEl.innerHTML = '⚠️ Editezi standul existent <b>„' + (s.z || '—') + '"</b> — verifică pe hartă (mai jos) că e chiar cel la care te-ai gândit, înainte să trimiți.';
+  } else {
+    confirmEl.style.background = 'rgba(163,230,53,.08)';
+    confirmEl.style.border = '1px solid rgba(163,230,53,.25)';
+    confirmEl.style.color = '#a3e635';
+    confirmEl.innerHTML = '✓ Vei crea un stand nou — nu se suprapune cu niciun stand existent.';
+  }
 }
 
 function ambTogglePozitionare() {
@@ -1982,7 +1996,7 @@ function ambTogglePozitionare() {
   marker.id = 'amb-pin-marker';
   marker.style.left = startX + '%';
   marker.style.top  = startY + '%';
-  marker.innerHTML = pinSVG(s ? (s.n || 'S') : 'NOU', true, false);
+  marker.innerHTML = pinSVG(s ? (s.z || 'S') : 'NOU', true, false);
   marker.addEventListener('mousedown',  ambStartDragMarker);
   marker.addEventListener('touchstart', ambStartDragMarker, { passive: false });
   layer.appendChild(marker);
