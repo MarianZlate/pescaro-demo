@@ -635,6 +635,10 @@ button{font-family:inherit;}
         </div>
       </div>
 
+      <!-- Recorduri personale pe bălți -->
+      <div class="list-eyebrow" id="recorduri-personale-eyebrow" style="display:none;">🏆 RECORDUL MEU PE FIECARE BALTĂ</div>
+      <div id="recorduri-personale-list"></div>
+
       <!-- Lista capturi -->
       <div class="list-eyebrow">CAPTURILE MELE</div>
       <div id="capturi-list">
@@ -2328,6 +2332,43 @@ function descarcaCard() {
   setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
 }
 
+// Recordul personal pe fiecare baltă — cea mai mare captură a userului la
+// balta respectivă. Nu face un query nou, refolosește exact lista deja
+// încărcată de capturi aprobate (grupare + maxim, făcute local, în browser).
+function randeazaRecordurilePersonale(capturi) {
+  const eyebrow = document.getElementById('recorduri-personale-eyebrow');
+  const listEl = document.getElementById('recorduri-personale-list');
+  if (!eyebrow || !listEl) return;
+
+  if (!capturi.length) { eyebrow.style.display = 'none'; listEl.innerHTML = ''; return; }
+
+  const recordPerBalta = {};
+  capturi.forEach(c => {
+    if (c.kg == null) return;
+    const cheie = c.balta_id;
+    if (!recordPerBalta[cheie] || c.kg > recordPerBalta[cheie].kg) {
+      recordPerBalta[cheie] = c;
+    }
+  });
+
+  const recorduri = Object.values(recordPerBalta).sort((a, b) => b.kg - a.kg);
+  if (!recorduri.length) { eyebrow.style.display = 'none'; listEl.innerHTML = ''; return; }
+
+  eyebrow.style.display = 'block';
+  listEl.innerHTML = recorduri.map(c => `
+    <div class="capture-row" style="border-left:2px solid #f59e0b;">
+      ${c.foto_url
+        ? `<img class="capture-foto" src="${c.foto_url}" alt="record"/>`
+        : `<div class="capture-foto-empty">🏆</div>`}
+      <div class="capture-info">
+        <div class="capture-balta">${c.balti?.nume || '—'}</div>
+        <div class="capture-stand">${c.specie ? c.specie + ' · ' : ''}📍 ${c.standuri?.nume || '—'}</div>
+        <div class="capture-data">${c.data_captura || ''}</div>
+      </div>
+      <div class="capture-kg" style="color:#f59e0b;">🏆 ${c.kg} kg</div>
+    </div>`).join('');
+}
+
 async function loadCapturi() {
   const zodaId  = currentProfile?.zoda_id;
   const listEl  = document.getElementById('capturi-list');
@@ -2378,6 +2419,7 @@ async function loadCapturi() {
   if (nrCapturi) {
     html += `<div style="font-size:10px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin:${nrRecorduri ? '16px' : '0'} 0 8px;">CAPTURI APROBATE</div>`;
     window._capturiMele = capturi || [];
+    randeazaRecordurilePersonale(capturi || []);
     html += (capturi || []).map(c => `
       <div class="capture-row">
         ${c.foto_url
