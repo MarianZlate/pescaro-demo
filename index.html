@@ -1091,10 +1091,10 @@ function flyToBalta(id) {
 
 // ── SEARCH ────────────────────────────────────────────────────────────────────
 
-// Normalizează diacriticele (ă/â→a, î→i, ș/ş→s, ț/ţ→t) ca să nu conteze la căutare
+// Normalizează diacriticele (ă/â→a, î→i, ș/ş→s, ț/ţ→t, + orice alt accent) ca să nu conteze la căutare
+// Helper unic — folosit de căutarea fuzzy bălți, căutarea pescari și dropdown-ul de județe.
 function normStr(s) {
-  return (s || '').toLowerCase()
-    .replace(/[ăâ]/g, 'a').replace(/î/g, 'i').replace(/[șş]/g, 's').replace(/[țţ]/g, 't');
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 // Distanța de editare (Levenshtein) — câte litere trebuie schimbate/adăugate/șterse
@@ -2711,16 +2711,15 @@ function judetSearch(q) {
 }
 
 function judetRenderList(q) {
-  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const qn = norm(q.trim());
+  const qn = normStr(q.trim());
   
   let sorted;
   if(!qn) {
     sorted = [...JUDETE_LIST];
   } else {
     // Cele care încep cu litera/textul tastat — primele
-    const startsWith = JUDETE_LIST.filter(j => norm(j).startsWith(qn));
-    const contains   = JUDETE_LIST.filter(j => !norm(j).startsWith(qn) && norm(j).includes(qn));
+    const startsWith = JUDETE_LIST.filter(j => normStr(j).startsWith(qn));
+    const contains   = JUDETE_LIST.filter(j => !normStr(j).startsWith(qn) && normStr(j).includes(qn));
     sorted = [...startsWith, ...contains];
   }
 
@@ -2733,16 +2732,15 @@ function judetRenderList(q) {
   // Highlight textul cautat in denumire
   function highlight(name, q) {
     if(!q) return name;
-    const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    const idx = norm(name).indexOf(norm(q));
+    const idx = normStr(name).indexOf(normStr(q));
     if(idx < 0) return name;
     return name.slice(0,idx) + '<span class="judet-match">' + name.slice(idx, idx+q.length) + '</span>' + name.slice(idx+q.length);
   }
 
-  const isFirstGroup = qn ? sorted.findIndex(j => !norm(j).startsWith(qn)) : -1;
+  const isFirstGroup = qn ? sorted.findIndex(j => !normStr(j).startsWith(qn)) : -1;
 
   dd.innerHTML = sorted.map((j, i) => {
-    const isMatch = qn && norm(j).startsWith(qn);
+    const isMatch = qn && normStr(j).startsWith(qn);
     return `<div class="judet-opt${isMatch ? ' match-first' : ''}" 
       data-idx="${i}" 
       onclick="judetSelect('${j}')"
@@ -2789,20 +2787,10 @@ function judetKeydown(e) {
     opts[judetFocusIdx]?.scrollIntoView({block:'nearest'});
   } else if(e.key === 'Enter' && judetFocusIdx >= 0) {
     e.preventDefault();
-    const selected = opts[judetFocusIdx]?.dataset;
-    const judet = JUDETE_LIST.filter(j => {
-      const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      const q = document.getElementById('ab-judet-search').value.trim();
-      const qn = norm(q);
-      const startsWith = JUDETE_LIST.filter(j => norm(j).startsWith(qn));
-      const contains   = JUDETE_LIST.filter(j => !norm(j).startsWith(qn) && norm(j).includes(qn));
-      return [...startsWith, ...contains];
-    }).flat()[judetFocusIdx];
     const sorted = (() => {
-      const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      const q = norm(document.getElementById('ab-judet-search').value.trim());
-      const sw = JUDETE_LIST.filter(j => norm(j).startsWith(q));
-      const cn = JUDETE_LIST.filter(j => !norm(j).startsWith(q) && norm(j).includes(q));
+      const q = normStr(document.getElementById('ab-judet-search').value.trim());
+      const sw = JUDETE_LIST.filter(j => normStr(j).startsWith(q));
+      const cn = JUDETE_LIST.filter(j => !normStr(j).startsWith(q) && normStr(j).includes(q));
       return [...sw, ...cn];
     })();
     if(sorted[judetFocusIdx]) judetSelect(sorted[judetFocusIdx]);
