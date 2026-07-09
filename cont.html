@@ -839,6 +839,22 @@ button{font-family:inherit;}
 </div>
 
 <!-- ── MODAL ADAUGĂ CAPTURĂ ── -->
+<!-- CARD DE DISTRIBUIRE CAPTURĂ -->
+<div id="modal-card-distribuire" style="display:none;position:fixed;inset:0;background:rgba(4,7,12,.85);backdrop-filter:blur(3px);z-index:8500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:18px;width:100%;max-width:380px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-weight:800;font-size:14px;color:var(--text);">📤 Distribuie captura</div>
+      <button onclick="document.getElementById('modal-card-distribuire').style.display='none';" style="background:transparent;border:none;color:var(--text-faint);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <canvas id="card-canvas" width="1080" height="1080" style="width:100%;border-radius:12px;display:block;background:#111;"></canvas>
+    <div id="card-status" style="font-size:11px;color:var(--text-faint);margin:8px 0;text-align:center;"></div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button id="card-share-btn" onclick="distribuieCard()" style="flex:1;background:linear-gradient(135deg,var(--forest),var(--forest-2));border:none;color:#eafccb;font-weight:700;font-size:13px;padding:12px;border-radius:10px;cursor:pointer;">📤 Trimite</button>
+      <button onclick="descarcaCard()" style="background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);font-weight:600;font-size:13px;padding:12px 16px;border-radius:10px;cursor:pointer;">⬇️</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-captura">
   <div class="mc-box">
     <div class="mc-hdr">
@@ -2187,6 +2203,131 @@ async function loadStele() {
 }
 
 // ── CAPTURI ───────────────────────────────────────────────────────────────────
+// ── CARD DE DISTRIBUIRE CAPTURĂ ──────────────────────────────────────────────
+var _cardBlobCurent = null;
+
+function deschideCardDistribuire(captureId) {
+  const c = (window._capturiMele || []).find(x => x.id === captureId);
+  if (!c || !c.foto_url) return;
+  document.getElementById('modal-card-distribuire').style.display = 'flex';
+  document.getElementById('card-status').textContent = 'Se generează cardul...';
+  _cardBlobCurent = null;
+  deseneazaCardCaptura(c);
+}
+
+function deseneazaCardCaptura(c) {
+  const canvas = document.getElementById('card-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1080;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function() {
+    // Poza capturii, decupată să acopere tot pătratul (cover), fără deformare
+    const scale = Math.max(W / img.width, H / img.height);
+    const sw = W / scale, sh = H / scale;
+    const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+
+    // Gradient întunecat jos, ca textul să fie lizibil peste orice poză
+    const grad = ctx.createLinearGradient(0, H * 0.45, 0, H);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,.88)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Greutate — mare, sus în zona de text
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#a3e635';
+    ctx.font = '900 130px system-ui, sans-serif';
+    ctx.fillText((c.kg || '—') + ' KG', 60, H - 340);
+
+    // Specie
+    if (c.specie) {
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '700 44px system-ui, sans-serif';
+      ctx.fillText(c.specie, 62, H - 275);
+    }
+
+    // Nume pescar
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 40px system-ui, sans-serif';
+    ctx.fillText(currentProfile?.username || 'Pescar Zoda', 62, H - 210);
+
+    // Balta + stand
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 32px system-ui, sans-serif';
+    const baltaLine = (c.balti?.nume || 'Baltă necunoscută') + (c.standuri?.nume ? ' · ' + c.standuri.nume : '');
+    ctx.fillText(baltaLine, 62, H - 165);
+
+    // Data
+    if (c.data_captura) {
+      ctx.fillStyle = '#64748b';
+      ctx.font = '500 28px system-ui, sans-serif';
+      ctx.fillText(new Date(c.data_captura).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }), 62, H - 125);
+    }
+
+    // Linie separatoare subtilă
+    ctx.strokeStyle = 'rgba(255,255,255,.15)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(60, H - 90);
+    ctx.lineTo(W - 60, H - 90);
+    ctx.stroke();
+
+    // Logo Zoda — stânga jos
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#a3e635';
+    ctx.font = '900 38px system-ui, sans-serif';
+    ctx.fillText('🎣 Zoda', 60, H - 45);
+
+    // zoda.ro — dreapta jos, cu link-ul explicit
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '700 34px system-ui, sans-serif';
+    ctx.fillText('zoda.ro', W - 60, H - 45);
+
+    canvas.toBlob(function(blob) {
+      _cardBlobCurent = blob;
+      document.getElementById('card-status').textContent = '✓ Card generat — gata de trimis';
+    }, 'image/jpeg', 0.92);
+  };
+  img.onerror = function() {
+    document.getElementById('card-status').textContent = '✕ Nu s-a putut încărca poza capturii.';
+  };
+  img.src = c.foto_url;
+}
+
+async function distribuieCard() {
+  if (!_cardBlobCurent) return;
+  const fisier = new File([_cardBlobCurent], 'zoda-captura.jpg', { type: 'image/jpeg' });
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [fisier] })) {
+    try {
+      await navigator.share({
+        files: [fisier],
+        title: 'Captura mea pe Zoda',
+        text: 'Uite ce am prins! 🎣 zoda.ro',
+      });
+    } catch(e) { /* userul a anulat share-ul — nu tratăm ca eroare */ }
+  } else {
+    // Fallback desktop / browsere fără suport navigator.share cu fișiere
+    descarcaCard();
+  }
+}
+
+function descarcaCard() {
+  if (!_cardBlobCurent) return;
+  const url = URL.createObjectURL(_cardBlobCurent);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'zoda-captura.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+}
+
 async function loadCapturi() {
   const zodaId  = currentProfile?.zoda_id;
   const listEl  = document.getElementById('capturi-list');
@@ -2236,6 +2377,7 @@ async function loadCapturi() {
 
   if (nrCapturi) {
     html += `<div style="font-size:10px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin:${nrRecorduri ? '16px' : '0'} 0 8px;">CAPTURI APROBATE</div>`;
+    window._capturiMele = capturi || [];
     html += (capturi || []).map(c => `
       <div class="capture-row">
         ${c.foto_url
@@ -2247,6 +2389,7 @@ async function loadCapturi() {
           <div class="capture-data">${c.data_captura || ''}</div>
         </div>
         <div class="capture-kg">${c.kg ? c.kg + ' kg' : '—'}</div>
+        ${c.foto_url ? `<button onclick="deschideCardDistribuire(${c.id})" style="background:#166534;border:none;color:#eafccb;font-size:11px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;margin-left:8px;">📤 Distribuie</button>` : ''}
       </div>`).join('');
   }
 
