@@ -530,6 +530,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <button onclick="ambTrimiteSubmisie()" id="amb-trimite-btn" style="background:#166534;color:#fff;font-weight:700;font-size:13px;padding:10px 18px;border:none;border-radius:8px;cursor:pointer;">🚀 Trimite spre aprobare</button>
+        <button onclick="ambRenuntaModificari()" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-weight:600;font-size:12.5px;padding:10px 14px;border-radius:8px;cursor:pointer;">↺ Renunță</button>
         <span id="amb-status" style="font-size:12px;color:#64748b;"></span>
       </div>
     </div>
@@ -2008,6 +2009,7 @@ async function deleteOverlayStandFoto(pozaId) {
 var _ambFotoUrl = null;
 var _ambPozitie = null;      // {x,y} propus de ambasador, null = nemodificat
 var _ambPozActiva = false;   // true cât timp markerul de poziționare e vizibil/draggabil
+var _ambPozStandIdAscuns = null; // id-ul standului al cărui pin original a fost ascuns, pt restaurare corectă
 
 function ambInitPanel() {
   var sel = document.getElementById('amb-stand-select');
@@ -2016,6 +2018,13 @@ function ambInitPanel() {
     ST.map(function(s) { return '<option value="' + s.id + '">' + (s.z || 'Stand ' + s.id) + '</option>'; }).join('');
   ambSelectStand();
   ambLoadSubmisiiMele();
+}
+
+function ambRenuntaModificari() {
+  ambSelectStand(); // re-populează câmpurile cu datele reale ale standului selectat, șterge poza/poziția în lucru
+  var status = document.getElementById('amb-status');
+  status.textContent = '↺ Modificările au fost anulate.';
+  status.style.color = '#64748b';
 }
 
 function ambSelectStand() {
@@ -2060,6 +2069,15 @@ function ambTogglePozitionare() {
   _ambPozitie = { x: startX, y: startY };
 
   var layer = document.getElementById('pins-layer');
+
+  // Ascundem pin-ul original al standului cât timp îl poziționăm — altfel rămâneau
+  // vizibile două pinuri suprapuse (cel static + marker-ul nou), confuz la drag.
+  _ambPozStandIdAscuns = standId;
+  if (standId) {
+    var pinOriginal = document.getElementById('pin-' + standId);
+    if (pinOriginal) pinOriginal.style.display = 'none';
+  }
+
   var marker = document.createElement('div');
   marker.className = 'amb-pin-marker';
   marker.id = 'amb-pin-marker';
@@ -2082,6 +2100,15 @@ function ambOprestePozitionare() {
   _ambPozActiva = false;
   var marker = document.getElementById('amb-pin-marker');
   if (marker) marker.remove();
+
+  // Reafișăm pin-ul original al standului ascuns la intrarea în modul de poziționare
+  // (nu al celui curent selectat — s-ar putea să fi fost schimbat între timp).
+  if (_ambPozStandIdAscuns) {
+    var pinOriginal = document.getElementById('pin-' + _ambPozStandIdAscuns);
+    if (pinOriginal) pinOriginal.style.display = '';
+  }
+  _ambPozStandIdAscuns = null;
+
   var btn = document.getElementById('amb-poz-btn');
   if (btn) {
     if (_ambPozitie) {
