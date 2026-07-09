@@ -777,6 +777,23 @@ var DRUM_ACCES_YT = '';
 var BALTA_USER = null; // userul logat (null dacă vizitator)
 
 // ─── INIT ──────────────────────────────────────────────────────────────────
+function showGuestToast() {
+  if (BALTA_USER) return;
+  if (sessionStorage.getItem('zoda_toast_shown')) return;
+  sessionStorage.setItem('zoda_toast_shown', '1');
+  var t = document.getElementById('guest-toast');
+  if (!t) return;
+  if (window.repositionGuestToast) window.repositionGuestToast();
+  t.style.display = 'flex';
+  setTimeout(function() { t.classList.add('show'); }, 50);
+}
+function closeGuestToast() {
+  var t = document.getElementById('guest-toast');
+  if (!t) return;
+  t.classList.remove('show');
+  setTimeout(function() { t.style.display = 'none'; }, 400);
+}
+
 window.addEventListener('load', async function() {
   var params = new URLSearchParams(location.search);
   var baltaId = parseInt(params.get('id'));
@@ -790,6 +807,10 @@ window.addEventListener('load', async function() {
     var { data: { session } } = await sb.auth.getSession();
     BALTA_USER = session?.user || null;
   } catch(e) { BALTA_USER = null; }
+
+  // Vizitator nelogat pe pagina unei bălți — deja a venit "interesat" (a apăsat pe o baltă
+  // anume), deci pop-up-ul de creare cont apare instant, nu după o pauză ca pe index.html.
+  showGuestToast();
 
   try {
     await loadBaltaWithRetry(baltaId);
@@ -2602,7 +2623,26 @@ function startDrag(e, id) {
 .promo-dot.active{background:#a3e635;transform:scale(1.2);}
 #promo-bar-close{background:transparent;border:none;color:#4b5563;font-size:18px;line-height:1;cursor:pointer;padding:6px;flex-shrink:0;}
 #promo-bar-close:hover{color:#94a3b8;}
+#guest-toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:4050;background:#111827;border:1px solid #1a6b3a;border-radius:14px;padding:14px 18px 14px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:bottom .2s,transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;max-width:calc(100vw - 32px);width:max-content;opacity:0;}
+#guest-toast.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0);}
+.gt-icon{font-size:22px;flex-shrink:0;}
+.gt-text{flex:1;min-width:0;}
+.gt-title{font-size:13px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
+.gt-sub{font-size:11px;color:#64748b;line-height:1.4;}
+.gt-btn{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s;}
+.gt-btn:hover{background:#1e7a42;}
+.gt-close{background:transparent;border:none;color:#334155;font-size:18px;cursor:pointer;line-height:1;padding:0 0 0 4px;flex-shrink:0;transition:color .2s;}
+.gt-close:hover{color:#94a3b8;}
 </style>
+<div id="guest-toast">
+  <div class="gt-icon">🎣</div>
+  <div class="gt-text">
+    <div class="gt-title">Ești pescar?</div>
+    <div class="gt-sub">Înregistrează-te gratuit și deblochezi<br/>toate funcționalitățile platformei.</div>
+  </div>
+  <button class="gt-btn" onclick="closeGuestToast(); sessionStorage.setItem('zoda_open_auth','register'); window.location.href='index.html';">Creează cont</button>
+  <button class="gt-close" onclick="closeGuestToast()" title="Închide">✕</button>
+</div>
 <div id="promo-bar">
   <div id="promo-bar-top">
     <div id="promo-bar-inner" onclick="promoItemClick()">
@@ -2634,6 +2674,23 @@ function startDrag(e, id) {
     }
   }
 
+  // Ridică pop-up-ul "Ești pescar?" deasupra barei de reclamă / bannerului de cookie-uri,
+  // ca să nu rămână ascuns dedesubt.
+  function repositionGuestToast(){
+    var toast = document.getElementById('guest-toast');
+    if(!toast) return;
+    var bar = document.getElementById('promo-bar');
+    var cookie = document.getElementById('cookie-notice');
+    var offset = 24;
+    if(bar && bar.classList.contains('show')){
+      offset = bar.offsetHeight + parseInt(bar.style.bottom || '0', 10) + 12;
+    } else if(cookie && cookie.classList.contains('show')){
+      offset = cookie.offsetHeight + 12;
+    }
+    toast.style.bottom = offset + 'px';
+  }
+  window.repositionGuestToast = repositionGuestToast;
+
   function startPromoTimer(){
     if(promoTimer) clearInterval(promoTimer);
     if(PROMO_ITEMS.length > 1){
@@ -2657,6 +2714,7 @@ function startDrag(e, id) {
       PROMO_ITEMS = data;
       bar.classList.add('show');
       repositionPromoBar();
+      repositionGuestToast();
       renderPromoDots();
       showPromoItem(0);
       startPromoTimer();
@@ -2704,12 +2762,13 @@ function startDrag(e, id) {
     if(bar) bar.classList.remove('show');
     if(promoTimer) clearInterval(promoTimer);
     try { sessionStorage.setItem('zoda_promo_bar_closed', '1'); } catch(err) {}
+    repositionGuestToast();
   };
 
   // Dacă bannerul de cookie-uri apare/dispare, realiniem bara de reclamă deasupra lui
   if(window.zodaAcceptCookieNotice){
     var _origAccept = window.zodaAcceptCookieNotice;
-    window.zodaAcceptCookieNotice = function(){ _origAccept(); repositionPromoBar(); };
+    window.zodaAcceptCookieNotice = function(){ _origAccept(); repositionPromoBar(); repositionGuestToast(); };
   }
 
   if(document.readyState === 'complete') loadPromoItems();
