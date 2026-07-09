@@ -1153,6 +1153,7 @@ async function loadBalta(id) {
       nr: i + 1,
       x: pozitie.x != null ? pozitie.x : (4 + (i % 23) * 4),
       y: pozitie.y != null ? pozitie.y : (6 + Math.floor(i / 23) * 10),
+      arePozitieReala: pozitie.x != null && pozitie.y != null,
       z: s.nume || ('Stand ' + (i+1)),
       ad: s.adancime || 0,
       di: s.distanta || 0,
@@ -1244,6 +1245,7 @@ async function refreshBaltaInBackground(id, cacheKey) {
         id: s.id, nr: i+1,
         x: pozitie.x != null ? pozitie.x : (4 + (i % 23) * 4),
         y: pozitie.y != null ? pozitie.y : (6 + Math.floor(i / 23) * 10),
+        arePozitieReala: pozitie.x != null && pozitie.y != null,
         z: s.nume || ('Stand '+(i+1)),
         ad: s.adancime||0, di: s.distanta||0, la: s.latime||0, yt: s.yt||'',
         r: { kg: s.rec_kg!=null?String(s.rec_kg):'', pe: s.rec_pescar||'', pid: s.rec_pescar_id||'', da: s.rec_data||'', foto: s.rec_foto||'' },
@@ -2063,9 +2065,11 @@ function ambTogglePozitionare() {
   var standId = sel.value ? parseInt(sel.value) : null;
   var s = standId ? ST.find(function(x) { return x.id === standId; }) : null;
   // Poziție de start: cea propusă anterior (dacă a mai umblat la ea), altfel
-  // poziția actuală a standului (dacă are deja una), altfel centrul hărții.
-  var startX = _ambPozitie ? _ambPozitie.x : (s && s.x != null ? s.x : 50);
-  var startY = _ambPozitie ? _ambPozitie.y : (s && s.y != null ? s.y : 50);
+  // poziția actuală REALĂ a standului (dacă are deja una salvată — nu valoarea
+  // de grilă automată, care ar fi oricum arbitrară), altfel centrul hărții,
+  // ca să fie ușor de găsit pe o hartă aglomerată cu zeci de standuri.
+  var startX = _ambPozitie ? _ambPozitie.x : (s && s.arePozitieReala ? s.x : 50);
+  var startY = _ambPozitie ? _ambPozitie.y : (s && s.arePozitieReala ? s.y : 50);
   _ambPozitie = { x: startX, y: startY };
 
   var layer = document.getElementById('pins-layer');
@@ -2092,7 +2096,9 @@ function ambTogglePozitionare() {
   btn.textContent = '✓ Gata — am poziționat';
   btn.style.borderColor = '#a3e635';
   btn.style.color = '#a3e635';
-  document.getElementById('amb-poz-status').textContent = 'Trage marker-ul portocaliu pe hartă, apoi apasă din nou butonul.';
+  document.getElementById('amb-poz-status').textContent = (s && !s.arePozitieReala && !_ambPozitie)
+    ? 'Acest stand n-a avut niciodată o poziție reală — marker-ul a pornit din centrul hărții. Trage-l exact unde e standul.'
+    : 'Trage marker-ul portocaliu pe hartă, apoi apasă din nou butonul.';
   scrollToMap();
 }
 
