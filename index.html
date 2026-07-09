@@ -361,11 +361,15 @@ nav{display:flex;align-items:center;gap:6px;}
 
 /* ── FOOTER ────────────────────────────────────────────────────────────── */
 #site-footer{border-top:1px solid #1e293b;background:#0a0f1a;margin-top:32px;}
-#footer-inner{max-width:1100px;margin:0 auto;padding:28px 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+#footer-inner{max-width:1100px;margin:0 auto;padding:32px 20px 20px;display:flex;flex-direction:column;gap:28px;}
+.footer-brand{display:flex;flex-direction:column;gap:8px;max-width:320px;}
 .footer-logo-img{height:24px;width:auto;display:block;opacity:.85;}
-#footer-links{display:flex;flex-wrap:wrap;gap:20px;}
-#footer-links a{color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:color .2s;}
-#footer-links a:hover{color:#a3e635;}
+.footer-tagline{font-size:12px;color:#4b5563;line-height:1.6;margin:0;}
+.footer-cols{display:flex;flex-wrap:wrap;gap:28px;}
+.footer-col{display:flex;flex-direction:column;gap:10px;min-width:140px;}
+.footer-col-title{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.footer-col a{color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:color .2s;}
+.footer-col a:hover{color:#a3e635;}
 #footer-bottom{max-width:1100px;margin:0 auto;padding:0 20px 22px;font-size:11px;color:#334155;}
 #footer-legal{max-width:1100px;margin:0 auto;padding:0 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-top:1px solid #1e293b;padding-top:18px;}
 #footer-company{font-size:11px;color:#4b5563;line-height:1.6;}
@@ -377,8 +381,10 @@ nav{display:flex;align-items:center;gap:6px;}
 @media (max-width:600px){
   #footer-legal{flex-direction:column;align-items:flex-start;}
 }
-@media (max-width:520px){
-  #footer-inner{flex-direction:column;align-items:flex-start;}
+@media(min-width:769px){
+  #footer-inner{flex-direction:row;align-items:flex-start;justify-content:space-between;gap:40px;}
+  .footer-brand{flex:0 0 260px;}
+  .footer-cols{flex:1;justify-content:flex-end;}
 }
 </style>
 </head>
@@ -607,12 +613,27 @@ nav{display:flex;align-items:center;gap:6px;}
 <!-- FOOTER -->
 <footer id="site-footer">
   <div id="footer-inner">
-    <img src="zoda-logo.png" alt="Zoda" class="footer-logo-img"/>
-    <div id="footer-links">
-      <a href="termeni.html">Termeni și Condiții</a>
-      <a href="confidentialitate.html">Politica de Confidențialitate</a>
-      <a href="cookie-uri.html">Politica Cookie-uri</a>
-      <a onclick="openContactModal();return false;" href="#">Contact</a>
+    <div class="footer-brand">
+      <img src="zoda-logo.png" alt="Zoda" class="footer-logo-img"/>
+      <p class="footer-tagline">Comunitatea pescarilor din România — bălți, standuri, capturi și clasamente.</p>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <div class="footer-col-title">Platformă</div>
+        <a href="index.html">Acasă</a>
+        <a onclick="openRegModal();return false;" href="#">Înregistrează-ți balta</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="termeni.html">Termeni și Condiții</a>
+        <a href="confidentialitate.html">Politica de Confidențialitate</a>
+        <a href="cookie-uri.html">Politica Cookie-uri</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Contact</div>
+        <a onclick="openContactModal();return false;" href="#">Trimite un mesaj</a>
+        <a href="mailto:contact@zoda.ro">contact@zoda.ro</a>
+      </div>
     </div>
   </div>
   <div id="footer-legal">
@@ -1578,6 +1599,17 @@ document.addEventListener('click', function(e) {
 window.addEventListener('load', () => {
   initMap();
   loadBaltiFromSupabase();
+  // Deschide modalul cerut din footer-ul altei pagini (balta/cont/pescar.html?contact=1 / ?inregistreaza=1)
+  try {
+    var qp = new URLSearchParams(location.search);
+    if (qp.get('contact') === '1') {
+      setTimeout(function () { openContactModal(); }, 300);
+      history.replaceState(null, '', location.pathname + location.hash);
+    } else if (qp.get('inregistreaza') === '1') {
+      setTimeout(function () { openRegModal(); }, 300);
+      history.replaceState(null, '', location.pathname + location.hash);
+    }
+  } catch (e) {}
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
