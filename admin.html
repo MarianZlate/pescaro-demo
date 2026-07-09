@@ -605,12 +605,13 @@ th,td{padding:8px 6px;}
           <tr>
             <th>Ambasador</th>
             <th>Bălți documentate</th>
+            <th>Progres poze</th>
             <th>Submisii aprobate</th>
             <th>În așteptare</th>
           </tr>
         </thead>
         <tbody id="ambasadori-progres-tbody">
-          <tr><td colspan="4" class="empty-state">Se încarcă...</td></tr>
+          <tr><td colspan="5" class="empty-state">Se încarcă...</td></tr>
         </tbody>
       </table>
     </div>
@@ -1832,19 +1833,35 @@ async function loadAmbasadori() {
       </div>`).join('');
   }
 
-  // 2) Progres pe ambasador — bălți legate + submisii aprobate/în așteptare
-  const { data: baltiAmb } = await sb.from('balti').select('nume, ambasador_zoda_id').not('ambasador_zoda_id', 'is', null);
+  // 2) Progres pe ambasador — bălți legate + submisii aprobate/în așteptare + progres poze
+  const { data: baltiAmb } = await sb.from('balti').select('id, nume, ambasador_zoda_id').not('ambasador_zoda_id', 'is', null);
   if (!baltiAmb || !baltiAmb.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Niciun ambasador legat de vreo baltă încă.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Niciun ambasador legat de vreo baltă încă.</td></tr>';
     return;
   }
 
+  const baltiIds = baltiAmb.map(b => b.id);
   const { data: toateSubmisiile } = await sb.from('ambasador_submisii').select('ambasador_zoda_id, status');
+  const { data: standuriToate } = await sb.from('standuri').select('id, balta_id').in('balta_id', baltiIds);
+  const { data: pozeToate } = await sb.from('poze').select('stand_id, balta_id').in('balta_id', baltiIds).not('stand_id', 'is', null);
+
+  const standuriPerBalta = {};
+  (standuriToate || []).forEach(s => { standuriPerBalta[s.balta_id] = (standuriPerBalta[s.balta_id] || 0) + 1; });
+  const standuriCuPozaPerBalta = {};
+  const vazute = new Set();
+  (pozeToate || []).forEach(p => {
+    const cheie = p.balta_id + '-' + p.stand_id;
+    if (vazute.has(cheie)) return; // nu numărăm de 2 ori un stand cu mai multe poze
+    vazute.add(cheie);
+    standuriCuPozaPerBalta[p.balta_id] = (standuriCuPozaPerBalta[p.balta_id] || 0) + 1;
+  });
 
   const grupuri = {};
   baltiAmb.forEach(b => {
-    if (!grupuri[b.ambasador_zoda_id]) grupuri[b.ambasador_zoda_id] = { balti: [], aprobate: 0, pending: 0 };
+    if (!grupuri[b.ambasador_zoda_id]) grupuri[b.ambasador_zoda_id] = { balti: [], aprobate: 0, pending: 0, totalStanduri: 0, standuriCuPoza: 0 };
     grupuri[b.ambasador_zoda_id].balti.push(b.nume);
+    grupuri[b.ambasador_zoda_id].totalStanduri += (standuriPerBalta[b.id] || 0);
+    grupuri[b.ambasador_zoda_id].standuriCuPoza += (standuriCuPozaPerBalta[b.id] || 0);
   });
   (toateSubmisiile || []).forEach(s => {
     if (!grupuri[s.ambasador_zoda_id]) return; // ambasador fara balta legata momentan
@@ -1852,13 +1869,21 @@ async function loadAmbasadori() {
     if (s.status === 'pending') grupuri[s.ambasador_zoda_id].pending++;
   });
 
-  tbody.innerHTML = Object.entries(grupuri).map(([zodaId, g]) => `
+  tbody.innerHTML = Object.entries(grupuri).map(([zodaId, g]) => {
+    const procent = g.totalStanduri > 0 ? Math.round(g.standuriCuPoza / g.totalStanduri * 100) : 0;
+    const culoare = procent === 100 ? '#a3e635' : procent >= 50 ? '#f59e0b' : '#ef4444';
+    return `
     <tr>
       <td style="font-size:12px;">${numeAmbasador(zodaId)}</td>
       <td>${g.balti.map(escHtml).join(', ')} <span style="color:#4b5563;">(${g.balti.length})</span></td>
+      <td>
+        <div style="font-size:11.5px;color:${culoare};font-weight:700;">${g.standuriCuPoza}/${g.totalStanduri} standuri</div>
+        <div style="background:#1e293b;border-radius:4px;height:5px;margin-top:4px;width:90px;overflow:hidden;"><div style="background:${culoare};height:100%;width:${procent}%;"></div></div>
+      </td>
       <td>${g.aprobate}</td>
       <td>${g.pending > 0 ? `<span style="color:#f59e0b;font-weight:700;">${g.pending}</span>` : '0'}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function aprobaSubmisieAmbasador(submisieId) {
