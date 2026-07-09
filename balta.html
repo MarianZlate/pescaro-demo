@@ -966,6 +966,13 @@ async function checkPreviewSubmisie() {
 
   if (error || !s) return; // RLS blochează dacă nu ești zoda_admin — eșuează silențios, nu deranjează vizitatorii normali
 
+  // Dacă submisia vizează un stand existent, deschidem overlay-ul lui — asta
+  // evidențiază automat pin-ul (culoarea "activ" deja folosită la selecție)
+  // și arată datele curente, ca să le compari direct cu ce a propus ambasadorul.
+  if (s.stand_id && ST.some(function(x) { return x.id === s.stand_id; })) {
+    openOverlay(s.stand_id);
+  }
+
   // Marker distinct (mov, pulsând) la poziția propusă, dacă a fost trimisă una
   if (s.pozitie && s.pozitie.x != null && s.pozitie.y != null) {
     var layer = document.getElementById('pins-layer');
