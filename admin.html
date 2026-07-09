@@ -1824,6 +1824,7 @@ async function loadAmbasadori() {
           ${s.pozitie ? `<div>📍 <span style="color:#a3e635;">Poziție nouă pe hartă propusă</span></div>` : ''}
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <a href="balta.html?id=${s.balta_id}&edit=1&preview_submisie=${s.id}" target="_blank" style="background:transparent;border:1px solid #7c3aed;color:#c4b5fd;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;cursor:pointer;text-decoration:none;">👁️ Vezi pe hartă</a>
           <button onclick="aprobaSubmisieAmbasador(${s.id})" style="background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;cursor:pointer;">✅ Aprobă</button>
           <input type="text" id="amb-motiv-${s.id}" placeholder="Motiv respingere (opțional)" style="flex:1;min-width:160px;background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:8px 10px;color:#f1f5f9;font-size:12px;outline:none;"/>
           <button onclick="respingeSubmisieAmbasador(${s.id})" style="background:transparent;border:1px solid #7f1d1d;color:#fca5a5;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;cursor:pointer;">✕ Respinge</button>
