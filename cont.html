@@ -666,6 +666,22 @@ button{font-family:inherit;}
     </div>
   </div>
 
+  <!-- ── AMBASADOR (nu e rol în user_roles — orice cont poate fi legat) ── -->
+  <div class="section" id="section-ambasador" style="display:none;">
+    <div class="section-hdr">
+      <span class="section-icon">🎥</span>
+      <div>
+        <div class="section-title">Bălțile mele de documentat</div>
+        <div class="section-sub">Ești ambasador — poze, video și detalii de stand, cu aprobare</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="balti-ambasador-list">
+        <div style="color:var(--text-ghost);font-size:13px;text-align:center;padding:20px;">Se încarcă...</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── CAPTURI RESPINSE (balta_admin) ── -->
   <div class="section" id="section-capturi-respinse" style="display:none;">
     <div class="section-hdr notif-hdr" onclick="toggleCapturiRespinsePanel()">
@@ -1001,6 +1017,13 @@ async function boot() {
       document.getElementById('section-balta-admin').style.display = 'block';
       await loadCapturiRespinse();
     }
+  }
+
+  // Secțiune ambasador — nu e rol în user_roles, orice cont (inclusiv balta_admin/zoda_admin)
+  // poate fi legat ca ambasador la o baltă, deci verificăm mereu, indiferent de currentRole.
+  const nrBaltiAmbasador = await loadBaltiAmbasador();
+  if (nrBaltiAmbasador > 0) {
+    document.getElementById('section-ambasador').style.display = 'block';
   }
 
   document.getElementById('loading-screen').style.display = 'none';
@@ -1425,6 +1448,53 @@ async function loadBaltiAdmin() {
         <a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:border-color .2s;" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">↗ Vezi balta</a>
       </div>
       ${checklistHtml}
+    </div>`;
+  }).join('');
+  return balti.length;
+}
+
+async function loadBaltiAmbasador() {
+  const listEl = document.getElementById('balti-ambasador-list');
+  const zodaId = currentProfile?.zoda_id;
+  if (!zodaId) { return 0; }
+
+  const { data: balti, error } = await sb.from('balti')
+    .select('id, nume, judet')
+    .eq('ambasador_zoda_id', zodaId)
+    .order('nume');
+
+  if (error || !balti?.length) return 0;
+
+  // Statusul submisiilor proprii, per baltă — câte în așteptare / respinse, ca să știe unde mai are de lucru
+  const { data: submisii } = await sb.from('ambasador_submisii')
+    .select('balta_id, status')
+    .eq('ambasador_zoda_id', zodaId);
+
+  const statusMap = {};
+  (submisii || []).forEach(s => {
+    if (!statusMap[s.balta_id]) statusMap[s.balta_id] = { pending: 0, respinse: 0, aprobate: 0 };
+    if (s.status === 'pending') statusMap[s.balta_id].pending++;
+    else if (s.status === 'respins') statusMap[s.balta_id].respinse++;
+    else if (s.status === 'aprobat') statusMap[s.balta_id].aprobate++;
+  });
+
+  listEl.innerHTML = balti.map(b => {
+    const st = statusMap[b.id] || { pending: 0, respinse: 0, aprobate: 0 };
+    const statusBadges = [
+      st.pending  ? `<span style="color:#f59e0b;">⏳ ${st.pending} în așteptare</span>` : '',
+      st.respinse ? `<span style="color:#ef4444;">❌ ${st.respinse} respinse</span>` : '',
+      st.aprobate ? `<span style="color:#a3e635;">✅ ${st.aprobate} aprobate</span>` : '',
+    ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+    return `
+    <div class="balta-admin-card">
+      <div class="balta-admin-info">
+        <div class="balta-admin-nume">${escH(b.nume)}</div>
+        <div class="balta-admin-judet">📍 ${escH(b.judet || '—')}</div>
+        ${statusBadges ? `<div style="font-size:11.5px;margin-top:6px;">${statusBadges}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:#166534;color:#eafccb;font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:8px;text-decoration:none;">🎥 Documentează balta</a>
+      </div>
     </div>`;
   }).join('');
   return balti.length;
