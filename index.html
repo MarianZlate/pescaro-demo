@@ -114,7 +114,7 @@ nav{display:flex;align-items:center;gap:6px;}
 .balta-tooltip::before{border-top-color:#1e293b!important;}
 
 /* GUEST TOAST */
-#guest-toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:3000;background:#111827;border:1px solid #1a6b3a;border-radius:14px;padding:14px 18px 14px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;max-width:calc(100vw - 32px);width:max-content;opacity:0;}
+#guest-toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:4050;background:#111827;border:1px solid #1a6b3a;border-radius:14px;padding:14px 18px 14px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:bottom .2s,transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;max-width:calc(100vw - 32px);width:max-content;opacity:0;}
 #guest-toast.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0);}
 .gt-icon{font-size:22px;flex-shrink:0;}
 .gt-text{flex:1;min-width:0;}
@@ -3531,7 +3531,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
     // Toast pentru vizitatori (o dată per sesiune)
     if (!currentUser && !sessionStorage.getItem('zoda_toast_shown')) {
-      setTimeout(function() { showGuestToast(); }, 30000);
+      setTimeout(function() { showGuestToast(); }, 8000);
     }
     renderBalti(); // reîncarcă istoricul din sursa corectă (cont sau local)
   } else if(event === 'SIGNED_IN') {
@@ -3972,6 +3972,7 @@ function showGuestToast() {
   sessionStorage.setItem('zoda_toast_shown', '1');
   var t = document.getElementById('guest-toast');
   if (!t) return;
+  if (window.repositionGuestToast) window.repositionGuestToast();
   t.style.display = 'flex';
   setTimeout(function() { t.classList.add('show'); }, 50);
 }
@@ -4074,6 +4075,23 @@ function closeGuestToast() {
     }
   }
 
+  // Ridică pop-up-ul "Ești pescar?" deasupra barei de reclamă / bannerului de cookie-uri,
+  // ca să nu mai rămână ascuns dedesubt (erau amândouă fixate jos, cu z-index apropiat).
+  function repositionGuestToast(){
+    var toast = document.getElementById('guest-toast');
+    if(!toast) return;
+    var bar = document.getElementById('promo-bar');
+    var cookie = document.getElementById('cookie-notice');
+    var offset = 24; // valoare de bază, cât timp nimic altceva nu e vizibil jos
+    if(bar && bar.classList.contains('show')){
+      offset = bar.offsetHeight + parseInt(bar.style.bottom || '0', 10) + 12;
+    } else if(cookie && cookie.classList.contains('show')){
+      offset = cookie.offsetHeight + 12;
+    }
+    toast.style.bottom = offset + 'px';
+  }
+  window.repositionGuestToast = repositionGuestToast;
+
   function startPromoTimer(){
     if(promoTimer) clearInterval(promoTimer);
     if(PROMO_ITEMS.length > 1){
@@ -4097,6 +4115,7 @@ function closeGuestToast() {
       PROMO_ITEMS = data;
       bar.classList.add('show');
       repositionPromoBar();
+      repositionGuestToast();
       renderPromoDots();
       showPromoItem(0);
       startPromoTimer();
@@ -4144,12 +4163,13 @@ function closeGuestToast() {
     if(bar) bar.classList.remove('show');
     if(promoTimer) clearInterval(promoTimer);
     try { sessionStorage.setItem('zoda_promo_bar_closed', '1'); } catch(err) {}
+    repositionGuestToast();
   };
 
   // Dacă bannerul de cookie-uri apare/dispare, realiniem bara de reclamă deasupra lui
   if(window.zodaAcceptCookieNotice){
     var _origAccept = window.zodaAcceptCookieNotice;
-    window.zodaAcceptCookieNotice = function(){ _origAccept(); repositionPromoBar(); };
+    window.zodaAcceptCookieNotice = function(){ _origAccept(); repositionPromoBar(); repositionGuestToast(); };
   }
 
   if(document.readyState === 'complete') loadPromoItems();
