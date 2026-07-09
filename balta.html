@@ -945,7 +945,7 @@ async function renderAmbasadorCredit(ambasadorZodaId) {
   try {
     var { data } = await sb.from('user_profiles_public').select('username').eq('zoda_id', ambasadorZodaId).single();
     if (data?.username) {
-      el.textContent = '🎥 Conținut media: ' + data.username;
+      el.innerHTML = '🎥 Conținut media: <a href="ambasador-galerie.html?id=' + encodeURIComponent(ambasadorZodaId) + '" style="color:inherit;text-decoration:underline;">' + escH(data.username) + '</a>';
       el.style.display = 'block';
     } else {
       el.style.display = 'none';
@@ -2014,6 +2014,7 @@ var _ambFotoUrl = null;
 var _ambPozitie = null;      // {x,y} propus de ambasador, null = nemodificat
 var _ambPozActiva = false;   // true cât timp markerul de poziționare e vizibil/draggabil
 var _ambPozStandIdAscuns = null; // id-ul standului al cărui pin original a fost ascuns, pt restaurare corectă
+var _ambPozStartRef = null; // {x,y} de la momentul intrării în modul de poziționare — pt. a detecta dacă a mutat efectiv ceva
 
 function ambInitPanel() {
   var sel = document.getElementById('amb-stand-select');
@@ -2041,6 +2042,7 @@ function ambSelectStand() {
   document.getElementById('amb-latime').value   = s ? (s.la || '') : '';
   _ambFotoUrl = null;
   _ambPozitie = null;
+  _ambPozStartRef = null;
   document.getElementById('amb-foto-preview').style.display = 'none';
   document.getElementById('amb-foto-preview-wrap').style.display = 'block';
   ambOprestePozitionare();
@@ -2073,6 +2075,9 @@ function ambTogglePozitionare() {
   var startX = _ambPozitie ? _ambPozitie.x : (s && s.arePozitieReala ? s.x : 50);
   var startY = _ambPozitie ? _ambPozitie.y : (s && s.arePozitieReala ? s.y : 50);
   _ambPozitie = { x: startX, y: startY };
+  // Reținem separat punctul de pornire, ca la trimitere să știm dacă a mutat
+  // efectiv ceva sau doar a intrat/ieșit din mod fără să tragă marker-ul.
+  if (_ambPozStartRef === null) _ambPozStartRef = { x: startX, y: startY };
 
   var layer = document.getElementById('pins-layer');
 
@@ -2214,8 +2219,15 @@ async function ambTrimiteSubmisie() {
   var latime   = document.getElementById('amb-latime').value ? parseInt(document.getElementById('amb-latime').value) : null;
   var status = document.getElementById('amb-status');
 
-  if (!nume && adancime == null && distanta == null && latime == null && !_ambFotoUrl && !_ambPozitie) {
-    status.textContent = 'Completează cel puțin un câmp, adaugă o poză sau poziționează pe hartă.';
+  // Trimitem poziția doar dacă a fost cu adevărat mutată (măcar ~1% din hartă) față
+  // de punctul de pornire — altfel, dacă a intrat/ieșit din mod fără să tragă nimic,
+  // s-ar fi trimis oricum acea poziție de pornire ca fiind "propunerea lui".
+  var pozitieMutata = _ambPozitie && _ambPozStartRef && (
+    Math.abs(_ambPozitie.x - _ambPozStartRef.x) > 1 || Math.abs(_ambPozitie.y - _ambPozStartRef.y) > 1
+  );
+
+  if (!nume && adancime == null && distanta == null && latime == null && !_ambFotoUrl && !pozitieMutata) {
+    status.textContent = 'Completează cel puțin un câmp, adaugă o poză sau chiar mută poziția pe hartă (nu doar deschide modul de poziționare).';
     status.style.color = '#f59e0b';
     return;
   }
@@ -2231,7 +2243,7 @@ async function ambTrimiteSubmisie() {
     p_distanta: distanta,
     p_latime: latime,
     p_foto_url: _ambFotoUrl,
-    p_pozitie: _ambPozitie ? { x: parseFloat(_ambPozitie.x.toFixed(3)), y: parseFloat(_ambPozitie.y.toFixed(3)) } : null,
+    p_pozitie: pozitieMutata ? { x: parseFloat(_ambPozitie.x.toFixed(3)), y: parseFloat(_ambPozitie.y.toFixed(3)) } : null,
   });
 
   btn.disabled = false; btn.textContent = '🚀 Trimite spre aprobare';
@@ -2246,6 +2258,7 @@ async function ambTrimiteSubmisie() {
   status.style.color = '#a3e635';
   _ambFotoUrl = null;
   _ambPozitie = null;
+  _ambPozStartRef = null;
   ambOprestePozitionare();
   document.getElementById('amb-foto-preview').style.display = 'none';
   document.getElementById('amb-foto-preview-wrap').style.display = 'block';
