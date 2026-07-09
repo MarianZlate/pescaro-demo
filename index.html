@@ -155,6 +155,7 @@ nav{display:flex;align-items:center;gap:6px;}
 .hof-star-legend-label{font-size:9px;color:#4b5563;font-weight:600;letter-spacing:.04em;white-space:nowrap;}
 .see-all:hover{color:#a3e635;}
 .balti-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
+#saptamanal-wrap{display:grid;grid-template-columns:1fr;gap:10px;margin:0 10px;}
 .balti-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding:10px 12px;}
 .balti-title{font-weight:800;color:#e2e8f0;font-size:12px;}
 .balti-count{background:#1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
@@ -323,7 +324,8 @@ nav{display:flex;align-items:center;gap:6px;}
   #search-input{font-size:15px;}
   #stats-bar{padding:0;}
   .stat-chip{padding:5px 20px;font-size:14px;}
-  #main{padding:0 24px 60px;grid-template-columns:1fr 400px;grid-template-rows:auto auto 1fr;grid-template-areas:"search ." "statsbar ." "mapwrap sidebar";gap:14px 24px;}
+  #main{padding:0 24px 60px;grid-template-columns:1fr 400px;grid-template-rows:auto auto 1fr auto;grid-template-areas:"search ." "statsbar ." "mapwrap sidebar" "saptamanal saptamanal";gap:14px 24px;}
+  #saptamanal-wrap{grid-area:saptamanal;grid-template-columns:1fr 1fr;margin:0;}
   #stats-bar{grid-area:statsbar;}
   #map-wrap{grid-area:mapwrap;border-radius:16px;margin:0;}
   #sidebar{grid-area:sidebar;}
@@ -561,6 +563,28 @@ nav{display:flex;align-items:center;gap:6px;}
     <div id="map-zoom-hint">🔍 Dă zoom sau caută o baltă ca să vezi pinurile pe hartă</div>
     <div id="map-touch-overlay" onclick="activateMap()">
       <div class="mto-inner"><span class="mto-icon">👆</span> Apasă pentru a interacționa cu harta</div>
+    </div>
+  </div>
+
+  <!-- TOP SĂPTĂMÂNAL — capturi + stele, reset luni la 00:00 -->
+  <div id="saptamanal-wrap">
+    <div class="hof-card">
+      <div class="hof-header">
+        <div>
+          <div class="hof-title" style="color:#60a5fa;">🐟 Top capturi săptămâna asta</div>
+          <div class="hof-sub" id="saptamanal-interval-1">—</div>
+        </div>
+      </div>
+      <div id="saptamanal-capturi-list"><div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Se încarcă...</div></div>
+    </div>
+    <div class="hof-card">
+      <div class="hof-header">
+        <div>
+          <div class="hof-title">⭐ Top stele săptămâna asta</div>
+          <div class="hof-sub" id="saptamanal-interval-2">—</div>
+        </div>
+      </div>
+      <div id="saptamanal-stele-list"><div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Se încarcă...</div></div>
     </div>
   </div>
 
@@ -1244,6 +1268,106 @@ function hofRowHtml(h, extended) {
   </div>`;
 }
 
+// Luni 00:00 a săptămânii curente (locale, ora browserului) — reset automat
+// când trece de miezul nopții din duminică spre luni, fără nicio programare
+// separată, doar recalculând intervalul la fiecare încărcare de pagină.
+function inceputSaptamanaCurenta() {
+  var d = new Date();
+  var ziua = d.getDay(); // 0=duminică, 1=luni, ..., 6=sâmbătă
+  var diffPanaLuni = ziua === 0 ? 6 : ziua - 1;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() - diffPanaLuni, 0, 0, 0, 0);
+}
+
+async function loadTopSaptamanal() {
+  var luni = inceputSaptamanaCurenta();
+  var luniUrmatoare = new Date(luni.getTime() + 7 * 24 * 60 * 60 * 1000);
+  var luniISO = luni.toISOString();
+  var luniUrmatoareISO = luniUrmatoare.toISOString();
+
+  var intervalText = luni.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' }) + ' – ' +
+    new Date(luniUrmatoare.getTime() - 1).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' }) +
+    ' · se resetează luni la 00:00';
+  var el1 = document.getElementById('saptamanal-interval-1');
+  var el2 = document.getElementById('saptamanal-interval-2');
+  if (el1) el1.textContent = intervalText;
+  if (el2) el2.textContent = intervalText;
+
+  // ── Top 10 capturi ale săptămânii (toate bălțile) ──
+  var capturiListEl = document.getElementById('saptamanal-capturi-list');
+  try {
+    var { data: capturi } = await sb.from('capturi')
+      .select('id, kg, specie, pescar_nume, pescar_id, foto_url, balta_id, balti(nume)')
+      .eq('status', 'approved')
+      .gte('data_captura', luniISO.split('T')[0])
+      .lt('data_captura', luniUrmatoareISO.split('T')[0])
+      .order('kg', { ascending: false })
+      .limit(10);
+
+    if (!capturi || !capturi.length) {
+      capturiListEl.innerHTML = '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Nicio captură aprobată încă săptămâna asta.</div>';
+    } else {
+      capturiListEl.innerHTML = capturi.map(function(c, i) {
+        var nameHtml = c.pescar_id
+          ? (currentUser
+              ? '<a href="pescar.html?id=' + c.pescar_id + '" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;">' + escH(c.pescar_nume) + '</a>'
+              : '<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;">' + escH(c.pescar_nume) + '</span>')
+          : '<span style="color:#e2e8f0;font-weight:700;">' + escH(c.pescar_nume || 'Anonim') + '</span>';
+        return '<div class="hof-row">' +
+          '<div class="hof-loc">' + (i + 1) + '</div>' +
+          (c.foto_url ? '<img class="hof-avatar" src="' + escH(c.foto_url) + '" alt="" loading="lazy"/>' : '<div class="hof-avatar-empty"></div>') +
+          '<div style="flex:1;min-width:0;">' +
+            '<div class="hof-name">' + nameHtml + '</div>' +
+            '<div class="hof-detail">' + escH(c.balti?.nume || '—') + (c.specie ? ' · ' + escH(c.specie) : '') + '</div>' +
+          '</div>' +
+          '<div style="color:#60a5fa;font-weight:800;font-size:12px;flex-shrink:0;">' + c.kg + ' kg</div>' +
+        '</div>';
+      }).join('');
+    }
+  } catch(e) {
+    capturiListEl.innerHTML = '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Eroare la încărcare.</div>';
+  }
+
+  // ── Top 10 pescari după stele câștigate săptămâna asta ──
+  var steleListEl = document.getElementById('saptamanal-stele-list');
+  try {
+    var { data: steleRaw } = await sb.from('stele_log')
+      .select('zoda_id')
+      .gte('created_at', luniISO)
+      .lt('created_at', luniUrmatoareISO);
+
+    if (!steleRaw || !steleRaw.length) {
+      steleListEl.innerHTML = '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Nicio stea câștigată încă săptămâna asta.</div>';
+    } else {
+      var contor = {};
+      steleRaw.forEach(function(s) { contor[s.zoda_id] = (contor[s.zoda_id] || 0) + 1; });
+      var topZodaIds = Object.keys(contor).sort(function(a, b) { return contor[b] - contor[a]; }).slice(0, 10);
+
+      var { data: profiluri } = await sb.from('user_profiles_public').select('zoda_id, username, avatar_url').in('zoda_id', topZodaIds);
+      var profMap = {};
+      (profiluri || []).forEach(function(p) { profMap[p.zoda_id] = p; });
+
+      steleListEl.innerHTML = topZodaIds.map(function(zodaId, i) {
+        var p = profMap[zodaId] || {};
+        var username = p.username || zodaId;
+        var nameHtml = currentUser
+          ? '<a href="pescar.html?id=' + zodaId + '" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;">' + escH(username) + '</a>'
+          : '<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;">' + escH(username) + '</span>';
+        return '<div class="hof-row">' +
+          '<div class="hof-loc">' + (i + 1) + '</div>' +
+          (p.avatar_url ? '<img class="hof-avatar" src="' + escH(p.avatar_url) + '" alt="" loading="lazy"/>' : '<div class="hof-avatar-empty"></div>') +
+          '<div style="flex:1;min-width:0;">' +
+            '<div class="hof-name">' + nameHtml + '</div>' +
+            '<div class="hof-detail">' + escH(zodaId) + '</div>' +
+          '</div>' +
+          '<div class="hof-stars"><span style="color:#f59e0b;font-size:11px;font-weight:800;">⭐' + contor[zodaId] + '</span></div>' +
+        '</div>';
+      }).join('');
+    }
+  } catch(e) {
+    steleListEl.innerHTML = '<div style="padding:16px;text-align:center;color:#334155;font-size:12px;">Eroare la încărcare.</div>';
+  }
+}
+
 async function loadHof() {
   // Cache 60 minute — HoF se schimbă doar la aprobare capturi
   const cached = CACHE.get('hof_global');
@@ -1464,6 +1588,7 @@ async function loadBaltiFromSupabase() {
     renderMapMarkers();
     renderBalti();
     loadHof();
+    loadTopSaptamanal();
     restoreIndexState();
     // Refresh în background fără să blocheze UI
     refreshBaltiInBackground();
@@ -1484,6 +1609,7 @@ async function loadBaltiFromSupabase() {
   renderMapMarkers();
   renderBalti();
   loadHof();
+  loadTopSaptamanal();
   // Restaurează starea paginii dacă userul vine din altă pagină
   restoreIndexState();
 }
