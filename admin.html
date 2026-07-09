@@ -578,6 +578,17 @@ th,td{padding:8px 6px;}
   </div>
 
   <!-- AMBASADORI PANEL -->
+  <!-- MODAL ASIGNARE AMBASADOR -->
+  <div id="amb-assign-modal" style="display:none;position:fixed;inset:0;background:rgba(4,7,12,.78);backdrop-filter:blur(3px);z-index:9000;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeAmbAssignModal()">
+    <div style="background:#111827;border:1px solid #1e293b;border-radius:14px;padding:20px;width:100%;max-width:380px;">
+      <div style="font-weight:800;font-size:14px;color:#f1f5f9;margin-bottom:4px;">🎥 Fă ambasador</div>
+      <div id="amb-assign-user" style="font-size:12px;color:#64748b;margin-bottom:14px;"></div>
+      <input type="text" id="amb-assign-search" placeholder="Caută balta după nume..." oninput="ambAssignFilterList()" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:9px 11px;color:#f1f5f9;font-size:13px;outline:none;margin-bottom:10px;"/>
+      <div id="amb-assign-list" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+      <button onclick="closeAmbAssignModal()" style="margin-top:14px;width:100%;background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;padding:8px;border-radius:7px;cursor:pointer;">Anulează</button>
+    </div>
+  </div>
+
   <div id="panel-ambasadori" style="display:none;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <span>🎥 Submisii de ambasador — în așteptare</span>
@@ -1851,6 +1862,59 @@ async function respingeSubmisieAmbasador(submisieId) {
   await loadAmbasadori();
 }
 
+// ── ASIGNARE AMBASADOR DIN TAB-UL USERS ──────────────────────────────────────
+var _ambAssignZodaId = null;
+var _ambAssignBaltiCache = [];
+
+function openAmbAssignModal(userId, zodaId, username) {
+  if (!zodaId) {
+    alert('Acest utilizator nu are încă un ZODA-ID — nu poate fi legat ca ambasador.');
+    return;
+  }
+  _ambAssignZodaId = zodaId;
+  document.getElementById('amb-assign-user').textContent = 'Pentru: ' + (username || zodaId) + '  ·  ' + zodaId;
+  document.getElementById('amb-assign-search').value = '';
+  document.getElementById('amb-assign-modal').style.display = 'flex';
+  document.getElementById('amb-assign-search').focus();
+  ambAssignLoadBalti();
+}
+
+function closeAmbAssignModal() {
+  document.getElementById('amb-assign-modal').style.display = 'none';
+}
+
+async function ambAssignLoadBalti() {
+  const listEl = document.getElementById('amb-assign-list');
+  listEl.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+  const { data, error } = await sb.from('balti').select('id, nume, judet, ambasador_zoda_id').order('nume');
+  if (error) { listEl.innerHTML = '<div class="empty-state">Eroare: ' + escHtml(error.message) + '</div>'; return; }
+  _ambAssignBaltiCache = data || [];
+  ambAssignFilterList();
+}
+
+function ambAssignFilterList() {
+  const q = normStr((document.getElementById('amb-assign-search').value || '').trim());
+  const listEl = document.getElementById('amb-assign-list');
+  const filtered = q ? _ambAssignBaltiCache.filter(b => normStr(b.nume).includes(q)) : _ambAssignBaltiCache;
+  if (!filtered.length) { listEl.innerHTML = '<div class="empty-state">Nicio baltă găsită.</div>'; return; }
+  listEl.innerHTML = filtered.map(b => {
+    const nume = escHtml(b.nume);
+    const jaSetat = b.ambasador_zoda_id === _ambAssignZodaId;
+    const areAltul = b.ambasador_zoda_id && !jaSetat;
+    return `<div onclick="ambAssignConfirm(${b.id},'${nume.replace(/'/g,"\\'")}')" style="padding:9px 10px;border-radius:7px;cursor:pointer;font-size:12.5px;color:#e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:8px;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
+      <span>${nume} <span style="color:#4b5563;">· ${escHtml(b.judet||'—')}</span></span>
+      ${jaSetat ? '<span style="font-size:10px;color:#a3e635;flex-shrink:0;">✓ deja el</span>' : areAltul ? '<span style="font-size:10px;color:#f59e0b;flex-shrink:0;">are alt ambasador</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+async function ambAssignConfirm(baltaId, baltaNume) {
+  const { error } = await sb.from('balti').update({ ambasador_zoda_id: _ambAssignZodaId }).eq('id', baltaId);
+  if (error) { showToast('❌ Eroare: ' + error.message, true); return; }
+  showToast('✅ Legat ca ambasador la „' + baltaNume + '".');
+  closeAmbAssignModal();
+}
+
 // ── VIEW-ONLY ISTORIC ──────────────────────────────────────────────────────
 async function openViewCaptura(capturaId) {
   const { data: c, error } = await sb.from('capturi')
@@ -2574,16 +2638,21 @@ function renderUsersTable() {
     if (rol === 'zoda_admin') {
       actiuni = u.id === SUPREME_ADMIN_UID
         ? '<span style="font-size:11px;color:#4b5563;font-style:italic;">Suprem</span>'
-        : `<div class="action-btns"><button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">Revocă admin</button></div>`;
+        : `<div class="action-btns">
+             <button class="btn-remove-admin" onclick="setUserRole('${u.id}','user')">Revocă admin</button>
+             <button class="btn-make-balta-admin" onclick="openAmbAssignModal('${u.id}','${u.zoda_id||''}','${escH(u.username||u.email||'').replace(/'/g,"\\'")}')">🎥 Fă Ambasador</button>
+           </div>`;
     } else if (rol === 'balta_admin') {
       actiuni = `<div class="action-btns">
         <button class="btn-make-admin" onclick="setUserRole('${u.id}','zoda_admin')">Fă Zoda Admin</button>
         <button class="btn-revoke-balta-admin" onclick="setUserRole('${u.id}','user')">Revocă baltă</button>
+        <button class="btn-make-balta-admin" onclick="openAmbAssignModal('${u.id}','${u.zoda_id||''}','${escH(u.username||u.email||'').replace(/'/g,"\\'")}')">🎥 Fă Ambasador</button>
       </div>`;
     } else {
       actiuni = `<div class="action-btns">
         <button class="btn-make-admin" onclick="setUserRole('${u.id}','zoda_admin')">Fă Zoda Admin</button>
         <button class="btn-make-balta-admin" onclick="setUserRole('${u.id}','balta_admin')">🏊 Baltă Admin</button>
+        <button class="btn-make-balta-admin" onclick="openAmbAssignModal('${u.id}','${u.zoda_id||''}','${escH(u.username||u.email||'').replace(/'/g,"\\'")}')">🎥 Fă Ambasador</button>
       </div>`;
     }
 
