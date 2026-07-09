@@ -1174,12 +1174,17 @@ async function loadBalta(id) {
   var editParam = new URLSearchParams(location.search).get('edit') === '1';
   if (editParam) {
     checkAdminAndShowBar();
-    checkPreviewSubmisie();
   }
 
   // Randează UI
   await loadSteleForStanduri();
   renderPage(hartaUrl);
+  // Previzualizarea submisiei de ambasador trebuie să ruleze DUPĂ renderPage() —
+  // altfel renderPins() (apelat din renderPage) golește #pins-layer și șterge
+  // markerul de previzualizare abia adăugat.
+  if (editParam) {
+    checkPreviewSubmisie();
+  }
   // Salvează în cache 15 minute
   CACHE.set(cacheKey, { balta: BALTA, standuri: ST, hartaUrl: hartaUrl }, 15);
   // Salvează balta în istoricul personal de vizite (local, per browser — nu e un contor public)
