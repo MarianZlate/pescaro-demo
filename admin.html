@@ -146,11 +146,11 @@ th,td{padding:8px 6px;}
 }
 
 /* BALTI TABLE */
-.table-wrap{width:100%;}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 
 /* TABLES — baza stiluri comune */
 .balti-table,
-.users-table{width:100%;border-collapse:collapse;background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1e293b;table-layout:fixed;}
+.users-table{width:100%;min-width:640px;border-collapse:collapse;background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1e293b;table-layout:fixed;}
 .balti-table th,
 .users-table th{background:#0a0f1a;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;border-bottom:1px solid #1e293b;white-space:nowrap;}
 .balti-table td,
@@ -605,7 +605,7 @@ th,td{padding:8px 6px;}
         <thead>
           <tr>
             <th>Ambasador</th>
-            <th>Bălți asignate</th>
+            <th>Bălți legate</th>
             <th>Acțiuni</th>
           </tr>
         </thead>
@@ -1795,6 +1795,28 @@ async function markVideoDeleted(capturaId) {
 }
 
 // ── SUBMISII AMBASADORI ──────────────────────────────────────────────────────
+// Bălțile unui ambasador — una sub cealaltă, cu extend dacă sunt mai mult de 3
+function randeazaBaltiExtensibil(balti, idPrefix) {
+  if (!balti.length) return '<span style="color:#4b5563;">niciuna momentan</span>';
+  const randuri = balti.map(escHtml);
+  if (randuri.length <= 3) return randuri.join('<br/>');
+  const vizibile = randuri.slice(0, 3).join('<br/>');
+  const ascunse = randuri.slice(3).join('<br/>');
+  const rest = randuri.length - 3;
+  return vizibile +
+    `<div id="${idPrefix}-extra" style="display:none;margin-top:2px;">${ascunse}</div>` +
+    `<button onclick="toggleBaltiExtinse('${idPrefix}')" id="${idPrefix}-toggle-btn" data-rest-text="▾ +${rest}" style="background:transparent;border:none;color:#64748b;font-size:10.5px;font-weight:700;cursor:pointer;padding:3px 0 0;">▾ +${rest}</button>`;
+}
+
+function toggleBaltiExtinse(idPrefix) {
+  const extra = document.getElementById(idPrefix + '-extra');
+  const btn = document.getElementById(idPrefix + '-toggle-btn');
+  if (!extra || !btn) return;
+  const esteAscuns = extra.style.display === 'none';
+  extra.style.display = esteAscuns ? 'block' : 'none';
+  btn.textContent = esteAscuns ? '▴ mai puține' : btn.dataset.restText;
+}
+
 async function loadTotiAmbasadorii() {
   const tbody = document.getElementById('toti-ambasadorii-tbody');
   if (!tbody) return;
@@ -1824,9 +1846,10 @@ async function loadTotiAmbasadorii() {
   tbody.innerHTML = ambasadori.map(a => {
     const balti = baltiPerZodaId[a.zoda_id] || [];
     const numeSigur = escHtml(a.username || a.zoda_id || '').replace(/'/g,"\\'");
+    const idPrefix = 'balti-amb-' + (a.zoda_id || a.id).replace(/[^a-zA-Z0-9-]/g, '');
     return `<tr>
       <td style="font-size:12.5px;">${escHtml(a.username || '—')} <span style="font-family:monospace;color:#4b5563;font-size:11px;">(${escHtml(a.zoda_id||'—')})</span></td>
-      <td style="font-size:12px;">${balti.length ? balti.map(escHtml).join(', ') : '<span style="color:#4b5563;">niciuna momentan</span>'}</td>
+      <td style="font-size:12px;">${randeazaBaltiExtensibil(balti, idPrefix)}</td>
       <td>
         <div class="action-btns">
           <button class="btn-make-balta-admin" onclick="openAmbAssignModal('${a.id}','${a.zoda_id||''}','${numeSigur}')">+ Leagă de o baltă</button>
