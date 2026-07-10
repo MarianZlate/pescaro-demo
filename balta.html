@@ -1342,6 +1342,11 @@ function renderPage(hartaUrl) {
     if (top10Card) top10Card.style.display = 'none';
     var top10LunarCard = document.getElementById('top10-lunar-card');
     if (top10LunarCard) top10LunarCard.style.display = 'none';
+    // Harta cu standuri și videoclipul de drum de acces au sens doar pe o baltă
+    // verificată — pe o listare "basic" (neconfirmată), pozițiile de stand sunt
+    // fie inexistente, fie generate automat, nu date reale.
+    var mapGrid = document.getElementById('map-grid');
+    if (mapGrid) mapGrid.style.display = 'none';
   }
 
   // Navigare GPS
