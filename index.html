@@ -1642,7 +1642,9 @@ async function loadBaltiFromSupabase() {
     refreshBaltiInBackground();
     return;
   }
-  const { data, error } = await sb.from('balti').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('balti')
+    .select('id, nume, judet, lat, lng, standuri, telefon, facebook, whatsapp, adresa, rec, vizibilitate, vizite, created_at')
+    .order('created_at', { ascending: false });
   if (error) { console.error('Eroare Supabase:', error); return; }
   BALTI = (data || []).map(b => ({
     id: b.id, nume: b.nume, judet: b.judet, lat: b.lat, lng: b.lng,
@@ -1665,7 +1667,9 @@ async function loadBaltiFromSupabase() {
 // Refresh bălți în background (după ce cache-ul a servit UI-ul)
 async function refreshBaltiInBackground() {
   try {
-    const { data, error } = await sb.from('balti').select('*').order('created_at', { ascending: false });
+    const { data, error } = await sb.from('balti')
+      .select('id, nume, judet, lat, lng, standuri, telefon, facebook, whatsapp, adresa, rec, vizibilitate, vizite, created_at')
+      .order('created_at', { ascending: false });
     if (error || !data) return;
     const fresh = data.map(b => ({
       id: b.id, nume: b.nume, judet: b.judet, lat: b.lat, lng: b.lng,
@@ -3365,16 +3369,25 @@ async function updateNavForUser(user) {
     return;
   }
 
-  if(_roleCache && _roleCache.userId === user.id) {
-    currentRole = _roleCache.rol;
-  } else {
-    const { data: roleData } = await sb.from('user_roles').select('rol').eq('id', user.id).single();
-    currentRole = roleData?.rol || 'user';
+  // Rolul, profilul și numărul de notificări necitite nu depind unul de altul —
+  // le pornim simultan, nu unul după altul, ca să reducem timpul total de așteptare.
+  const roleNeedsFetch = !(_roleCache && _roleCache.userId === user.id);
+  const [roleResult, profileResult, notifResult] = await Promise.all([
+    roleNeedsFetch
+      ? sb.from('user_roles').select('rol').eq('id', user.id).single()
+      : Promise.resolve(null),
+    sb.from('user_profiles').select('username,avatar_url,zoda_id').eq('id', user.id).single(),
+    sb.from('notificari').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('citita', false),
+  ]);
+
+  if (roleNeedsFetch) {
+    currentRole = roleResult?.data?.rol || 'user';
     _roleCache  = { userId: user.id, rol: currentRole };
+  } else {
+    currentRole = _roleCache.rol;
   }
 
-  // Citim profilul pentru username + avatar
-  const { data: profile } = await sb.from('user_profiles').select('username,avatar_url,zoda_id').eq('id', user.id).single();
+  const profile = profileResult?.data;
   MY_ZODA_ID = profile?.zoda_id || null;
   var cautaCard = document.getElementById('cauta-pescari-card');
   if (cautaCard) cautaCard.style.display = 'block';
@@ -3406,14 +3419,8 @@ async function updateNavForUser(user) {
   const adminBadge = adminPendingCount > 0
     ? `<span class="nav-bell-badge">${adminPendingCount > 99 ? '99+' : adminPendingCount}</span>` : '';
 
-  // Citim numărul de notificări necitite
-  let unreadCount = 0;
-  try {
-    const { count } = await sb.from('notificari')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id).eq('citita', false);
-    unreadCount = count || 0;
-  } catch(e) {}
+  // Numărul de notificări necitite a fost deja citit mai sus, în paralel cu rolul și profilul
+  const unreadCount = notifResult?.count || 0;
 
   const bellBadge = unreadCount > 0
     ? `<span class="nav-bell-badge">${unreadCount > 99 ? '99+' : unreadCount}</span>` : '';
