@@ -2219,6 +2219,19 @@ function deschideCardDistribuire(captureId) {
   deseneazaCardCaptura(c);
 }
 
+// Recordurile de stand deținute vin din tabela `standuri` (rec_kg/rec_foto/rec_data),
+// nu din `capturi` — nu au un id de captură de care să ne agățăm ca la celelalte
+// două liste, de-aia le normalizăm la aceeași formă și le distribuim după index,
+// nu după id.
+function deschideCardDistribuireStand(index) {
+  const c = (window._recordurileStandMele || [])[index];
+  if (!c || !c.foto_url) return;
+  document.getElementById('modal-card-distribuire').style.display = 'flex';
+  document.getElementById('card-status').textContent = 'Se generează cardul...';
+  _cardBlobCurent = null;
+  deseneazaCardCaptura(c);
+}
+
 function deseneazaCardCaptura(c) {
   const canvas = document.getElementById('card-canvas');
   const ctx = canvas.getContext('2d');
@@ -2426,6 +2439,7 @@ function randeazaRecordurilePersonale(capturi) {
         <div class="capture-data">${c.data_captura || ''}</div>
       </div>
       <div class="capture-kg" style="color:#f59e0b;">🏆 ${c.kg} kg</div>
+      ${c.foto_url ? `<button onclick="deschideCardDistribuire(${c.id})" style="background:#166534;border:none;color:#eafccb;font-size:11px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;margin-left:8px;">📤 Distribuie</button>` : ''}
     </div>`);
   listEl.innerHTML = randeazaListaExtensibila(rows, 'recorduri-personale');
 }
@@ -2463,7 +2477,13 @@ async function loadCapturi() {
 
   if (nrRecorduri) {
     html += `<div style="font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:.06em;margin-bottom:8px;">⭐ RECORDURI STAND DEȚINUTE</div>`;
-    const rowsRecStand = (recorduri || []).map(c => `
+    // Normalizăm la aceeași formă ca o captură obișnuită (kg/foto_url/data_captura/
+    // balti/standuri), ca deseneazaCardCaptura() să funcționeze neschimbat pt. ambele.
+    window._recordurileStandMele = (recorduri || []).map(c => ({
+      kg: c.rec_kg, foto_url: c.rec_foto, data_captura: c.rec_data,
+      balti: c.balti, standuri: { nume: c.nume },
+    }));
+    const rowsRecStand = (recorduri || []).map((c, i) => `
       <div class="capture-row">
         ${c.rec_foto
           ? `<img class="capture-foto" src="${c.rec_foto}" alt="captură"/>`
@@ -2474,6 +2494,7 @@ async function loadCapturi() {
           <div class="capture-data">${c.rec_data || ''}</div>
         </div>
         <div class="capture-kg">${c.rec_kg ? c.rec_kg + ' kg' : '—'}</div>
+        ${c.rec_foto ? `<button onclick="deschideCardDistribuireStand(${i})" style="background:#166534;border:none;color:#eafccb;font-size:11px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;margin-left:8px;">📤 Distribuie</button>` : ''}
       </div>`);
     html += randeazaListaExtensibila(rowsRecStand, 'recorduri-stand');
   }
