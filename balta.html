@@ -1350,6 +1350,10 @@ function renderPage(hartaUrl) {
     if (mapSidebar) mapSidebar.style.display = 'none';
     var mapYtBar = document.getElementById('map-yt-bar');
     if (mapYtBar) mapYtBar.style.display = 'none';
+    // Pinurile de pe hartă rămân accesibile (click direct) chiar dacă lista/pilulele
+    // din #map-sidebar sunt ascunse — le ascundem separat, direct pe stratul lor.
+    var pinsLayer = document.getElementById('pins-layer');
+    if (pinsLayer) pinsLayer.style.display = 'none';
   }
 
   // Navigare GPS
