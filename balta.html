@@ -1342,11 +1342,14 @@ function renderPage(hartaUrl) {
     if (top10Card) top10Card.style.display = 'none';
     var top10LunarCard = document.getElementById('top10-lunar-card');
     if (top10LunarCard) top10LunarCard.style.display = 'none';
-    // Harta cu standuri și videoclipul de drum de acces au sens doar pe o baltă
-    // verificată — pe o listare "basic" (neconfirmată), pozițiile de stand sunt
-    // fie inexistente, fie generate automat, nu date reale.
-    var mapGrid = document.getElementById('map-grid');
-    if (mapGrid) mapGrid.style.display = 'none';
+    // Standurile (pinuri, listă, buton video) și secțiunea video de drum de acces
+    // au sens doar pe o baltă verificată — pe o listare "basic" (neconfirmată),
+    // pozițiile de stand sunt fie inexistente, fie generate automat, nu date reale.
+    // Harta în sine (#map-grid) rămâne vizibilă — arată doar locația/forma băltii.
+    var mapSidebar = document.getElementById('map-sidebar');
+    if (mapSidebar) mapSidebar.style.display = 'none';
+    var mapYtBar = document.getElementById('map-yt-bar');
+    if (mapYtBar) mapYtBar.style.display = 'none';
   }
 
   // Navigare GPS
@@ -1417,6 +1420,10 @@ function renderPage(hartaUrl) {
 
   // Init player drum acces
   showMapYT(null);
+  if (b.vizibilitate === 'basic') {
+    var mapYtBarDupa = document.getElementById('map-yt-bar');
+    if (mapYtBarDupa) mapYtBarDupa.style.display = 'none';
+  }
 
   // Click pe hartă → deselect
   document.getElementById('map-wrap').addEventListener('click', function(e) {
