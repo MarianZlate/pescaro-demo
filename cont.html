@@ -2373,6 +2373,28 @@ function descarcaCard() {
 // Recordul personal pe fiecare baltă — cea mai mare captură a userului la
 // balta respectivă. Nu face un query nou, refolosește exact lista deja
 // încărcată de capturi aprobate (grupare + maxim, făcute local, în browser).
+// ── LISTE EXTENSIBILE — arată primele 2 rânduri, restul ascuns sub un buton
+//    "Arată încă N", ca să nu ocupe spațiu inutil pe pagina de cont. Reutilizat
+//    pentru toate cele 3 liste din "Realizările mele".
+function randeazaListaExtensibila(rowsHtml, idPrefix) {
+  if (rowsHtml.length <= 2) return rowsHtml.join('');
+  const vizibile = rowsHtml.slice(0, 2).join('');
+  const ascunse = rowsHtml.slice(2).join('');
+  const rest = rowsHtml.length - 2;
+  return vizibile +
+    `<div id="${idPrefix}-extra" style="display:none;">${ascunse}</div>` +
+    `<button onclick="toggleListaExtinsa('${idPrefix}')" id="${idPrefix}-toggle-btn" data-rest-text="▾ Arată încă ${rest}" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--text-dim);font-size:11.5px;font-weight:600;padding:8px;border-radius:8px;cursor:pointer;margin-top:4px;">▾ Arată încă ${rest}</button>`;
+}
+
+function toggleListaExtinsa(idPrefix) {
+  const extra = document.getElementById(idPrefix + '-extra');
+  const btn = document.getElementById(idPrefix + '-toggle-btn');
+  if (!extra || !btn) return;
+  const esteAscunsAcum = extra.style.display === 'none';
+  extra.style.display = esteAscunsAcum ? 'block' : 'none';
+  btn.textContent = esteAscunsAcum ? '▴ Arată mai puține' : btn.dataset.restText;
+}
+
 function randeazaRecordurilePersonale(capturi) {
   const eyebrow = document.getElementById('recorduri-personale-eyebrow');
   const listEl = document.getElementById('recorduri-personale-list');
@@ -2393,7 +2415,7 @@ function randeazaRecordurilePersonale(capturi) {
   if (!recorduri.length) { eyebrow.style.display = 'none'; listEl.innerHTML = ''; return; }
 
   eyebrow.style.display = 'block';
-  listEl.innerHTML = recorduri.map(c => `
+  const rows = recorduri.map(c => `
     <div class="capture-row" style="border-left:2px solid #f59e0b;">
       ${c.foto_url
         ? `<img class="capture-foto" src="${c.foto_url}" alt="record"/>`
@@ -2404,7 +2426,8 @@ function randeazaRecordurilePersonale(capturi) {
         <div class="capture-data">${c.data_captura || ''}</div>
       </div>
       <div class="capture-kg" style="color:#f59e0b;">🏆 ${c.kg} kg</div>
-    </div>`).join('');
+    </div>`);
+  listEl.innerHTML = randeazaListaExtensibila(rows, 'recorduri-personale');
 }
 
 async function loadCapturi() {
@@ -2440,7 +2463,7 @@ async function loadCapturi() {
 
   if (nrRecorduri) {
     html += `<div style="font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:.06em;margin-bottom:8px;">⭐ RECORDURI STAND DEȚINUTE</div>`;
-    html += (recorduri || []).map(c => `
+    const rowsRecStand = (recorduri || []).map(c => `
       <div class="capture-row">
         ${c.rec_foto
           ? `<img class="capture-foto" src="${c.rec_foto}" alt="captură"/>`
@@ -2451,14 +2474,15 @@ async function loadCapturi() {
           <div class="capture-data">${c.rec_data || ''}</div>
         </div>
         <div class="capture-kg">${c.rec_kg ? c.rec_kg + ' kg' : '—'}</div>
-      </div>`).join('');
+      </div>`);
+    html += randeazaListaExtensibila(rowsRecStand, 'recorduri-stand');
   }
 
   if (nrCapturi) {
     html += `<div style="font-size:10px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin:${nrRecorduri ? '16px' : '0'} 0 8px;">CAPTURI APROBATE</div>`;
     window._capturiMele = capturi || [];
     randeazaRecordurilePersonale(capturi || []);
-    html += (capturi || []).map(c => `
+    const rowsCapturi = (capturi || []).map(c => `
       <div class="capture-row">
         ${c.foto_url
           ? `<img class="capture-foto" src="${c.foto_url}" alt="captură"/>`
@@ -2470,7 +2494,8 @@ async function loadCapturi() {
         </div>
         <div class="capture-kg">${c.kg ? c.kg + ' kg' : '—'}</div>
         ${c.foto_url ? `<button onclick="deschideCardDistribuire(${c.id})" style="background:#166534;border:none;color:#eafccb;font-size:11px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;margin-left:8px;">📤 Distribuie</button>` : ''}
-      </div>`).join('');
+      </div>`);
+    html += randeazaListaExtensibila(rowsCapturi, 'capturi-aprobate');
   }
 
   listEl.innerHTML = html;
