@@ -1032,34 +1032,36 @@ async function boot() {
   if (!user) { window.location.href = 'index.html'; return; }
   currentUser = user;
 
-  const { data: profile } = await sb.from('user_profiles')
-    .select('*').eq('id', user.id).single();
+  // Profilul și rolul nu depind unul de altul — le pornim simultan, nu în lanț
+  const [{ data: profile }, { data: roleData }] = await Promise.all([
+    sb.from('user_profiles').select('*').eq('id', user.id).single(),
+    sb.from('user_roles').select('rol').eq('id', user.id).single(),
+  ]);
   currentProfile = profile || {};
+  currentRole = roleData?.rol || 'user';
 
   if (currentProfile.deleted_at) { showDeletedScreen(); return; }
 
-  const { data: roleData } = await sb.from('user_roles').select('rol').eq('id', user.id).single();
-  currentRole = roleData?.rol || 'user';
-
   renderProfile();
-  await Promise.all([loadCapturi(), loadStele(), loadNotificari()]);
 
-  // Secțiune balta_admin
-  if (currentRole === 'balta_admin') {
-    await loadBaltiAdmin();
+  // Secțiunea de balta_admin/zoda_admin și cea de ambasador nu depind una de
+  // cealaltă — pornim tot ce se poate porni simultan, nu una după alta.
+  const promisePrincipale = Promise.all([loadCapturi(), loadStele(), loadNotificari()]);
+  const promiseAmbasador = loadBaltiAmbasador();
+  const promiseAdminBalti = (currentRole === 'balta_admin' || currentRole === 'zoda_admin')
+    ? loadBaltiAdmin() : Promise.resolve(0);
+
+  await promisePrincipale;
+
+  const nrBalti = await promiseAdminBalti;
+  if (currentRole === 'balta_admin' || (currentRole === 'zoda_admin' && nrBalti > 0)) {
     document.getElementById('section-balta-admin').style.display = 'block';
     await loadCapturiRespinse();
-  } else if (currentRole === 'zoda_admin') {
-    const nrBalti = await loadBaltiAdmin();
-    if (nrBalti > 0) {
-      document.getElementById('section-balta-admin').style.display = 'block';
-      await loadCapturiRespinse();
-    }
   }
 
   // Secțiune ambasador — nu e rol în user_roles, orice cont (inclusiv balta_admin/zoda_admin)
   // poate fi legat ca ambasador la o baltă, deci verificăm mereu, indiferent de currentRole.
-  const nrBaltiAmbasador = await loadBaltiAmbasador();
+  const nrBaltiAmbasador = await promiseAmbasador;
   if (nrBaltiAmbasador > 0) {
     document.getElementById('section-ambasador').style.display = 'block';
   }
