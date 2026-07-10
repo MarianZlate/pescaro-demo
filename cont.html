@@ -2268,13 +2268,25 @@ function deseneazaCardCaptura(c) {
     }
 
     // ── Rândul 2 (jos în bandă): caption-ul principal, stânga ──
-    const luna = c.data_captura
-      ? new Date(c.data_captura).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })
-      : '';
+    let dataFormatata = '';
+    if (c.data_captura) {
+      // Parsăm direct din string (nu prin Date()), ca să evităm orice decalaj
+      // de fus orar la conversia UTC — riscant pentru o dată fără oră.
+      const mParts = String(c.data_captura).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (mParts) {
+        dataFormatata = mParts[3] + '-' + mParts[2] + '-' + mParts[1]; // DD-MM-YYYY
+      } else {
+        const d = new Date(c.data_captura);
+        if (!isNaN(d)) {
+          const pad = n => String(n).padStart(2, '0');
+          dataFormatata = pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear();
+        }
+      }
+    }
     const kgText = c.kg != null ? c.kg + ' kg' : '—';
     const nume = currentProfile?.username || 'Pescar Zoda';
     const captionParts = [nume, kgText];
-    if (luna) captionParts.push(luna.charAt(0).toUpperCase() + luna.slice(1));
+    if (dataFormatata) captionParts.push(dataFormatata);
     const caption = captionParts.join('  -  ');
     const captionBaseline = H - 36;
 
