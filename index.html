@@ -948,6 +948,40 @@ async function uploadToR2(file, folder) {
   if (!resp.ok || !data.url) throw new Error(data.error || 'Eroare upload R2');
   return data.url;
 }
+
+// Resize + compresie la upload — vezi aceeași funcție în cont.html/admin.html/balta.html.
+function resizeImage(file, maxWidth, maxHeight, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width  = Math.round(width  * ratio);
+        height = Math.round(height * ratio);
+      } else {
+        resolve(file);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width  = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        if (!blob) { resolve(file); return; }
+        const numeOriginal = file.name || 'poza.jpg'; // Blob simplu (nu File) nu are .name
+        const resized = new File([blob], numeOriginal.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+        resolve(resized);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: {
     persistSession: true,
@@ -2636,7 +2670,8 @@ async function abSubmit() {
     try {
       const fotoResp = await fetch(s.foto);
       const blob = await fotoResp.blob();
-      const upUrl = await uploadToR2(blob, 'standuri');
+      const resizedBlob = await resizeImage(blob, 1200, 99999, 0.80);
+      const upUrl = await uploadToR2(resizedBlob, 'standuri');
       await sb.from('poze').insert({ balta_id: baltaId, url: upUrl });
     } catch(e) { console.warn('Eroare upload poza stand', e); }
   }
