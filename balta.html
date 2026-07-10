@@ -1139,16 +1139,18 @@ async function loadBalta(id) {
     }
   }
 
-  // 2. Standuri — sortate după sort_order (cu retry dacă vine gol din eroare de rețea)
-  var sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true });
+  // 2+3. Standuri și poze — nu depind una de alta, doar de id-ul băltii, deja
+  // cunoscut din pasul 1. Le pornim simultan, nu secvențial.
+  var sRes, pRes;
+  [sRes, pRes] = await Promise.all([
+    sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true }),
+    sb.from('poze').select('*').eq('balta_id', id),
+  ]);
   if (sRes.error) {
     await new Promise(function(r) { setTimeout(r, 400); });
     sRes = await sb.from('standuri').select('*').eq('balta_id', id).order('sort_order', { ascending: true }).order('id', { ascending: true });
   }
   var standuri = sRes.data || [];
-
-  // 3. Poze
-  var pRes = await sb.from('poze').select('*').eq('balta_id', id);
   var poze = pRes.data || [];
 
   // Hartă baltă — ia cea mai recentă (stand_id IS NULL)
