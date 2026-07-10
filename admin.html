@@ -3266,7 +3266,8 @@ function addEditGalerie(standId) {
     window._galFotoUploading.add(uploadKey);
     try {
       const readyFile = await ensureNotHeic(file);
-      const url = await uploadToR2(readyFile, 'standuri');
+      const resizedFile = await resizeImage(readyFile, 1200, 99999, 0.80);
+      const url = await uploadToR2(resizedFile, 'standuri');
       loadDiv.className = 'gal-thumb-edit';
       loadDiv.style.cssText = '';
       loadDiv.innerHTML = `<img src="${escHtml(url)}" loading="lazy"/><button class="gal-thumb-del" onclick="this.parentElement.remove()" title="Șterge">✕</button>`;
@@ -3324,7 +3325,8 @@ async function uploadRecFoto(file, standId) {
   status.className   = 'rec-upload-status uploading';
 
   try {
-    const url = await uploadToR2(file, 'standuri');
+    const resizedFile = await resizeImage(file, 1200, 99999, 0.80);
+    const url = await uploadToR2(resizedFile, 'standuri');
     document.getElementById('se-rec-url-' + standId).value = url;
     status.textContent = '✓ Uploadat cu succes';
     status.className   = 'rec-upload-status done';
@@ -3976,7 +3978,9 @@ async function previewStandFoto(nr,input){
     delete prev.dataset.url;
     if(cb)cb.style.display='block';
     window._standFotoUploading.add(nr);
-    uploadToR2(file,'standuri').then(function(url){
+    resizeImage(file, 1200, 99999, 0.80).then(function(resizedFile){
+      return uploadToR2(resizedFile, 'standuri');
+    }).then(function(url){
       prev.dataset.url=url;
       var spin=document.getElementById('s'+nr+'-foto-spin');
       if(spin)spin.remove();
