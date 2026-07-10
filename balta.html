@@ -332,7 +332,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .footer-col a{color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:color .2s;}
 .footer-col a:hover{color:#a3e635;}
 #footer-bottom{max-width:1100px;margin:0 auto;padding:0 20px 22px;font-size:11px;color:#334155;}
-#footer-legal{max-width:1100px;margin:0 auto;padding:0 20px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-top:1px solid #1e293b;padding-top:18px;}
+#footer-legal{max-width:1100px;margin:0 auto;padding:0 20px 18px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px;border-top:1px solid #1e293b;padding-top:18px;}
 #footer-company{font-size:11px;color:#4b5563;line-height:1.6;}
 #footer-company strong{color:#64748b;}
 #footer-sal{display:flex;flex-direction:column;align-items:center;justify-content:center;width:250px;height:50px;border-radius:8px;background:#111827;border:1px solid #1e293b;text-decoration:none;flex-shrink:0;transition:border-color .2s;}
@@ -736,6 +736,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div class="footer-col-title">Platformă</div>
         <a href="index.html">Acasă</a>
         <a href="index.html?inregistreaza=1">Înregistrează-ți balta</a>
+        <a onclick="openDetaliiFirmaModal();return false;" href="#">Detalii firmă</a>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Legal</div>
@@ -746,14 +747,11 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div class="footer-col">
         <div class="footer-col-title">Contact</div>
         <a href="index.html?contact=1">Trimite un mesaj</a>
-        <a href="mailto:contact@zoda.ro">contact@zoda.ro</a>
+        <a href="mailto:SalutZoda@gmail.com">SalutZoda@gmail.com</a>
       </div>
     </div>
   </div>
   <div id="footer-legal">
-    <div id="footer-company">
-      <strong>[Denumire firmă — DE COMPLETAT]</strong> · CUI [DE COMPLETAT] · Reg. Com. [DE COMPLETAT] · Sediu: [DE COMPLETAT]
-    </div>
     <a href="https://reclamatiisal.anpc.ro/" target="_blank" rel="noopener" id="footer-sal" title="Soluționarea Alternativă a Litigiilor — ANPC">
       <span class="sal-badge-txt">SAL</span>
       <span class="sal-badge-sub">Soluționarea Alternativă a Litigiilor</span>
@@ -761,6 +759,26 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
   </div>
   <div id="footer-bottom">Zoda © 2026</div>
 </footer>
+
+<!-- MODAL DETALII FIRMĂ -->
+<div id="modal-detalii-firma" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;" onclick="if(event.target===this)closeDetaliiFirmaModal()">
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:420px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;">
+      <div style="font-size:16px;font-weight:800;color:#f1f5f9;">🏢 Detalii firmă</div>
+      <button onclick="closeDetaliiFirmaModal()" style="background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="padding:20px 24px;font-size:13px;color:#94a3b8;line-height:2;">
+      <div><strong style="color:#f1f5f9;">Denumire:</strong> [DE COMPLETAT]</div>
+      <div><strong style="color:#f1f5f9;">CUI:</strong> [DE COMPLETAT]</div>
+      <div><strong style="color:#f1f5f9;">Reg. Com.:</strong> [DE COMPLETAT]</div>
+      <div><strong style="color:#f1f5f9;">Sediu:</strong> [DE COMPLETAT]</div>
+    </div>
+  </div>
+</div>
+<script>
+function openDetaliiFirmaModal() { document.getElementById('modal-detalii-firma').style.display = 'flex'; }
+function closeDetaliiFirmaModal() { document.getElementById('modal-detalii-firma').style.display = 'none'; }
+</script>
 
 <!-- OVERLAY GENERIC — TARIFE / REGULAMENT (in afara #map-wrap, ca sa functioneze si pt balti fara harta) -->
 <!-- MODAL REVENDICARE BALTA — folosit doar pe baltile 'basic', mesaj adaptat -->
