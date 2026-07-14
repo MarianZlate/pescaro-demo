@@ -862,6 +862,12 @@ function closeDetaliiFirmaModal() { document.getElementById('modal-detalii-firma
 
 <!-- ── MODAL ADAUGĂ CAPTURĂ ── -->
 <!-- CARD DE DISTRIBUIRE CAPTURĂ -->
+<!-- LIGHTBOX — vizualizare poză la dimensiune completă, la click pe o realizare -->
+<div id="lightbox-foto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;align-items:center;justify-content:center;padding:20px;" onclick="closeLightboxFoto()">
+  <button onclick="closeLightboxFoto()" style="position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;line-height:1;">✕</button>
+  <img id="lightbox-foto-img" src="" style="max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;"/>
+</div>
+
 <div id="modal-card-distribuire" style="display:none;position:fixed;inset:0;background:rgba(4,7,12,.85);backdrop-filter:blur(3px);z-index:8500;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:18px;width:100%;max-width:380px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -2230,6 +2236,15 @@ async function loadStele() {
 // ── CARD DE DISTRIBUIRE CAPTURĂ ──────────────────────────────────────────────
 var _cardBlobCurent = null;
 
+// ── LIGHTBOX — vizualizare poză la dimensiune completă ──────────────────────
+function deschideLightboxFoto(url) {
+  document.getElementById('lightbox-foto-img').src = url;
+  document.getElementById('lightbox-foto').style.display = 'flex';
+}
+function closeLightboxFoto() {
+  document.getElementById('lightbox-foto').style.display = 'none';
+}
+
 function deschideCardDistribuire(captureId) {
   const c = (window._capturiMele || []).find(x => x.id === captureId);
   if (!c || !c.foto_url) return;
@@ -2451,7 +2466,7 @@ function randeazaRecordurilePersonale(capturi) {
   const rows = recorduri.map(c => `
     <div class="capture-row" style="border-left:2px solid #f59e0b;">
       ${c.foto_url
-        ? `<img class="capture-foto" src="${c.foto_url}" alt="record"/>`
+        ? `<img class="capture-foto" src="${c.foto_url}" alt="record" onclick="deschideLightboxFoto('${c.foto_url}')" style="cursor:pointer;"/>`
         : `<div class="capture-foto-empty">🏆</div>`}
       <div class="capture-info">
         <div class="capture-balta">${c.balti?.nume || '—'}</div>
@@ -2506,7 +2521,7 @@ async function loadCapturi() {
     const rowsRecStand = (recorduri || []).map((c, i) => `
       <div class="capture-row">
         ${c.rec_foto
-          ? `<img class="capture-foto" src="${c.rec_foto}" alt="captură"/>`
+          ? `<img class="capture-foto" src="${c.rec_foto}" alt="captură" onclick="deschideLightboxFoto('${c.rec_foto}')" style="cursor:pointer;"/>`
           : `<div class="capture-foto-empty">🏅</div>`}
         <div class="capture-info">
           <div class="capture-balta">${c.balti?.nume || '—'}</div>
@@ -2526,7 +2541,7 @@ async function loadCapturi() {
     const rowsCapturi = (capturi || []).map(c => `
       <div class="capture-row">
         ${c.foto_url
-          ? `<img class="capture-foto" src="${c.foto_url}" alt="captură"/>`
+          ? `<img class="capture-foto" src="${c.foto_url}" alt="captură" onclick="deschideLightboxFoto('${c.foto_url}')" style="cursor:pointer;"/>`
           : `<div class="capture-foto-empty">🐟</div>`}
         <div class="capture-info">
           <div class="capture-balta">${c.balti?.nume || '—'}</div>
