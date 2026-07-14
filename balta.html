@@ -546,7 +546,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
       <div id="stand-overlay">
       <div class="ov-hdr">
+        <button id="ov-prev-btn" onclick="navigheazaStand(-1)" title="Standul anterior" style="background:#0a0f1a;border:1px solid #1e293b;color:#94a3b8;font-size:15px;font-weight:700;width:30px;height:30px;border-radius:7px;cursor:pointer;flex-shrink:0;">◀</button>
         <div class="spnr" id="ov-nr">Stand 1</div>
+        <button id="ov-next-btn" onclick="navigheazaStand(1)" title="Standul următor" style="background:#0a0f1a;border:1px solid #1e293b;color:#94a3b8;font-size:15px;font-weight:700;width:30px;height:30px;border-radius:7px;cursor:pointer;flex-shrink:0;">▶</button>
         <button id="ov-edit-btn" onclick="toggleOverlayEdit()" style="display:none;background:rgba(163,230,53,.1);border:1px solid rgba(163,230,53,.3);color:#a3e635;font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;margin-right:6px;">✏️ Editează</button>
         <button class="xbtn" onclick="closeOverlay()">✕</button>
       </div>
@@ -1877,6 +1879,20 @@ function openOverlay(id) {
 
   var s = ST.find(function(x) { return x.id === id; });
   document.getElementById('ov-nr').textContent = s.z || ('Stand ' + s.nr);
+
+  var idxCurent = ST.findIndex(function(x) { return x.id === id; });
+  var prevBtn = document.getElementById('ov-prev-btn');
+  var nextBtn = document.getElementById('ov-next-btn');
+  if (prevBtn) {
+    prevBtn.disabled = idxCurent <= 0;
+    prevBtn.style.opacity = prevBtn.disabled ? '.35' : '1';
+    prevBtn.style.cursor = prevBtn.disabled ? 'default' : 'pointer';
+  }
+  if (nextBtn) {
+    nextBtn.disabled = idxCurent === -1 || idxCurent >= ST.length - 1;
+    nextBtn.style.opacity = nextBtn.disabled ? '.35' : '1';
+    nextBtn.style.cursor = nextBtn.disabled ? 'default' : 'pointer';
+  }
 
   var editBtn = document.getElementById('ov-edit-btn');
   if (editBtn) editBtn.style.display = CAN_EDIT ? 'inline-flex' : 'none';
