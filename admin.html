@@ -748,6 +748,24 @@ th,td{padding:8px 6px;}
       </div>
 
       <div class="fg">
+        <label>PAGINI UNDE APARE (poți bifa mai multe)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:7px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:13px;color:#e2e8f0;">
+            <input type="checkbox" class="rc-pagina-check" value="index"/> 🏠 Index
+          </label>
+          <label style="display:flex;align-items:center;gap:7px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:13px;color:#e2e8f0;">
+            <input type="checkbox" class="rc-pagina-check" value="balta"/> 🎣 Baltă
+          </label>
+          <label style="display:flex;align-items:center;gap:7px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:13px;color:#e2e8f0;">
+            <input type="checkbox" class="rc-pagina-check" value="cont"/> 👤 Cont
+          </label>
+          <label style="display:flex;align-items:center;gap:7px;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:13px;color:#e2e8f0;">
+            <input type="checkbox" class="rc-pagina-check" value="pescar"/> 🎣 Profil pescar
+          </label>
+        </div>
+      </div>
+
+      <div class="fg">
         <label>TITLU</label>
         <input type="text" id="rc-titlu" placeholder="ex: Balta Ileana — Weekend cu premii"/>
       </div>
@@ -2245,6 +2263,7 @@ function rcResetForm() {
   document.getElementById('rc-start').value = new Date().toISOString().slice(0,10);
   document.getElementById('rc-sfarsit').value = '';
   document.getElementById('rc-sort').value = '0';
+  document.querySelectorAll('.rc-pagina-check').forEach(c => { c.checked = (c.value === 'balta'); }); // implicit "balta", ca înainte
   document.getElementById('rc-img-preview').innerHTML = '📷';
   document.getElementById('rc-img-status').textContent = '';
   document.getElementById('reclama-err').style.display = 'none';
@@ -2275,6 +2294,7 @@ async function openEditReclama(id) {
   document.getElementById('rc-start').value = r.data_start;
   document.getElementById('rc-sfarsit').value = r.data_sfarsit;
   document.getElementById('rc-sort').value = r.sort_order || 0;
+  document.querySelectorAll('.rc-pagina-check').forEach(c => { c.checked = (r.pagini || []).includes(c.value); });
   document.getElementById('rc-img-preview').innerHTML = r.imagine_url ? `<img src="${r.imagine_url}" style="width:100%;height:100%;object-fit:cover;"/>` : '📷';
   rcTipChanged();
   document.getElementById('reclama-modal').style.display = 'flex';
@@ -2311,6 +2331,7 @@ async function saveReclama() {
   const dataStart  = document.getElementById('rc-start').value;
   const dataSfarsit= document.getElementById('rc-sfarsit').value;
   const sortOrder  = parseInt(document.getElementById('rc-sort').value, 10) || 0;
+  const pagini = Array.from(document.querySelectorAll('.rc-pagina-check:checked')).map(c => c.value);
   const errEl = document.getElementById('reclama-err');
   errEl.style.display = 'none';
 
@@ -2319,6 +2340,7 @@ async function saveReclama() {
   if(!dataStart || !dataSfarsit)      return rcShowErr('Completează data de start și de sfârșit.');
   if(dataSfarsit < dataStart)         return rcShowErr('Data de sfârșit e înaintea datei de start.');
   if(!rcImgFile && !rcImgUrl)         return rcShowErr('Alege o imagine pentru reclamă.');
+  if(!pagini.length)                  return rcShowErr('Bifează cel puțin o pagină unde să apară reclama.');
 
   const btn = document.getElementById('reclama-save-btn');
   btn.disabled = true; btn.textContent = 'Se salvează...';
@@ -2336,6 +2358,7 @@ async function saveReclama() {
       data_start: dataStart, data_sfarsit: dataSfarsit,
       balta_id: tip === 'balta' && baltaId ? parseInt(baltaId, 10) : null,
       sort_order: sortOrder,
+      pagini,
     };
 
     let error;
@@ -3081,6 +3104,31 @@ function buildEditBody(b, ext) {
     </div>
   </div>
 
+  <!-- NIVEL DE VIZIBILITATE (pachet plătit — bază/recomandat/premium) -->
+  <div class="edit-section">
+    <div class="edit-section-title"><span>⭐ NIVEL DE VIZIBILITATE</span></div>
+    <div style="display:flex;gap:8px;">
+      <button id="enl-1" onclick="setEditNivel(1)"
+        style="flex:1;padding:10px 6px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;${(b.nivel_vizibilitate||1)===1?'border:2px solid #94a3b8;background:#1e293b;color:#e2e8f0;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
+        🥉 Bază
+      </button>
+      <button id="enl-2" onclick="setEditNivel(2)"
+        style="flex:1;padding:10px 6px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;${(b.nivel_vizibilitate||1)===2?'border:2px solid #60a5fa;background:#0d1a2e;color:#60a5fa;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
+        🥈 Recomandat
+      </button>
+      <button id="enl-3" onclick="setEditNivel(3)"
+        style="flex:1;padding:10px 6px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;${(b.nivel_vizibilitate||1)===3?'border:2px solid #f5a524;background:#1c1500;color:#f5a524;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
+        🥇 Premium
+      </button>
+    </div>
+    <input type="hidden" id="eb-nivel" value="${b.nivel_vizibilitate || 1}"/>
+    <div class="fg" style="margin-top:10px;">
+      <label>TAGLINE (opțional, doar nivel 2/3 — max 140 caractere)</label>
+      <input type="text" id="eb-tagline" maxlength="140" value="${escH(b.tagline || '')}" placeholder="ex: Crapi peste 15kg, acces auto direct la fiecare stand" oninput="document.getElementById('eb-tagline-count').textContent = this.value.length + '/140';"/>
+      <div id="eb-tagline-count" style="font-size:10px;color:#4b5563;margin-top:3px;text-align:right;">${(b.tagline || '').length}/140</div>
+    </div>
+  </div>
+
   <!-- STANDURI -->
   <div class="edit-section">
     <div class="edit-section-title">
@@ -3391,6 +3439,19 @@ function setEditViz(status) {
   }
 }
 
+function setEditNivel(n) {
+  document.getElementById('eb-nivel').value = n;
+  const stiluri = {
+    1: 'border:2px solid #94a3b8;background:#1e293b;color:#e2e8f0;',
+    2: 'border:2px solid #60a5fa;background:#0d1a2e;color:#60a5fa;',
+    3: 'border:2px solid #f5a524;background:#1c1500;color:#f5a524;',
+  };
+  [1, 2, 3].forEach(i => {
+    const btn = document.getElementById('enl-' + i);
+    if (btn) btn.style.cssText = 'flex:1;padding:10px 6px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;' + (i === n ? stiluri[i] : 'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;');
+  });
+}
+
 async function saveEditBalta() {
   const b = editBaltaData;
   if(!b) return;
@@ -3414,6 +3475,8 @@ async function saveEditBalta() {
     admin_zoda_id:  document.getElementById('e-admin-zoda-id')?.value.trim() || null,
     ambasador_zoda_id: document.getElementById('e-ambasador-zoda-id')?.value.trim() || null,
     vizibilitate:   editVizStatus,
+    nivel_vizibilitate: parseInt(document.getElementById('eb-nivel')?.value, 10) || 1,
+    tagline:        document.getElementById('eb-tagline')?.value.trim().slice(0, 140) || null,
   };
 
   // Acordăm/confirmăm rolul balta_admin ori de câte ori admin_zoda_id e setat
