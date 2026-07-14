@@ -1090,11 +1090,13 @@ async function loadBalta(id) {
     DRUM_ACCES_YT = BALTA.drum_yt || '';
     ST = cached.standuri;
     var hartaUrl = cached.hartaUrl;
+    if (new URLSearchParams(location.search).get('edit') === '1') {
+      await checkAdminAndShowBar();
+    }
     renderPage(hartaUrl);
     loadTop10Lunar(id);
     loadHallOfFame(id);
     if (new URLSearchParams(location.search).get('edit') === '1') {
-      checkAdminAndShowBar();
       checkPreviewSubmisie();
     }
     // Refresh în background
@@ -1190,7 +1192,7 @@ async function loadBalta(id) {
   // Arată edit bar DOAR dacă pagina e deschisă cu ?edit=1 din admin
   var editParam = new URLSearchParams(location.search).get('edit') === '1';
   if (editParam) {
-    checkAdminAndShowBar();
+    await checkAdminAndShowBar();
   }
 
   // Randează UI
@@ -1335,7 +1337,11 @@ function renderPage(hartaUrl) {
   // Listare de bază (neverificată) — banner de revendicare (doar dacă nu are
   // deja un admin atribuit) + ascundem secțiunile care n-ar avea sens fără
   // date reale (Top 10 / capturi).
-  if (b.vizibilitate === 'basic') {
+  // Standurile/video se ascund pe bălțile "basic" doar pentru vizitatori obișnuiți.
+  // zoda_admin, balta_admin-ul acestei bălți sau ambasadorul ei trebuie să vadă tot,
+  // exact ca pe o baltă publică — altfel n-ar putea edita poziții/detalii de stand
+  // pe o baltă încă neconfirmată.
+  if (b.vizibilitate === 'basic' && !CAN_EDIT && !IS_AMBASADOR) {
     var basicBanner = document.getElementById('basic-tier-banner');
     if (basicBanner && !(b.admin_zoda_id && b.admin_zoda_id.trim())) {
       basicBanner.style.display = 'flex';
@@ -1426,7 +1432,7 @@ function renderPage(hartaUrl) {
 
   // Init player drum acces
   showMapYT(null);
-  if (b.vizibilitate === 'basic') {
+  if (b.vizibilitate === 'basic' && !CAN_EDIT && !IS_AMBASADOR) {
     var mapYtBarDupa = document.getElementById('map-yt-bar');
     if (mapYtBarDupa) mapYtBarDupa.style.display = 'none';
   }
