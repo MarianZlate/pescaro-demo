@@ -570,6 +570,25 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         </div>
       </div>
 
+      <!-- Videoclip de prezentare a standului — direct în overlay, nu separat mai jos -->
+      <div id="ov-yt-section" style="display:none;padding:10px;border-top:1px solid #1e293b;">
+        <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;">🎬 VIDEOCLIP DE PREZENTARE A STANDULUI</div>
+        <div id="ov-yt-thumb-wrap" style="position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;cursor:pointer;" onclick="playOverlayYT()">
+          <img id="ov-yt-thumb" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"/>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);">
+            <div style="width:52px;height:52px;border-radius:50%;background:rgba(232,20,42,.92);display:flex;align-items:center;justify-content:center;">
+              <div style="width:0;height:0;border-style:solid;border-width:10px 0 10px 16px;border-color:transparent transparent transparent #fff;margin-left:3px;"></div>
+            </div>
+          </div>
+        </div>
+        <div id="ov-yt-iframe-wrap" style="display:none;position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+          <iframe id="ov-yt-iframe" src="" frameborder="0"
+            allow="autoplay;encrypted-media;fullscreen" allowfullscreen
+            style="position:absolute;inset:0;width:100%;height:100%;border:none;">
+          </iframe>
+        </div>
+      </div>
+
       <!-- Editare detalii stand (nume/adâncime/distanță/lățime + galerie poze) -->
       <div id="ov-edit-section" style="display:none;padding:12px 10px;border-top:1px solid #1e293b;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
@@ -1845,8 +1864,6 @@ function selStand(id) {
   // un singur tap arată tot, fără dublu-tap neintuitiv.
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
-  var selectedStand = ST.find(function(x) { return x.id === id; });
-  showMapYT(selectedStand);
   var mapWrap = document.getElementById('map-wrap');
   if (mapWrap) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
   openOverlay(id);
@@ -1918,7 +1935,19 @@ function openOverlay(id) {
     stFoto.innerHTML = '<span style="font-size:24px;">📷</span><span>Fără fotografie</span>';
   }
 
-  showMapYT(s);
+  var ovYtSection = document.getElementById('ov-yt-section');
+  var ovYtVid = ytVideoId(s.yt || '');
+  if (ovYtVid) {
+    _currentOverlayYtUrl = s.yt;
+    document.getElementById('ov-yt-thumb').src = 'https://img.youtube.com/vi/' + ovYtVid + '/hqdefault.jpg';
+    document.getElementById('ov-yt-thumb-wrap').style.display = 'block';
+    document.getElementById('ov-yt-iframe-wrap').style.display = 'none';
+    document.getElementById('ov-yt-iframe').src = '';
+    ovYtSection.style.display = 'block';
+  } else {
+    _currentOverlayYtUrl = '';
+    ovYtSection.style.display = 'none';
+  }
   document.getElementById('stand-overlay').style.display = 'block';
   document.getElementById('stand-overlay-backdrop').style.display = 'block';
   document.getElementById('spr').style.display = 'none';
@@ -2631,6 +2660,15 @@ function playMapYT() {
   document.getElementById('map-yt-iframe').src = emb.replace('?rel=0', '?rel=0&autoplay=1');
   document.getElementById('map-yt-thumb-wrap').style.display = 'none';
   document.getElementById('map-yt-iframe-wrap').style.display = 'block';
+}
+
+var _currentOverlayYtUrl = '';
+function playOverlayYT() {
+  var emb = ytEmbed(_currentOverlayYtUrl);
+  if (!emb) return;
+  document.getElementById('ov-yt-iframe').src = emb.replace('?rel=0', '?rel=0&autoplay=1');
+  document.getElementById('ov-yt-thumb-wrap').style.display = 'none';
+  document.getElementById('ov-yt-iframe-wrap').style.display = 'block';
 }
 
 function ytVideoId(url) {
