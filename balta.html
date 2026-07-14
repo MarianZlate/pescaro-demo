@@ -255,11 +255,13 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
    DESKTOP (min-width: 769px) — adăugăm peste baza mobilă
    ============================================================ */
 .info-overlay-body{padding:18px;overflow-y:auto;font-size:15.5px;color:#cbd5e1;line-height:1.8;white-space:pre-wrap;}
+.ib-name-tagline-wrap{display:flex;flex-direction:column;}
 
 @media(min-width:769px){
   /* HEADER */
   #hdr-in{padding:0 20px;height:52px;gap:12px;}
   #hdr-balta-name{font-size:15px;}
+  .ib-name-tagline-wrap{flex-direction:row;align-items:baseline;gap:8px;}
   #hdr-balta-loc{display:block;}
   .back-btn{padding:6px 12px;font-size:12px;}
 
@@ -457,7 +459,10 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
       <span style="font-size:20px;">🎣</span>
       <div>
-        <div id="ib-name" style="font-weight:800;font-size:15px;color:#f1f5f9;">—</div>
+        <div class="ib-name-tagline-wrap">
+          <div id="ib-name" style="font-weight:800;font-size:15px;color:#f1f5f9;">—</div>
+          <div id="ib-tagline" style="font-size:12px;color:#a3e635;font-weight:600;display:none;"></div>
+        </div>
         <div id="ib-loc" style="font-size:11px;color:#64748b;"></div>
         <div id="ib-ambasador-credit" style="font-size:10.5px;color:#64748b;margin-top:2px;display:none;"></div>
       </div>
@@ -1313,6 +1318,15 @@ function renderPage(hartaUrl) {
   document.getElementById('hdr-balta-name').textContent = b.nume;
   document.getElementById('hdr-balta-loc').textContent = b.adresa ? '📍 ' + b.adresa : (b.judet ? '📍 ' + b.judet : '');
   document.getElementById('ib-name').textContent = b.nume;
+  var ibTagline = document.getElementById('ib-tagline');
+  if (ibTagline) {
+    if (b.tagline && (b.nivel_vizibilitate || 1) >= 2) {
+      ibTagline.textContent = b.tagline;
+      ibTagline.style.display = 'block';
+    } else {
+      ibTagline.style.display = 'none';
+    }
+  }
   document.getElementById('ib-loc').textContent = (b.adresa || b.judet || '');
   renderAmbasadorCredit(b.ambasador_zoda_id);
 
@@ -3348,6 +3362,7 @@ function startDrag(e, id) {
       var azi = new Date().toISOString().slice(0, 10);
       var res = await sb.from('reclame').select('*')
         .eq('activ', true)
+        .contains('pagini', ['balta'])
         .lte('data_start', azi)
         .gte('data_sfarsit', azi)
         .order('sort_order', { ascending: true });
