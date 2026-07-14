@@ -2988,13 +2988,18 @@ async function savePositions() {
   document.getElementById('edit-status-sub').textContent   = '';
 
   try {
-    for (var i = 0; i < ST.length; i++) {
-      var s = ST[i];
-      await sb.from('standuri').update({
-        pozitie:    JSON.stringify({ x: parseFloat(s.x.toFixed(3)), y: parseFloat(s.y.toFixed(3)) }),
-        sort_order: i
-      }).eq('id', s.id);
-    }
+    var standuriPayload = ST.map(function(s, i) {
+      return {
+        id: s.id,
+        pozitie: JSON.stringify({ x: parseFloat(s.x.toFixed(3)), y: parseFloat(s.y.toFixed(3)) }),
+        sort_order: i,
+      };
+    });
+    var { error: rpcError } = await sb.rpc('salveaza_pozitii_standuri', {
+      p_balta_id: BALTA.id,
+      p_standuri: standuriPayload,
+    });
+    if (rpcError) throw rpcError;
     document.getElementById('edit-status-icon').textContent  = '✅';
     document.getElementById('edit-status-title').textContent = 'Poziții salvate!';
     document.getElementById('edit-status-title').style.color = '#a3e635';
