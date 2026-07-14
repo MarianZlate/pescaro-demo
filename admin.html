@@ -2843,7 +2843,7 @@ async function setUserRole(userId, rol) {
 }
 
 async function promoveazaLaAmbasador(userId, username) {
-  const { error } = await sb.from('user_profiles').update({ este_ambasador: true }).eq('id', userId);
+  const { error } = await sb.rpc('seteaza_ambasador', { p_user_id: userId, p_valoare: true });
   if (error) { showToast('Eroare: ' + error.message, true); return; }
   showToast('🎥 ' + username + ' e acum ambasador!');
   try {
@@ -2865,7 +2865,7 @@ async function revocaAmbasador(userId, username) {
   if (prof?.zoda_id) {
     await sb.from('balti').update({ ambasador_zoda_id: null }).eq('ambasador_zoda_id', prof.zoda_id);
   }
-  const { error } = await sb.from('user_profiles').update({ este_ambasador: false }).eq('id', userId);
+  const { error } = await sb.rpc('seteaza_ambasador', { p_user_id: userId, p_valoare: false });
   if (error) { showToast('Eroare: ' + error.message, true); return; }
   showToast('✓ Rol de ambasador revocat — dezlegat de la toate bălțile.');
   try {
