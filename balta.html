@@ -3000,6 +3000,9 @@ async function savePositions() {
       p_standuri: standuriPayload,
     });
     if (rpcError) throw rpcError;
+    // Invalidăm cache-ul local al băltii — altfel un refresh în următoarele 15 minute
+    // ar servi ordinea veche din cache, deși în bază e deja salvată cea nouă.
+    CACHE.clear('balta_' + BALTA.id);
     document.getElementById('edit-status-icon').textContent  = '✅';
     document.getElementById('edit-status-title').textContent = 'Poziții salvate!';
     document.getElementById('edit-status-title').style.color = '#a3e635';
