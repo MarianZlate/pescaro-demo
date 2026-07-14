@@ -1240,7 +1240,7 @@ function renderDropdownRasfoire() {
       <div style="flex:1;">
         <div class="dd-name">${escH(b.nume)}</div>
         <div class="dd-meta">📍 ${escH(b.judet)}${b.adresa ? ' · ' + escH(b.adresa) : ''} · ${b.standuri} standuri</div>
-        ${b.tagline ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px;">${escH(b.tagline)}</div>` : ''}
+        ${b.tagline ? `<div style="font-size:12.5px;font-style:italic;color:${(b.nivel_vizibilitate||1)===3?'#eab308':'#60a5fa'};margin-top:3px;font-weight:600;">✨ ${escH(b.tagline)}</div>` : ''}
       </div>
       <button class="dd-open" onclick="event.stopPropagation();__goToBalta(${b.id})">Deschide →</button>
     </div>`).join('');
@@ -1807,7 +1807,7 @@ function togglePublicBaltiDropdown(e) {
     const list = document.getElementById('public-balti-list');
     const publicBalti = sorteazaBaltiPeNiveluri(BALTI.filter(b => b.vizibilitate === 'public'));
     list.innerHTML = publicBalti.length
-      ? publicBalti.map(b => `<a href="balta.html?id=${b.id}">🎣 ${escH(b.nume)} <span style="color:#4b5563;font-size:11px;">· ${escH(b.judet)}</span>${b.tagline ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px;">${escH(b.tagline)}</div>` : ''}</a>`).join('')
+      ? publicBalti.map(b => `<a href="balta.html?id=${b.id}">🎣 ${escH(b.nume)} <span style="color:#4b5563;font-size:11px;">· ${escH(b.judet)}</span>${b.tagline ? `<div style="font-size:12.5px;font-style:italic;color:${(b.nivel_vizibilitate||1)===3?'#eab308':'#60a5fa'};margin-top:3px;font-weight:600;">✨ ${escH(b.tagline)}</div>` : ''}</a>`).join('')
       : '<div style="padding:14px;color:#4b5563;font-size:12px;">Momentan nicio baltă publică.</div>';
   }
   dd.style.display = willOpen ? 'block' : 'none';
