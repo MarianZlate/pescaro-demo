@@ -545,12 +545,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div id="stand-overlay-backdrop" onclick="closeOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1999;"></div>
 
       <div id="stand-overlay">
+      <button id="ov-edit-btn" onclick="toggleOverlayEdit()" style="display:none;position:absolute;top:8px;right:44px;z-index:10;background:rgba(163,230,53,.15);border:1px solid rgba(163,230,53,.4);color:#a3e635;font-size:11.5px;font-weight:700;padding:5px 9px;border-radius:7px;cursor:pointer;">✏️ Editează</button>
+      <button class="xbtn" onclick="closeOverlay()" style="position:absolute;top:6px;right:6px;z-index:10;background:rgba(10,15,26,.7);border-radius:50%;width:28px;height:28px;">✕</button>
       <div class="ov-hdr">
-        <button id="ov-prev-btn" onclick="navigheazaStand(-1)" title="Standul anterior" style="background:#0a0f1a;border:1px solid #1e293b;color:#94a3b8;font-size:15px;font-weight:700;width:30px;height:30px;border-radius:7px;cursor:pointer;flex-shrink:0;">◀</button>
-        <div class="spnr" id="ov-nr">Stand 1</div>
-        <button id="ov-next-btn" onclick="navigheazaStand(1)" title="Standul următor" style="background:#0a0f1a;border:1px solid #1e293b;color:#94a3b8;font-size:15px;font-weight:700;width:30px;height:30px;border-radius:7px;cursor:pointer;flex-shrink:0;">▶</button>
-        <button id="ov-edit-btn" onclick="toggleOverlayEdit()" style="display:none;background:rgba(163,230,53,.1);border:1px solid rgba(163,230,53,.3);color:#a3e635;font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;margin-right:6px;">✏️ Editează</button>
-        <button class="xbtn" onclick="closeOverlay()">✕</button>
+        <button id="ov-prev-btn" onclick="navigheazaStand(-1)" title="Standul anterior" style="background:#0a0f1a;border:1px solid #1e293b;color:#94a3b8;font-size:12px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;flex-shrink:0;white-space:nowrap;">◀ Anterior</button>
+        <div class="spnr" id="ov-nr" style="flex:1;text-align:center;">Stand 1</div>
+        <button id="ov-next-btn" onclick="navigheazaStand(1)" title="Standul următor" style="background:#0a0f1a;border:1px solid #1e293b;color:#94a3b8;font-size:12px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;flex-shrink:0;white-space:nowrap;">Următor ▶</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
         <div style="padding:10px;border-right:1px solid #1e293b;">
