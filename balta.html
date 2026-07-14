@@ -461,7 +461,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
       <div>
         <div class="ib-name-tagline-wrap">
           <div id="ib-name" style="font-weight:800;font-size:15px;color:#f1f5f9;">—</div>
-          <div id="ib-tagline" style="font-size:12px;color:#a3e635;font-weight:600;display:none;"></div>
+          <div id="ib-tagline" style="font-size:13px;font-style:italic;color:#60a5fa;font-weight:600;display:none;"></div>
         </div>
         <div id="ib-loc" style="font-size:11px;color:#64748b;"></div>
         <div id="ib-ambasador-credit" style="font-size:10.5px;color:#64748b;margin-top:2px;display:none;"></div>
@@ -1321,7 +1321,8 @@ function renderPage(hartaUrl) {
   var ibTagline = document.getElementById('ib-tagline');
   if (ibTagline) {
     if (b.tagline && (b.nivel_vizibilitate || 1) >= 2) {
-      ibTagline.textContent = b.tagline;
+      ibTagline.textContent = '✨ ' + b.tagline;
+      ibTagline.style.color = (b.nivel_vizibilitate || 1) === 3 ? '#eab308' : '#60a5fa';
       ibTagline.style.display = 'block';
     } else {
       ibTagline.style.display = 'none';
