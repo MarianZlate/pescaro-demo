@@ -616,7 +616,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🎬 Videoclip drum de acces</button>
         <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
       </div>
-      <div style="width:100%;font-size:12px;font-weight:700;color:#a3e635;margin-top:6px;white-space:nowrap;overflow-x:auto;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Apasă de două ori pe un stand ca să-i vezi poza și detaliile: <span style="display:inline-block;transform:rotate(180deg);">👆</span></div>
+      <div style="width:100%;font-size:12px;font-weight:700;color:#a3e635;margin-top:6px;white-space:nowrap;overflow-x:auto;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Apasă pe un stand ca să-i vezi poza și detaliile: <span style="display:inline-block;transform:rotate(180deg);">👆</span></div>
       <div id="pills"></div>
     </div><!-- /#pw -->
 
@@ -1831,31 +1831,25 @@ function selStand(id) {
   var overlay = document.getElementById('stand-overlay');
   var overlayOpen = overlay.style.display !== 'none';
 
-  if (selId === id) {
-    // Al doilea sau al treilea tap pe același stand
-    if (!overlayOpen) {
-      openOverlay(id);  // tap 2 — deschide overlay
-    } else {
-      closeOverlay();   // tap 3 — închide overlay, lasă standul selectat
-      selId = id;       // păstrăm selId activ
-      renderPins();
-      updatePills();
-    }
+  if (selId === id && overlayOpen) {
+    // Tap pe standul deja deschis — închide overlay-ul, standul rămâne selectat
+    closeOverlay();
+    selId = id;
+    renderPins();
+    updatePills();
     return;
   }
-  // Tap 1 — selectează standul, nu deschide overlay
-  selId = id;
-  overlay.style.display = 'none';
-  document.getElementById('stand-overlay-backdrop').style.display = 'none';
+
+  // Orice alt tap — selectăm standul ȘI deschidem overlay-ul direct, într-un
+  // singur gest. Nu mai există etapa intermediară "doar selectat, fără overlay" —
+  // un singur tap arată tot, fără dublu-tap neintuitiv.
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
-  renderPins();
-  updatePills();
-  document.querySelectorAll('.li').forEach(function(l) { l.classList.toggle('active', +l.dataset.id === id); });
   var selectedStand = ST.find(function(x) { return x.id === id; });
   showMapYT(selectedStand);
   var mapWrap = document.getElementById('map-wrap');
   if (mapWrap) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  openOverlay(id);
 }
 
 function openOverlay(id) {
