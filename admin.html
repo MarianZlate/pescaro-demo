@@ -3122,12 +3122,12 @@ function buildStandEditCard(s) {
   return `<div class="se-card" id="se-card-${s.id}">
     <div class="se-card-hdr" onclick="if(!event.target.closest('.se-drag-handle'))toggleEditStand(${s.id})">
       <span class="se-drag-handle" title="Trage pentru a reordona" draggable="true" onclick="event.stopPropagation()">⠿</span>
-      <div class="se-card-name">${escHtml(s.zona || 'Stand ' + s.nr)}</div>
+      <div class="se-card-name" id="se-card-name-${s.id}">${escHtml(s.zona || 'Stand ' + s.nr)}</div>
       <span class="se-card-toggle" id="se-arrow-${s.id}">▸</span>
       <button class="se-del-btn" onclick="event.stopPropagation();delEditStand(${s.id})">✕ Șterge</button>
     </div>
     <div class="se-card-body" id="se-body-${s.id}">
-      <div class="fg"><label>ZONĂ / DESCRIERE</label><input type="text" id="se-zona-${s.id}" value="${escHtml(s.zona||'')}" /></div>
+      <div class="fg"><label>ZONĂ / DESCRIERE</label><input type="text" id="se-zona-${s.id}" value="${escHtml(s.zona||'')}" oninput="document.getElementById('se-card-name-${s.id}').textContent = this.value.trim() || 'Stand ${s.nr}';" /></div>
       <div class="fg"><label>ADÂNCIME (m)</label><input type="number" step="0.1" id="se-ad-${s.id}" value="${s.ad||''}" /></div>
       <div class="fg"><label>DISTANȚĂ (m)</label><input type="number" id="se-di-${s.id}" value="${s.di||''}" /></div>
       <div class="fg"><label>LĂȚIME (m)</label><input type="number" id="se-la-${s.id}" value="${s.la||''}" /></div>
