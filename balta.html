@@ -2430,6 +2430,34 @@ function closeOverlay() {
   document.getElementById('stand-overlay-backdrop').style.display = 'none';
 }
 
+// ── SWIPE STÂNGA/DREAPTA PE OVERLAY — navigare rapidă între standuri ─────────
+function navigheazaStand(directie) {
+  if (selId == null || !ST.length) return;
+  var idxCurent = ST.findIndex(function(s) { return s.id === selId; });
+  if (idxCurent === -1) return;
+  var idxNou = idxCurent + directie; // -1 = standul anterior, +1 = standul următor
+  if (idxNou < 0 || idxNou >= ST.length) return; // deja la capăt, nu facem nimic
+  openOverlay(ST[idxNou].id);
+}
+
+(function initSwipeOverlay() {
+  var overlay = document.getElementById('stand-overlay');
+  if (!overlay) return;
+  var touchStartX = 0, touchStartY = 0;
+  overlay.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  overlay.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    // Prag minim de 50px, și trebuie să fie clar orizontal (nu scroll vertical din greșeală)
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0) navigheazaStand(1);  // swipe stânga → standul următor
+    else        navigheazaStand(-1); // swipe dreapta → standul anterior
+  }, { passive: true });
+})();
+
 // ── OVERLAY GENERIC — TARIFE / REGULAMENT ──────────────────────────────────────
 // ── URMĂREȘTE BALTA ──────────────────────────────────────────────────────────
 var URMARESC_BALTA_CURENTA = false;
