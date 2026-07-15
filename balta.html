@@ -641,7 +641,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
     <div id="map-sidebar-left">
     <div id="pw" style="margin:0;">
       <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;">
-        <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#64748b;">🎬 Videoclip drum de acces</button>
+        <button id="pill-drum" onclick="showDrumAcces()" style="border:1.5px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer;font-size:12px;font-weight:700;background:#0a0f1a;color:#cbd5e1;">🎬 Videoclip drum de acces</button>
         <button id="pill-all" onclick="showAll()">🗺️ Toate standurile</button>
       </div>
       <div style="width:100%;font-size:12px;font-weight:700;color:#a3e635;margin-top:6px;white-space:nowrap;overflow-x:auto;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Apasă pe un stand ca să-i vezi poza și detaliile: <span style="display:inline-block;transform:rotate(180deg);">👆</span></div>
@@ -2655,7 +2655,7 @@ function deselectStand() {
   renderPins(); updatePills();
   document.querySelectorAll('.li').forEach(function(l) { l.classList.remove('active'); });
   var db = document.getElementById('pill-drum');
-  if (db) { db.style.borderColor = '#334155'; db.style.background = '#0a0f1a'; db.style.color = '#64748b'; }
+  if (db) { db.style.borderColor = '#334155'; db.style.background = '#0a0f1a'; db.style.color = '#cbd5e1'; }
   document.getElementById('map-yt-iframe').src = '';
   document.getElementById('map-yt-bar').style.display = 'none';
   document.getElementById('spr').style.display = 'block';
@@ -2683,7 +2683,7 @@ function showDrumAcces() {
   document.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.li').forEach(function(l) { l.classList.remove('active'); });
   var pb = document.getElementById('pill-all');
-  pb.style.borderColor = '#334155'; pb.style.background = '#0a0f1a'; pb.style.color = '#64748b';
+  pb.style.borderColor = '#334155'; pb.style.background = '#0a0f1a'; pb.style.color = '#cbd5e1';
   var db = document.getElementById('pill-drum');
   db.style.borderColor = '#f59e0b'; db.style.background = '#1c1500'; db.style.color = '#f59e0b';
 
@@ -2699,7 +2699,7 @@ function updatePills() {
   var ab = document.getElementById('pill-all');
   ab.style.borderColor = selId ? '#334155' : '#a3e635';
   ab.style.background = selId ? '#0a0f1a' : '#1e3a2e';
-  ab.style.color = selId ? '#4b5563' : '#a3e635';
+  ab.style.color = selId ? '#cbd5e1' : '#a3e635';
 }
 
 // ─── YOUTUBE ───────────────────────────────────────────────────────────────
