@@ -1880,11 +1880,11 @@ function selStand(id) {
 
   // Orice alt tap — selectăm standul ȘI deschidem overlay-ul direct, într-un
   // singur gest. Nu mai există etapa intermediară "doar selectat, fără overlay" —
-  // un singur tap arată tot, fără dublu-tap neintuitiv.
+  // un singur tap arată tot, fără dublu-tap neintuitiv. Fără auto-scroll spre
+  // hartă — videoclipul e acum în overlay, nu mai trebuie dus jos spre hartă
+  // pentru nimic, doar acoperea butoanele de sus (WhatsApp etc.) degeaba.
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
-  var mapWrap = document.getElementById('map-wrap');
-  if (mapWrap) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
   openOverlay(id);
 }
 
