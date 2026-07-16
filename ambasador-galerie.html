@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Zoda — Galerie ambasador</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:#0a0f1a;}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px;}
+
+/* HEADER */
+#hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);display:flex;align-items:center;gap:12px;padding:0 14px;height:52px;max-width:900px;margin:0 auto;}
+.logo-img{height:28px;width:auto;display:block;}
+.back-pill{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;color:#94a3b8;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;margin-left:auto;padding:5px 12px;font-size:12px;}
+.back-pill:hover{border-color:#a3e635;color:#a3e635;}
+
+#page{max-width:900px;margin:0 auto;padding:24px 14px 60px;}
+
+/* PROFIL CARD */
+#profil-card{background:#111827;border:1px solid #1e293b;border-radius:18px;padding:22px 20px;margin-bottom:24px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;}
+#profil-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(163,230,53,.05) 0%,transparent 60%);pointer-events:none;}
+#profil-avatar{width:60px;height:60px;border-radius:50%;background:#1a6b3a;border:2px solid #166534;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#a3e635;flex-shrink:0;overflow:hidden;position:relative;z-index:1;}
+#profil-avatar img{width:100%;height:100%;object-fit:cover;}
+#profil-nume{font-size:18px;font-weight:800;color:#f1f5f9;position:relative;z-index:1;}
+#profil-sub{font-size:12.5px;color:#a3e635;font-weight:600;margin-top:3px;position:relative;z-index:1;}
+
+/* SECȚIUNI PE BALTĂ */
+.balta-sectiune{margin-bottom:28px;}
+.balta-titlu{font-size:15px;font-weight:700;margin-bottom:10px;color:#f1f5f9;}
+.balta-titlu a{color:#a3e635;text-decoration:none;}
+.balta-titlu a:hover{text-decoration:underline;}
+
+.poze-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.poza-thumb{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;cursor:pointer;background:#111827;border:1px solid #1e293b;}
+.poza-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s;}
+.poza-thumb:hover img{transform:scale(1.05);}
+.poza-stand-label{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);color:#fff;font-size:10.5px;font-weight:700;padding:14px 7px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.empty-state{text-align:center;padding:60px 20px;color:#64748b;font-size:13px;}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:#0a0f1a;display:flex;align-items:center;justify-content:center;z-index:9000;flex-direction:column;gap:16px;}
+.spinner{width:40px;height:40px;border:3px solid #1e293b;border-top-color:#a3e635;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* LIGHTBOX */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+#lightbox.open{display:flex;}
+#lightbox img{max-width:100%;max-height:90vh;border-radius:8px;}
+#lightbox-close{position:absolute;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;background:none;border:none;line-height:1;}
+
+@media(min-width:769px){
+  .poze-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen"><div class="spinner"></div></div>
+
+<div id="hdr">
+  <a href="index.html"><img src="zoda-logo.png" alt="Zoda" class="logo-img"/></a>
+  <a href="#" onclick="history.back();return false;" class="back-pill">← Înapoi</a>
+</div>
+
+<div id="page">
+  <div id="profil-card">
+    <div id="profil-avatar">--</div>
+    <div>
+      <div id="profil-nume">Se încarcă...</div>
+      <div id="profil-sub">🎥 Galerie ambasador — conținut documentat pe Zoda</div>
+    </div>
+  </div>
+  <div id="continut"><div class="empty-state">Se încarcă...</div></div>
+</div>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src=""/>
+</div>
+
+<script>
+const SUPA_URL = 'https://emnesflrzptqfttlzusw.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtbmVzZmxyenB0cWZ0dGx6dXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NTc5NDUsImV4cCI6MjA5NzUzMzk0NX0.LoR6peujcdm1SLZ8SUSdtSH8wDa_ptCUEYT3qtAPZXk';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'zoda-auth' }
+});
+
+function escH(str) {
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function openLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+async function boot() {
+  const continutEl = document.getElementById('continut');
+  const zodaId = new URLSearchParams(location.search).get('id');
+
+  if (!zodaId) {
+    document.getElementById('loading-screen').style.display = 'none';
+    continutEl.innerHTML = '<div class="empty-state">Lipsă parametru ?id= în URL.</div>';
+    return;
+  }
+
+  const { data: prof } = await sb.from('user_profiles_public').select('username, avatar_url').eq('zoda_id', zodaId).single();
+  const username = prof?.username || zodaId;
+  document.getElementById('profil-nume').textContent = username;
+  document.getElementById('profil-avatar').textContent = username.slice(0, 2).toUpperCase();
+  if (prof?.avatar_url) {
+    document.getElementById('profil-avatar').innerHTML = '<img src="' + escH(prof.avatar_url) + '"/>';
+  }
+  document.title = username + ' — Galerie ambasador — Zoda';
+
+  const { data: poze, error } = await sb.from('poze')
+    .select('id, url, balta_id, stand_id, balti(nume), standuri(nume)')
+    .eq('ambasador_zoda_id', zodaId)
+    .order('id', { ascending: false });
+
+  document.getElementById('loading-screen').style.display = 'none';
+
+  if (error) {
+    continutEl.innerHTML = '<div class="empty-state">Eroare la încărcare: ' + escH(error.message) + '</div>';
+    return;
+  }
+  if (!poze || !poze.length) {
+    continutEl.innerHTML = '<div class="empty-state">📷 Niciun conținut documentat încă de acest ambasador.</div>';
+    return;
+  }
+
+  // Grupăm pe baltă
+  const grupuri = {};
+  poze.forEach(function(p) {
+    const baltaId = p.balta_id;
+    if (!grupuri[baltaId]) grupuri[baltaId] = { nume: p.balti?.nume || 'Baltă', poze: [] };
+    grupuri[baltaId].poze.push(p);
+  });
+
+  continutEl.innerHTML = Object.entries(grupuri).map(function(entry) {
+    const baltaId = entry[0], g = entry[1];
+    return '' +
+      '<div class="balta-sectiune">' +
+        '<div class="balta-titlu">🏕️ <a href="balta.html?id=' + baltaId + '">' + escH(g.nume) + '</a> ' +
+          '<span style="color:#64748b;font-weight:500;font-size:12px;">(' + g.poze.length + ' ' + (g.poze.length === 1 ? 'poză' : 'poze') + ')</span>' +
+        '</div>' +
+        '<div class="poze-grid">' +
+          g.poze.map(function(p) {
+            return '' +
+              '<div class="poza-thumb" onclick="openLightbox(\'' + escH(p.url) + '\')">' +
+                '<img src="' + escH(p.url) + '" loading="lazy"/>' +
+                (p.standuri?.nume ? '<div class="poza-stand-label">' + escH(p.standuri.nume) + '</div>' : '') +
+              '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }).join('');
+}
+
+boot();
+</script>
+</body>
+</html>
