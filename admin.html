@@ -1816,7 +1816,7 @@ async function markVideoDeleted(capturaId) {
 // Bălțile unui ambasador — una sub cealaltă, cu extend dacă sunt mai mult de 3
 function randeazaBaltiExtensibil(balti, idPrefix) {
   if (!balti.length) return '<span style="color:#4b5563;">niciuna momentan</span>';
-  const randuri = balti.map(escHtml);
+  const randuri = balti.map(b => `<a href="balta.html?id=${encodeURIComponent(b.id)}&edit=1" target="_blank" style="color:#94a3b8;text-decoration:none;border-bottom:1px dotted #4b5563;">${escHtml(b.nume)}</a>`);
   if (randuri.length <= 3) return randuri.join('<br/>');
   const vizibile = randuri.slice(0, 3).join('<br/>');
   const ascunse = randuri.slice(3).join('<br/>');
@@ -1853,12 +1853,12 @@ async function loadTotiAmbasadorii() {
 
   const zodaIds = ambasadori.map(a => a.zoda_id).filter(Boolean);
   const { data: baltiToate } = zodaIds.length
-    ? await sb.from('balti').select('nume, ambasador_zoda_id').in('ambasador_zoda_id', zodaIds)
+    ? await sb.from('balti').select('id, nume, ambasador_zoda_id').in('ambasador_zoda_id', zodaIds)
     : { data: [] };
   const baltiPerZodaId = {};
   (baltiToate || []).forEach(b => {
     if (!baltiPerZodaId[b.ambasador_zoda_id]) baltiPerZodaId[b.ambasador_zoda_id] = [];
-    baltiPerZodaId[b.ambasador_zoda_id].push(b.nume);
+    baltiPerZodaId[b.ambasador_zoda_id].push({ id: b.id, nume: b.nume });
   });
 
   tbody.innerHTML = ambasadori.map(a => {
@@ -1978,7 +1978,7 @@ async function loadAmbasadori() {
     return `
     <tr>
       <td style="font-size:12px;">${numeAmbasador(b.ambasador_zoda_id)}</td>
-      <td>${escHtml(b.nume)}</td>
+      <td><a href="balta.html?id=${encodeURIComponent(b.id)}&edit=1" target="_blank" style="color:#f1f5f9;text-decoration:none;border-bottom:1px dotted #4b5563;">${escHtml(b.nume)}</a></td>
       <td>
         <div style="font-size:11.5px;color:${culoare};font-weight:700;">${cuPoza}/${total} standuri</div>
         <div style="background:#1e293b;border-radius:4px;height:5px;margin-top:4px;width:90px;overflow:hidden;"><div style="background:${culoare};height:100%;width:${procent}%;"></div></div>
