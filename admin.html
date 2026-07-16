@@ -1866,7 +1866,7 @@ async function loadTotiAmbasadorii() {
     const numeSigur = escHtml(a.username || a.zoda_id || '').replace(/'/g,"\\'");
     const idPrefix = 'balti-amb-' + (a.zoda_id || a.id).replace(/[^a-zA-Z0-9-]/g, '');
     return `<tr>
-      <td style="font-size:12.5px;">${escHtml(a.username || '—')} <span style="font-family:monospace;color:#4b5563;font-size:11px;">(${escHtml(a.zoda_id||'—')})</span></td>
+      <td style="font-size:12.5px;">${a.zoda_id ? `<a href="ambasador-galerie.html?id=${encodeURIComponent(a.zoda_id)}" target="_blank" style="color:#f1f5f9;text-decoration:none;border-bottom:1px dotted #4b5563;">${escHtml(a.username || '—')}</a>` : escHtml(a.username || '—')} <span style="font-family:monospace;color:#4b5563;font-size:11px;">(${escHtml(a.zoda_id||'—')})</span></td>
       <td style="font-size:12px;">${randeazaBaltiExtensibil(balti, idPrefix)}</td>
       <td>
         <div class="action-btns">
@@ -1902,7 +1902,9 @@ async function loadAmbasadori() {
     const { data: profiluri } = await sb.from('user_profiles_public').select('zoda_id, username').in('zoda_id', Array.from(toateZodaId));
     (profiluri || []).forEach(p => { numeMap[p.zoda_id] = p.username; });
   }
-  const numeAmbasador = zodaId => numeMap[zodaId] ? `${escHtml(numeMap[zodaId])} <span style="font-family:monospace;color:#4b5563;">(${escHtml(zodaId)})</span>` : `<span style="font-family:monospace;">${escHtml(zodaId)}</span>`;
+  const numeAmbasador = zodaId => numeMap[zodaId]
+    ? `<a href="ambasador-galerie.html?id=${encodeURIComponent(zodaId)}" target="_blank" style="color:#f1f5f9;text-decoration:none;border-bottom:1px dotted #4b5563;">${escHtml(numeMap[zodaId])}</a> <span style="font-family:monospace;color:#4b5563;">(${escHtml(zodaId)})</span>`
+    : `<a href="ambasador-galerie.html?id=${encodeURIComponent(zodaId)}" target="_blank" style="font-family:monospace;color:#94a3b8;text-decoration:none;border-bottom:1px dotted #4b5563;">${escHtml(zodaId)}</a>`;
 
   if (subErr) {
     listEl.innerHTML = `<div class="empty-state">Eroare la încărcare: ${escHtml(subErr.message)}</div>`;
