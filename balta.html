@@ -1985,6 +1985,8 @@ function openOverlay(id) {
   document.getElementById('stand-overlay-backdrop').style.display = 'block';
   document.getElementById('spr').style.display = 'none';
   document.getElementById('legend-card').style.display = 'none';
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
   requestAnimationFrame(pozitioneazaTopbarOverlay);
 }
 
@@ -2464,6 +2466,8 @@ function closeOverlay() {
   document.getElementById('stand-overlay').style.display = 'none';
   document.getElementById('stand-overlay-backdrop').style.display = 'none';
   document.getElementById('stand-overlay-topbar').style.display = 'none';
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
 }
 
 // Poziționează bara flotantă (editează + închide) EXACT deasupra colțului din
@@ -2477,7 +2481,9 @@ function pozitioneazaTopbarOverlay() {
   var rect = overlay.getBoundingClientRect();
   topbar.style.display = 'flex';
   var topbarH = topbar.offsetHeight || 34;
-  topbar.style.top   = Math.max(6, rect.top - topbarH - 6) + 'px';
+  var hdr = document.getElementById('hdr');
+  var hdrH = (hdr ? hdr.offsetHeight : 0) + 8; // niciodată sub header, indiferent cât de sus ar calcula altfel
+  topbar.style.top   = Math.max(hdrH, rect.top - topbarH - 6) + 'px';
   topbar.style.left  = rect.left + 'px';
   topbar.style.width = rect.width + 'px';
 }
