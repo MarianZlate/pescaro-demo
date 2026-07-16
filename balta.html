@@ -991,7 +991,7 @@ async function renderAmbasadorCredit(ambasadorZodaId) {
   try {
     var { data } = await sb.from('user_profiles_public').select('username').eq('zoda_id', ambasadorZodaId).single();
     if (data?.username) {
-      el.innerHTML = '🎥 Conținut media: <a href="ambasador-galerie.html?id=' + encodeURIComponent(ambasadorZodaId) + '" style="color:inherit;text-decoration:underline;">' + escH(data.username) + '</a>';
+      el.innerHTML = '🎥 Conținut media: <a href="ambasador-galerie.html?id=' + encodeURIComponent(ambasadorZodaId) + '" style="color:#a3e635;font-weight:700;font-size:12px;text-decoration:underline;">' + escH(data.username) + '</a>';
       el.style.display = 'block';
     } else {
       el.style.display = 'none';
