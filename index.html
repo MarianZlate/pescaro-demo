@@ -578,7 +578,7 @@ nav{display:flex;align-items:center;gap:6px;}
     <div style="position:relative;padding:0 16px 14px;">
       <input type="text" id="cauta-pescari-input" oninput="cautaPescariUrmarire(this.value)" onfocus="onFocusCautaPescari()" placeholder="Nume sau ZODA-ID..."
         style="width:100%;background:#0a0f1a;border:1px solid #1e293b;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;"/>
-      <div id="cauta-pescari-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #1e293b;border-radius:10px;max-height:255px;overflow-y:auto;z-index:900;box-shadow:0 8px 24px rgba(0,0,0,.5);"></div>
+      <div id="cauta-pescari-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;max-height:255px;overflow-y:auto;z-index:900;box-shadow:0 8px 24px rgba(0,0,0,.5);"></div>
     </div>
   </div>
 
@@ -3502,13 +3502,7 @@ function ascundeCautarePescari() {
 }
 
 function pozitioneazaDropdownPescari() {
-  const dd = document.getElementById('cauta-pescari-dropdown');
-  var inputEl = document.getElementById('cauta-pescari-input');
-  var r = inputEl.getBoundingClientRect();
-  dd.style.top = (r.bottom + 4) + 'px';
-  dd.style.left = r.left + 'px';
-  dd.style.width = r.width + 'px';
-  return dd;
+  return document.getElementById('cauta-pescari-dropdown');
 }
 
 // Sortează un set de rezultate pescari după cei mai urmăriți primii, restul
