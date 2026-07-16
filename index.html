@@ -3520,11 +3520,13 @@ async function sorteazaSiRandeazaPescari(dd, rezultate) {
   }
 
   const idsRezultate = rezultate.map(u => u.zoda_id);
-  const { data: urmaririToate } = await sb.from('urmariri_pescari')
-    .select('pescar_zoda_id')
-    .in('pescar_zoda_id', idsRezultate);
+  const { data: urmaririToate, error: errCount } = await sb.rpc('numara_urmaritori', { p_zoda_ids: idsRezultate });
   const nrUrmaritori = {};
-  (urmaririToate || []).forEach(u => { nrUrmaritori[u.pescar_zoda_id] = (nrUrmaritori[u.pescar_zoda_id] || 0) + 1; });
+  if (errCount) {
+    console.warn('numara_urmaritori RPC lipsă sau eșuat — sortare doar alfabetică:', errCount.message);
+  } else {
+    (urmaririToate || []).forEach(u => { nrUrmaritori[u.pescar_zoda_id] = u.nr_urmaritori || 0; });
+  }
 
   rezultate.sort((a, b) => {
     const diff = (nrUrmaritori[b.zoda_id] || 0) - (nrUrmaritori[a.zoda_id] || 0);
