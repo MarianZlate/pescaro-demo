@@ -89,6 +89,10 @@ nav{display:flex;align-items:center;gap:6px;}
 #public-balti-dropdown a:last-child{border-bottom:none;}
 #public-balti-dropdown a:hover{background:#1e293b;color:#a3e635;}
 #main{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr;align-items:start;padding:0 8px 40px;gap:10px;}
+/* Sub breakpoint-ul desktop, #main e o singură coloană — #sidebar (care conține
+   "Caută pescari") urcă înaintea #saptamanal-wrap (Top capturi/stele), ca
+   widgetul de căutare pescari să fie primul lucru sub hartă pe mobil. */
+@media(max-width:768px){ #sidebar{order:-1;} }
 #map-wrap{position:relative;border:1px solid #1e293b;overflow:hidden;border-radius:10px;margin:0 10px;}
 #map{width:100%;height:300px;}
 .leaflet-control{z-index:400!important;}
