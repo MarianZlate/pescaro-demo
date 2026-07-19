@@ -28,22 +28,22 @@ html,body{background-color:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-u
 .logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;}
 .logo-img{height:32px;width:auto;display:block;}
 .logo-icon{font-size:22px;}
-.logo-text{font-size:18px;font-weight:900;color:#a3e635;letter-spacing:-.5px;}
+.logo-text{font-size:18px;font-weight:900;color:#38bdf8;letter-spacing:-.5px;}
 nav{display:flex;align-items:center;gap:6px;}
 .nav-btn{background:transparent;border:none;color:#94a3b8;cursor:pointer;border-radius:8px;transition:color .2s;font-size:12px;padding:6px 8px;}
 .nav-btn:hover{color:#f1f5f9;}
-.nav-primary{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;cursor:pointer;border-radius:8px;font-size:12px;padding:6px 10px;}
-.nav-primary:hover{background:#1e7a42;}
+.nav-primary{background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;cursor:pointer;border-radius:8px;font-size:12px;padding:6px 10px;}
+.nav-primary:hover{background:#0891b2;}
 /* Mobil: ascunde textul din butoane, afișează doar iconița */
 .nav-label{display:inline;}
 .nav-user{display:flex;align-items:center;gap:8px;}
-.nav-avatar{width:32px;height:32px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#a3e635;cursor:pointer;border:2px solid #1a3020;}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:#0c3a4d;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#38bdf8;cursor:pointer;border:2px solid #0e7490;}
 .nav-user-name{display:none;font-size:13px;color:#94a3b8;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .nav-logout{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:12px;padding:5px 10px;border-radius:7px;cursor:pointer;}
 .nav-logout:hover{border-color:#ef4444;color:#ef4444;}
 .nav-admin-badge{font-size:10px;background:#f59e0b;color:#000;padding:2px 7px;border-radius:4px;font-weight:800;}
 .nav-bell{position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#111827;border:1px solid #1e293b;border-radius:8px;cursor:pointer;color:#94a3b8;font-size:16px;transition:border-color .2s,color .2s;flex-shrink:0;}
-.nav-bell:hover{border-color:#a3e635;color:#a3e635;}
+.nav-bell:hover{border-color:#38bdf8;color:#38bdf8;}
 .nav-bell-badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;background:#ef4444;border-radius:9px;font-size:10px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid #0a0f1a;line-height:1;pointer-events:none;}
 /* Panel notificări */
 #notif-panel{position:fixed;top:56px;right:12px;width:340px;max-height:480px;background:#111827;border:1px solid #1e293b;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:2000;display:none;flex-direction:column;overflow:hidden;}
@@ -51,13 +51,13 @@ nav{display:flex;align-items:center;gap:6px;}
 .notif-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1e293b;flex-shrink:0;}
 .notif-hdr-title{font-size:13px;font-weight:800;color:#f1f5f9;}
 .notif-mark-all{font-size:11px;color:#4b5563;cursor:pointer;transition:color .2s;}
-.notif-mark-all:hover{color:#a3e635;}
+.notif-mark-all:hover{color:#38bdf8;}
 .notif-list{overflow-y:auto;flex:1;}
 .notif-item{padding:12px 16px;border-bottom:1px solid #0f172a;cursor:pointer;transition:background .15s;}
 .notif-item:hover{background:#0f172a;}
-.notif-item.unread{background:#0d1f12;}
-.notif-item.unread:hover{background:#122918;}
-.notif-dot{width:7px;height:7px;border-radius:50%;background:#a3e635;flex-shrink:0;margin-top:4px;}
+.notif-item.unread{background:#071c26;}
+.notif-item.unread:hover{background:#0c2a38;}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:#38bdf8;flex-shrink:0;margin-top:4px;}
 .notif-msg{font-size:12px;color:#cbd5e1;line-height:1.5;flex:1;}
 .notif-time{font-size:10px;color:#4b5563;margin-top:3px;}
 .notif-empty{padding:32px 16px;text-align:center;color:#4b5563;font-size:13px;}
@@ -67,7 +67,7 @@ nav{display:flex;align-items:center;gap:6px;}
 .hero-sub:last-of-type{margin-bottom:22px;}
 #search-wrap{position:relative;max-width:580px;margin:0 auto 10px;padding:0 14px;z-index:1100;}
 #search-box{display:flex;align-items:center;gap:10px;background:#111827;border:2px solid #1e293b;border-radius:14px;padding:13px 18px;transition:border-color .2s;}
-#search-box:focus-within{border-color:#1a6b3a;}
+#search-box:focus-within{border-color:#0c3a4d;}
 #search-input{flex:1;background:transparent;border:none;outline:none;color:#f1f5f9;font-size:14px;}
 #search-input::placeholder{color:#4b5563;}
 #clear-btn{background:transparent;border:none;color:#4b5563;cursor:pointer;font-size:18px;line-height:1;display:none;}
@@ -77,19 +77,19 @@ nav{display:flex;align-items:center;gap:6px;}
 .dd-item:hover{background:#1e293b;}
 .dd-name{font-weight:700;font-size:14px;color:#f1f5f9;}
 .dd-meta{font-size:11px;color:#64748b;margin-top:2px;}
-.dd-open{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.dd-open{background:#0c3a4d;border:none;color:#38bdf8;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 #stats-bar{display:block;margin-bottom:10px;padding:0 14px;}
 .stats-inner{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative;}
 .stat-chip{background:#111827;border:1px solid #1e293b;border-radius:20px;color:#64748b;text-align:center;padding:4px 10px;font-size:11px;white-space:nowrap;}
 .stat-chip strong{color:#f1f5f9;font-size:14px;}
 .stat-chip-clickable{cursor:pointer;user-select:none;position:relative;z-index:1000;transition:border-color .15s;}
-.stat-chip-clickable:hover{border-color:#a3e635;}
-.stat-chip-clickable strong{color:#a3e635;}
+.stat-chip-clickable:hover{border-color:#38bdf8;}
+.stat-chip-clickable strong{color:#38bdf8;}
 #public-balti-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#111827;border:1px solid #1e293b;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:900;min-width:260px;max-width:320px;max-height:320px;overflow-y:auto;text-align:left;}
 #public-balti-dropdown .pbd-hdr{padding:12px 14px;border-bottom:1px solid #1e293b;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.04em;}
 #public-balti-dropdown a{display:block;padding:9px 14px;font-size:13px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #0f172a;}
 #public-balti-dropdown a:last-child{border-bottom:none;}
-#public-balti-dropdown a:hover{background:#1e293b;color:#a3e635;}
+#public-balti-dropdown a:hover{background:#1e293b;color:#38bdf8;}
 #main{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr;align-items:start;padding:0 8px 40px;gap:10px;}
 #map-wrap{position:relative;border:1px solid #1e293b;overflow:hidden;border-radius:10px;margin:0 10px;}
 #map{width:100%;height:300px;}
@@ -99,12 +99,12 @@ nav{display:flex;align-items:center;gap:6px;}
 .leaflet-popup-content{color:#f1f5f9;margin:12px 14px;}
 .leaflet-popup-tip{background:#111827;}
 .leaflet-popup-close-button{color:#4b5563!important;font-size:18px!important;top:6px!important;right:8px!important;}
-.pop-name{font-size:15px;font-weight:800;color:#a3e635;margin-bottom:3px;}
+.pop-name{font-size:15px;font-weight:800;color:#38bdf8;margin-bottom:3px;}
 .pop-meta{font-size:11px;color:#64748b;margin-bottom:10px;}
 .pop-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
 .pop-tag{background:#0a0f1a;border-radius:5px;padding:3px 8px;font-size:10px;color:#94a3b8;}
-.pop-btn{width:100%;background:#166534;border:none;color:#a3e635;font-weight:700;font-size:12px;padding:8px;border-radius:7px;cursor:pointer;}
-.pop-btn:hover{background:#1a7a40;}
+.pop-btn{width:100%;background:#0e7490;border:none;color:#38bdf8;font-weight:700;font-size:12px;padding:8px;border-radius:7px;cursor:pointer;}
+.pop-btn:hover{background:#0e7490;}
 #map-legend{position:absolute;bottom:14px;left:14px;background:rgba(10,15,26,.85);border:1px solid #1e293b;border-radius:8px;padding:8px 12px;font-size:11px;color:#64748b;z-index:10;pointer-events:none;}
 #map-zoom-hint{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,15,26,.92);border:1px solid #334155;border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;color:#e2e8f0;z-index:850;pointer-events:none;text-align:center;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.5);}
 /* Overlay scroll-block pe mobil */
@@ -116,14 +116,14 @@ nav{display:flex;align-items:center;gap:6px;}
 .balta-tooltip::before{border-top-color:#1e293b!important;}
 
 /* GUEST TOAST */
-#guest-toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:4050;background:#111827;border:1px solid #1a6b3a;border-radius:14px;padding:14px 18px 14px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:bottom .2s,transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;max-width:calc(100vw - 32px);width:max-content;opacity:0;}
+#guest-toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:4050;background:#111827;border:1px solid #0c3a4d;border-radius:14px;padding:14px 18px 14px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:bottom .2s,transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;max-width:calc(100vw - 32px);width:max-content;opacity:0;}
 #guest-toast.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0);}
 .gt-icon{font-size:22px;flex-shrink:0;}
 .gt-text{flex:1;min-width:0;}
 .gt-title{font-size:13px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
 .gt-sub{font-size:11px;color:#64748b;line-height:1.4;}
-.gt-btn{background:#1a6b3a;border:none;color:#a3e635;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s;}
-.gt-btn:hover{background:#1e7a42;}
+.gt-btn{background:#0c3a4d;border:none;color:#38bdf8;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s;}
+.gt-btn:hover{background:#0891b2;}
 .gt-close{background:transparent;border:none;color:#334155;font-size:18px;cursor:pointer;line-height:1;padding:0 0 0 4px;flex-shrink:0;transition:color .2s;}
 .gt-close:hover{color:#94a3b8;}
 /* PESCAR GUEST MODAL */
@@ -133,8 +133,8 @@ nav{display:flex;align-items:center;gap:6px;}
 .pgm-icon{font-size:40px;margin-bottom:12px;}
 .pgm-title{font-size:17px;font-weight:900;color:#f1f5f9;margin-bottom:8px;}
 .pgm-sub{font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;}
-.pgm-btn{width:100%;background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;transition:background .2s;margin-bottom:10px;}
-.pgm-btn:hover{background:#1e7a42;}
+.pgm-btn{width:100%;background:#0c3a4d;border:none;color:#38bdf8;font-size:14px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;transition:background .2s;margin-bottom:10px;}
+.pgm-btn:hover{background:#0891b2;}
 .pgm-close{background:transparent;border:none;color:#4b5563;font-size:13px;cursor:pointer;transition:color .2s;}
 .pgm-close:hover{color:#94a3b8;}
 #sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;}
@@ -155,19 +155,19 @@ nav{display:flex;align-items:center;gap:6px;}
 .hof-count{font-size:13px;color:#f59e0b;font-weight:800;}
 .hof-star-legend{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
 .hof-star-legend-label{font-size:9px;color:#4b5563;font-weight:600;letter-spacing:.04em;white-space:nowrap;}
-.see-all:hover{color:#a3e635;}
+.see-all:hover{color:#38bdf8;}
 .balti-card{background:#111827;border:1px solid #1e293b;border-radius:14px;overflow:hidden;}
 #saptamanal-wrap{display:grid;grid-template-columns:1fr;gap:10px;margin:0 10px;}
 .balti-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding:10px 12px;}
 .balti-title{font-weight:800;color:#e2e8f0;font-size:12px;}
-.balti-count{background:#1a3020;color:#a3e635;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.balti-count{background:#0c3a4d;color:#38bdf8;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
 .balta-row{display:flex;align-items:center;border-bottom:1px solid #0f172a;cursor:pointer;transition:background .15s;gap:7px;padding:8px 10px;}
 .balta-row:last-child{border-bottom:none;}
 .balta-row:hover{background:#1e293b;}
-.balta-emoji{background:#0d2010;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px;font-size:14px;}
+.balta-emoji{background:#071c26;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px;font-size:14px;}
 .balta-name{font-weight:700;color:#f1f5f9;font-size:11px;}
 .balta-meta{color:#64748b;margin-top:2px;font-size:9px;}
-.balta-price{font-size:11px;font-weight:700;color:#a3e635;margin-left:auto;flex-shrink:0;}
+.balta-price{font-size:11px;font-weight:700;color:#38bdf8;margin-left:auto;flex-shrink:0;}
 .balta-arrow{color:#334155;font-size:16px;margin-left:4px;}
 #hof-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;}
 #hof-modal.open{display:flex;}
@@ -180,8 +180,8 @@ nav{display:flex;align-items:center;gap:6px;}
 .judet-opt{padding:9px 14px;cursor:pointer;font-size:13px;color:#f1f5f9;display:flex;align-items:center;gap:8px;border-bottom:1px solid #0f172a;transition:background .1s;}
 .judet-opt:last-child{border-bottom:none;}
 .judet-opt:hover,.judet-opt.focused{background:#1e293b;}
-.judet-opt.match-first{background:#0d1f12;}
-.judet-opt .judet-match{color:#a3e635;font-weight:800;}
+.judet-opt.match-first{background:#071c26;}
+.judet-opt .judet-match{color:#38bdf8;font-weight:800;}
 #auth-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:5000;backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;}
 #auth-modal.open{display:flex;}
 .auth-inner{background:#0a0f1a;border:1px solid #1e293b;width:100%;position:relative;max-width:100%;border-radius:16px 16px 0 0;padding:24px 18px;margin-top:auto;}
@@ -191,23 +191,23 @@ nav{display:flex;align-items:center;gap:6px;}
 .auth-sub{text-align:center;font-size:12px;color:#4b5563;margin-bottom:24px;}
 .auth-tabs{display:flex;background:#111827;border-radius:10px;padding:4px;margin-bottom:20px;}
 .auth-tab{flex:1;background:transparent;border:none;color:#4b5563;font-size:13px;font-weight:600;padding:8px;border-radius:7px;cursor:pointer;transition:all .2s;}
-.auth-tab.active{background:#1a6b3a;color:#a3e635;}
+.auth-tab.active{background:#0c3a4d;color:#38bdf8;}
 .auth-fg{margin-bottom:14px;}
 .auth-fg label{display:block;font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:5px;}
 .auth-fg input{width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;}
-.auth-fg input:focus{border-color:#1a6b3a;}
-.auth-btn{width:100%;background:#1a6b3a;border:none;color:#a3e635;font-size:14px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;margin-top:6px;transition:background .2s;}
-.auth-btn:hover{background:#1e7a42;}
+.auth-fg input:focus{border-color:#0c3a4d;}
+.auth-btn{width:100%;background:#0c3a4d;border:none;color:#38bdf8;font-size:14px;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;margin-top:6px;transition:background .2s;}
+.auth-btn:hover{background:#0891b2;}
 .auth-btn:disabled{opacity:.5;cursor:not-allowed;}
 .auth-err{background:#3b0f0f;border:1px solid #ef4444;border-radius:8px;padding:9px 12px;font-size:12px;color:#fca5a5;margin-bottom:12px;display:none;}
-.auth-ok{background:#0d1f12;border:1px solid #1a6b3a;border-radius:8px;padding:9px 12px;font-size:12px;color:#a3e635;margin-bottom:12px;display:none;}
+.auth-ok{background:#071c26;border:1px solid #0c3a4d;border-radius:8px;padding:9px 12px;font-size:12px;color:#38bdf8;margin-bottom:12px;display:none;}
 .auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:#334155;font-size:11px;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#1e293b;}
 .auth-google{width:100%;background:#111827;border:1.5px solid #1e293b;color:#f1f5f9;font-size:13px;font-weight:600;padding:11px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .2s;-webkit-tap-highlight-color:transparent;}
 .auth-google:hover{border-color:#334155;}
 .auth-google svg{pointer-events:none;flex-shrink:0;}
 .auth-remember{display:flex;align-items:center;gap:8px;margin:10px 0 14px 0;}
-.auth-remember input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#1a6b3a;flex-shrink:0;}
+.auth-remember input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#0c3a4d;flex-shrink:0;}
 .auth-remember label{font-size:12px;color:#64748b;cursor:pointer;user-select:none;}
 #edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1700;backdrop-filter:blur(6px);overflow-y:auto;align-items:flex-end;justify-content:center;padding:0;}
 #edit-modal.open{display:flex;}
@@ -215,8 +215,8 @@ nav{display:flex;align-items:center;gap:6px;}
 .edit-hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;position:sticky;top:0;background:#0a0f1a;z-index:10;border-radius:16px 16px 0 0;padding:14px 16px;}
 .edit-title{font-weight:800;color:#f1f5f9;font-size:14px;}
 .edit-hdr-btns{display:flex;gap:8px;align-items:center;}
-.edit-save-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;cursor:pointer;border-radius:8px;font-size:12px;padding:7px 12px;}
-.edit-save-btn:hover{background:#1e7a42;}
+.edit-save-btn{background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;cursor:pointer;border-radius:8px;font-size:12px;padding:7px 12px;}
+.edit-save-btn:hover{background:#0891b2;}
 .edit-close{background:transparent;border:none;color:#4b5563;font-size:22px;cursor:pointer;line-height:1;}
 .edit-body{padding:16px;}
 .edit-section{margin-bottom:28px;}
@@ -224,7 +224,7 @@ nav{display:flex;align-items:center;gap:6px;}
 .edit-section-title span{flex:1;}
 .se-card{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:14px;margin-bottom:10px;position:relative;}
 .se-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;}
-.se-nr-badge{width:28px;height:28px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
+.se-nr-badge{width:28px;height:28px;border-radius:50%;background:#0c3a4d;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
 .se-card-name{font-weight:700;font-size:13px;color:#e2e8f0;flex:1;}
 .se-card-toggle{color:#4b5563;font-size:14px;transition:transform .2s;}
 .se-card-body{display:none;}
@@ -236,8 +236,8 @@ nav{display:flex;align-items:center;gap:6px;}
 .gal-thumb-edit img{width:100%;height:100%;object-fit:cover;display:block;}
 .gal-thumb-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;color:#ef4444;font-size:14px;width:18px;height:18px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
 .gal-add-btn{width:72px;height:72px;border:1.5px dashed #1e293b;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;cursor:pointer;color:#4b5563;font-size:10px;transition:all .15s;}
-.gal-add-btn:hover{border-color:#1a6b3a;color:#a3e635;}
-.save-toast{position:fixed;bottom:24px;right:24px;background:#1a6b3a;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;pointer-events:none;transform:translateY(10px);transition:all .3s;}
+.gal-add-btn:hover{border-color:#0c3a4d;color:#38bdf8;}
+.save-toast{position:fixed;bottom:24px;right:24px;background:#0c3a4d;color:#fff;font-weight:700;font-size:13px;padding:12px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:9999;opacity:0;pointer-events:none;transform:translateY(10px);transition:all .3s;}
 .save-toast.show{pointer-events:auto;opacity:1;transform:translateY(0);}
 #ab-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1600;backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;}
 #ab-modal.open{display:flex;}
@@ -249,8 +249,8 @@ nav{display:flex;align-items:center;gap:6px;}
 .ab-step{display:flex;align-items:center;gap:8px;flex:1;}
 .ab-step:not(:last-child)::after{content:'';flex:1;height:2px;background:#1e293b;margin:0 8px;}
 .step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;border:2px solid #1e293b;color:#4b5563;background:#0a0f1a;transition:all .25s;}
-.step-dot.done{background:#1a6b3a;border-color:#a3e635;color:#a3e635;}
-.step-dot.active{background:#1e293b;border-color:#a3e635;color:#f1f5f9;}
+.step-dot.done{background:#0c3a4d;border-color:#38bdf8;color:#38bdf8;}
+.step-dot.active{background:#1e293b;border-color:#38bdf8;color:#f1f5f9;}
 .step-lbl{font-size:11px;color:#4b5563;font-weight:600;white-space:nowrap;}
 .step-lbl.active{color:#e2e8f0;}
 .ab-body{overflow-y:auto;padding:20px 24px;flex:1;}
@@ -259,33 +259,33 @@ nav{display:flex;align-items:center;gap:6px;}
 .ab-footer{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid #1e293b;flex-shrink:0;}
 .ab-back{background:transparent;border:1.5px solid #1e293b;color:#94a3b8;font-size:13px;font-weight:600;padding:9px 20px;border-radius:8px;cursor:pointer;}
 .ab-back:hover{border-color:#334155;color:#f1f5f9;}
-.ab-next{background:#1a6b3a;border:none;color:#a3e635;font-size:13px;font-weight:700;padding:9px 24px;border-radius:8px;cursor:pointer;}
-.ab-next:hover{background:#1e7a42;}
-.ab-submit{background:linear-gradient(135deg,#1a6b3a,#166534);border:none;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:8px;cursor:pointer;}
-.ab-submit:hover{background:linear-gradient(135deg,#1e7a42,#1a7040);}
-#ab-search-box:focus-within{border-color:#1a6b3a!important;}
+.ab-next{background:#0c3a4d;border:none;color:#38bdf8;font-size:13px;font-weight:700;padding:9px 24px;border-radius:8px;cursor:pointer;}
+.ab-next:hover{background:#0891b2;}
+.ab-submit{background:linear-gradient(135deg,#0c3a4d,#0e7490);border:none;color:#fff;font-size:14px;font-weight:800;padding:10px 28px;border-radius:8px;cursor:pointer;}
+.ab-submit:hover{background:linear-gradient(135deg,#0891b2,#0e7490);}
+#ab-search-box:focus-within{border-color:#0c3a4d!important;}
 .step-count{font-size:11px;color:#4b5563;}
 .ab-success{text-align:center;padding:32px 0;}
 .ab-success-icon{font-size:56px;margin-bottom:16px;}
-.ab-success-title{font-size:20px;font-weight:800;color:#a3e635;margin-bottom:8px;}
+.ab-success-title{font-size:20px;font-weight:800;color:#38bdf8;margin-bottom:8px;}
 .ab-success-sub{color:#64748b;font-size:13px;line-height:1.6;}
 .fg{margin-bottom:16px;}
 .fg label{display:block;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.06em;margin-bottom:6px;}
 .fg input,.fg select,.fg textarea{width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#1a6b3a;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#0c3a4d;}
 .fg textarea{resize:vertical;min-height:80px;}
 .fg select option{background:#111827;}
 .fg-row{display:grid;grid-template-columns:1fr;gap:12px;}
 .fg-row3{display:grid;grid-template-columns:1fr;gap:12px;}
 #ab-map{width:100%;height:260px;border-radius:10px;overflow:hidden;border:1.5px solid #1e293b;margin-bottom:10px;}
-.ab-coord-box{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;color:#a3e635;display:flex;align-items:center;gap:8px;}
+.ab-coord-box{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;color:#38bdf8;display:flex;align-items:center;gap:8px;}
 .ab-coord-lbl{color:#4b5563;font-size:11px;font-family:inherit;}
 .stand-item{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:14px;margin-bottom:10px;position:relative;}
-.stand-item-nr{font-size:11px;font-weight:800;color:#a3e635;letter-spacing:.05em;margin-bottom:10px;}
+.stand-item-nr{font-size:11px;font-weight:800;color:#38bdf8;letter-spacing:.05em;margin-bottom:10px;}
 .stand-del{position:absolute;top:12px;right:12px;background:transparent;border:none;color:#4b5563;font-size:16px;cursor:pointer;}
 .stand-del:hover{color:#ef4444;}
 .add-stand-btn{width:100%;background:transparent;border:1.5px dashed #1e293b;border-radius:10px;padding:14px;color:#4b5563;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.add-stand-btn:hover{border-color:#1a6b3a;color:#a3e635;background:#0d1f12;}
+.add-stand-btn:hover{border-color:#0c3a4d;color:#38bdf8;background:#071c26;}
 
 /* ============================================================
    ECRANE FOARTE MICI (320-360px)
@@ -375,14 +375,14 @@ nav{display:flex;align-items:center;gap:6px;}
 .footer-col{display:flex;flex-direction:column;gap:10px;min-width:140px;}
 .footer-col-title{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
 .footer-col a{color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:color .2s;}
-.footer-col a:hover{color:#a3e635;}
+.footer-col a:hover{color:#38bdf8;}
 #footer-bottom{max-width:1100px;margin:0 auto;padding:0 20px 22px;font-size:11px;color:#334155;}
 #footer-legal{max-width:1100px;margin:0 auto;padding:0 20px 18px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px;border-top:1px solid #1e293b;padding-top:18px;}
 #footer-company{font-size:11px;color:#4b5563;line-height:1.6;}
 #footer-company strong{color:#64748b;}
 #footer-sal{display:flex;flex-direction:column;align-items:center;justify-content:center;width:250px;height:50px;border-radius:8px;background:#111827;border:1px solid #1e293b;text-decoration:none;flex-shrink:0;transition:border-color .2s;}
-#footer-sal:hover{border-color:#a3e635;}
-.sal-badge-txt{font-size:14px;font-weight:900;color:#a3e635;letter-spacing:.05em;line-height:1.2;}
+#footer-sal:hover{border-color:#38bdf8;}
+.sal-badge-txt{font-size:14px;font-weight:900;color:#38bdf8;letter-spacing:.05em;line-height:1.2;}
 .sal-badge-sub{font-size:9px;color:#64748b;line-height:1.2;text-align:center;padding:0 8px;}
 @media (max-width:600px){
   #footer-legal{flex-direction:column;align-items:flex-start;}
@@ -427,12 +427,12 @@ nav{display:flex;align-items:center;gap:6px;}
 </div>
 
 <!-- BANDĂ ACTIVITATE DIN URMĂRIRI — apare doar dacă există evenimente nevăzute -->
-<div id="urmariri-banner" onclick="mergiLaEvenimenteUrmariri()" style="display:none;background:#1e3a2e;border-bottom:1px solid #166534;cursor:pointer;">
-  <div style="max-width:1400px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#a3e635;font-weight:600;">
+<div id="urmariri-banner" onclick="mergiLaEvenimenteUrmariri()" style="display:none;background:#0c3a4d;border-bottom:1px solid #0e7490;cursor:pointer;">
+  <div style="max-width:1400px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#38bdf8;font-weight:600;">
     <span>🔔</span>
     <span style="flex:1;" id="urmariri-banner-text">Activitate nouă în urmăriri</span>
     <span style="font-weight:800;">→</span>
-    <button onclick="event.stopPropagation();inchideUrmaririBanner();" style="background:transparent;border:none;color:#4b7a52;font-size:15px;cursor:pointer;padding:2px 6px;line-height:1;">✕</button>
+    <button onclick="event.stopPropagation();inchideUrmaririBanner();" style="background:transparent;border:none;color:#3a7a94;font-size:15px;cursor:pointer;padding:2px 6px;line-height:1;">✕</button>
   </div>
 </div>
 
@@ -469,14 +469,14 @@ nav{display:flex;align-items:center;gap:6px;}
         <div style="font-size:28px;">📧</div>
         <div>
           <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">EMAIL</div>
-          <a id="reg-email-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
+          <a id="reg-email-link" href="#" style="font-size:15px;font-weight:700;color:#38bdf8;text-decoration:none;">—</a>
         </div>
       </div>
       <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;">
         <div style="font-size:28px;">📞</div>
         <div>
           <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">TELEFON</div>
-          <a id="reg-phone-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
+          <a id="reg-phone-link" href="#" style="font-size:15px;font-weight:700;color:#38bdf8;text-decoration:none;">—</a>
         </div>
       </div>
       <a id="reg-wa-link" href="#" target="_blank" style="display:flex;align-items:center;gap:14px;background:#25d366;border-radius:12px;padding:16px;text-decoration:none;cursor:pointer;">
@@ -506,7 +506,7 @@ nav{display:flex;align-items:center;gap:6px;}
         <div style="font-size:28px;">📞</div>
         <div>
           <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;margin-bottom:4px;">TELEFON</div>
-          <a id="contact-phone-link" href="#" style="font-size:15px;font-weight:700;color:#a3e635;text-decoration:none;">—</a>
+          <a id="contact-phone-link" href="#" style="font-size:15px;font-weight:700;color:#38bdf8;text-decoration:none;">—</a>
         </div>
       </div>
       <a id="contact-wa-link" href="#" target="_blank" style="display:none;align-items:center;gap:14px;background:#25d366;border-radius:12px;padding:16px;text-decoration:none;cursor:pointer;">
@@ -522,13 +522,13 @@ nav{display:flex;align-items:center;gap:6px;}
 
       <div id="contact-form-wrap" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">
         <div style="font-size:11px;font-weight:700;color:#4b5563;letter-spacing:.06em;">✉️ SAU SCRIE-NE UN MESAJ</div>
-        <input type="text" id="cf-nume" placeholder="Numele tău" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
-        <input type="email" id="cf-email" placeholder="Emailul tău" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
-        <textarea id="cf-mesaj" placeholder="Mesajul tău..." rows="3" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;resize:vertical;font-family:inherit;" onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"></textarea>
+        <input type="text" id="cf-nume" placeholder="Numele tău" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" onfocus="this.style.borderColor='#0c3a4d'" onblur="this.style.borderColor='#1e293b'"/>
+        <input type="email" id="cf-email" placeholder="Emailul tău" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;" onfocus="this.style.borderColor='#0c3a4d'" onblur="this.style.borderColor='#1e293b'"/>
+        <textarea id="cf-mesaj" placeholder="Mesajul tău..." rows="3" style="background:#111827;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;resize:vertical;font-family:inherit;" onfocus="this.style.borderColor='#0c3a4d'" onblur="this.style.borderColor='#1e293b'"></textarea>
         <div style="display:flex;justify-content:center;">
           <div id="turnstile-contact" class="cf-turnstile" data-sitekey="0x4AAAAAADvJsgO0e3tWAKX2" data-theme="dark" data-callback="onContactTurnstileOk" data-expired-callback="onContactTurnstileExpired"></div>
         </div>
-        <button onclick="submitContactForm()" id="cf-submit-btn" style="background:#1a6b3a;border:none;color:#a3e635;font-weight:700;padding:11px;border-radius:8px;cursor:pointer;font-size:13px;">Trimite mesajul</button>
+        <button onclick="submitContactForm()" id="cf-submit-btn" style="background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;padding:11px;border-radius:8px;cursor:pointer;font-size:13px;">Trimite mesajul</button>
         <div id="cf-status" style="font-size:12px;text-align:center;min-height:16px;"></div>
       </div>
 
@@ -794,8 +794,8 @@ nav{display:flex;align-items:center;gap:6px;}
       <div class="ab-pane" id="pane-2">
 
         <!-- Instructiuni -->
-        <div style="background:#0d1f12;border:1px solid #1a3020;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#94a3b8;line-height:1.7;">
-          <strong style="color:#a3e635;">Cum găsești balta:</strong><br/>
+        <div style="background:#071c26;border:1px solid #0c3a4d;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#94a3b8;line-height:1.7;">
+          <strong style="color:#38bdf8;">Cum găsești balta:</strong><br/>
           <span style="color:#64748b;">①</span> Caută <strong style="color:#e2e8f0;">satul sau comuna</strong> unde se află balta<br/>
           <span style="color:#64748b;">②</span> Click pe rezultat → harta se centrează pe zonă<br/>
           <span style="color:#64748b;">③</span> <strong style="color:#e2e8f0;">Dă zoom</strong> și <strong style="color:#e2e8f0;">click exact pe baltă</strong> pentru a o marca
@@ -814,7 +814,7 @@ nav{display:flex;align-items:center;gap:6px;}
                 autocomplete="off"/>
               <button onclick="abClearSearch()" id="ab-search-clear" style="display:none;background:transparent;border:none;color:#4b5563;cursor:pointer;font-size:16px;line-height:1;">✕</button>
             </div>
-            <button onclick="abDoSearch()" style="background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;white-space:nowrap;">
+            <button onclick="abDoSearch()" style="background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;white-space:nowrap;">
               🔍 Caută
             </button>
           </div>
@@ -876,7 +876,7 @@ nav{display:flex;align-items:center;gap:6px;}
           <div style="margin-top:8px;font-size:11px;color:#1e293b;text-align:center;" id="harta-zoom-label">100%</div>
         </div>
 
-        <div style="margin-top:10px;background:#0d1f12;border:1px solid #1a3020;border-radius:8px;padding:9px 12px;font-size:11px;color:#64748b;line-height:1.7;">
+        <div style="margin-top:10px;background:#071c26;border:1px solid #0c3a4d;border-radius:8px;padding:9px 12px;font-size:11px;color:#64748b;line-height:1.7;">
           💡 Pasul este opțional — poți salva balta și fără hartă. Imaginea va apărea pe pagina baltii.
         </div>
         <div id="harta-upload-status" style="display:none;margin-top:8px;font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;background:#111827;"></div>
@@ -912,7 +912,7 @@ nav{display:flex;align-items:center;gap:6px;}
             </div>
           </div>
 
-          <button onclick="closeAddBalta()" style="margin-top:16px;background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:14px;padding:11px 28px;border-radius:10px;cursor:pointer;width:100%;">
+          <button onclick="closeAddBalta()" style="margin-top:16px;background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;font-size:14px;padding:11px 28px;border-radius:10px;cursor:pointer;width:100%;">
             ✓ Închide
           </button>
         </div>
@@ -1123,7 +1123,7 @@ var ZOOM_PRAG_NIVEL = { 3: 9, 2: 11, 1: 13 };
 function makeMarker(active, nivel) {
   nivel = nivel || 1;
   const STIL_NIVEL = {
-    1: { culoare: '#1a6b3a', dim: 30 },
+    1: { culoare: '#0c3a4d', dim: 30 },
     2: { culoare: '#3b82f6', dim: 35 },
     3: { culoare: '#eab308', dim: 39 },
   };
@@ -1335,8 +1335,8 @@ function hofRowHtml(h, extended) {
     : `<div class="hof-avatar-empty"></div>`;
   const nameHtml = h.zodaId
     ? (currentUser
-        ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${escH(h.pe)}</a>`
-        : `<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;" onmouseover="this.style.color='#a3e635'" onmouseout="this.style.color='#e2e8f0'">${escH(h.pe)}</span>`)
+        ? `<a href="pescar.html?id=${h.zodaId}" onclick="saveIndexState()" style="color:#e2e8f0;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#e2e8f0'">${escH(h.pe)}</a>`
+        : `<span onclick="openPescarGuestModal()" style="color:#e2e8f0;font-weight:700;cursor:pointer;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#e2e8f0'">${escH(h.pe)}</span>`)
     : `<span>${escH(h.pe)}</span>`;
   return `<div class="hof-row">
     <div class="hof-loc">${h.loc}</div>
@@ -1602,9 +1602,9 @@ function setVizibilitate(status) {
     st.style.color='#92400e'; st.style.background='#1c1500';
     st.innerHTML='🔒 Balta este <strong>Unlisted</strong> — nu apare în căutări sau pe harta publică.';
   } else {
-    btnP.style.borderColor='#a3e635'; btnP.style.background='#0d1f12'; btnP.style.color='#a3e635';
+    btnP.style.borderColor='#38bdf8'; btnP.style.background='#071c26'; btnP.style.color='#38bdf8';
     btnU.style.borderColor='#1e293b'; btnU.style.background='#0a0f1a'; btnU.style.color='#4b5563';
-    st.style.color='#166534'; st.style.background='#0d1f12';
+    st.style.color='#0e7490'; st.style.background='#071c26';
     st.innerHTML='🌍 Balta este <strong>Publică</strong> — vizibilă pe hartă și în căutări.';
     // Actualizam marker-ul pe harta principala
     if(lastBalta._marker) lastBalta._marker.setIcon(makeMarker(false, lastBalta.nivel_vizibilitate || 1));
@@ -1626,7 +1626,7 @@ function toggleVizibilitate(id) {
 
 // ── ACTIVE ROW STYLE ──────────────────────────────────────────────────────────
 const style = document.createElement('style');
-style.textContent = '.balta-row.active-row{background:#1e293b;border-left:3px solid #a3e635;}';
+style.textContent = '.balta-row.active-row{background:#1e293b;border-left:3px solid #38bdf8;}';
 document.head.appendChild(style);
 
 // ── CACHE SISTEM ──────────────────────────────────────────────────────────────
@@ -1897,7 +1897,7 @@ function resumeDraft() {
       if(d.judet) {
         document.getElementById('ab-judet').value = d.judet;
         const js = document.getElementById('ab-judet-search');
-        if(js) { js.value = d.judet; js.style.borderColor = '#1a6b3a'; }
+        if(js) { js.value = d.judet; js.style.borderColor = '#0c3a4d'; }
       }
       if(d.adresa) document.getElementById('ab-adresa').value= d.adresa;
       if(d.tel)    document.getElementById('ab-tel').value   = d.tel;
@@ -1907,7 +1907,7 @@ function resumeDraft() {
         abCoords = { lat: d.lat, lng: d.lng };
         document.getElementById('ab-coord-display').textContent =
           '✓ Marcat: ' + d.lat.toFixed(5) + '°N, ' + d.lng.toFixed(5) + '°E';
-        document.getElementById('ab-coord-display').style.color = '#a3e635';
+        document.getElementById('ab-coord-display').style.color = '#38bdf8';
         document.getElementById('ab-coord-clear').style.display = 'inline';
       }
       // Recreeaza standurile
@@ -2106,7 +2106,7 @@ function buildEditBody(b, ext) {
       </button>
       <button id="ev-public" onclick="setEditViz('public')"
         style="flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;
-        ${(b.vizibilitate||'public')==='public'?'border:2px solid #a3e635;background:#0d1f12;color:#a3e635;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
+        ${(b.vizibilitate||'public')==='public'?'border:2px solid #38bdf8;background:#071c26;color:#38bdf8;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
         🌍 Public<div style="font-size:10px;font-weight:400;margin-top:3px;">Vizibil pe platformă</div>
       </button>
     </div>
@@ -2116,7 +2116,7 @@ function buildEditBody(b, ext) {
   <div class="edit-section">
     <div class="edit-section-title">
       <span>🎣 STANDURI (${ext.standuri.length})</span>
-      <button onclick="addEditStand()" style="background:#1a6b3a;border:none;color:#a3e635;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;">+ Adaugă stand</button>
+      <button onclick="addEditStand()" style="background:#0c3a4d;border:none;color:#38bdf8;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;">+ Adaugă stand</button>
     </div>
     <div id="edit-stands-wrap">
       ${ext.standuri.map(s => buildStandEditCard(s)).join('')}
@@ -2231,7 +2231,7 @@ function setEditViz(status) {
     btnU.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #f59e0b;background:#1c1500;color:#f59e0b;';
     btnP.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;';
   } else {
-    btnP.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #a3e635;background:#0d1f12;color:#a3e635;';
+    btnP.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #38bdf8;background:#071c26;color:#38bdf8;';
     btnU.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;';
   }
 }
@@ -2557,7 +2557,7 @@ async function submitContactForm() {
   document.getElementById('cf-nume').value = '';
   document.getElementById('cf-email').value = '';
   document.getElementById('cf-mesaj').value = '';
-  statusEl.style.color = '#a3e635'; statusEl.textContent = '✓ Mesaj trimis! Îți răspundem cât mai curând.';
+  statusEl.style.color = '#38bdf8'; statusEl.textContent = '✓ Mesaj trimis! Îți răspundem cât mai curând.';
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
@@ -2805,7 +2805,7 @@ function initAbMap() {
     abCoords = e.latlng;
     document.getElementById('ab-coord-display').textContent =
       '✓ Marcat: ' + abCoords.lat.toFixed(5) + '°N, ' + abCoords.lng.toFixed(5) + '°E';
-    document.getElementById('ab-coord-display').style.color = '#a3e635';
+    document.getElementById('ab-coord-display').style.color = '#38bdf8';
     document.getElementById('ab-coord-clear').style.display = 'inline';
     if(abMarker) abMap.removeLayer(abMarker);
     abMarker = L.marker([abCoords.lat, abCoords.lng], { icon: pinIcon() }).addTo(abMap);
@@ -3003,7 +3003,7 @@ function judetRenderList(q) {
 function judetSelect(judet) {
   document.getElementById('ab-judet').value = judet;
   document.getElementById('ab-judet-search').value = judet;
-  document.getElementById('ab-judet-search').style.borderColor = '#1a6b3a';
+  document.getElementById('ab-judet-search').style.borderColor = '#0c3a4d';
   judetClose();
   // Triggeruim event change pentru harta
   if(judet && JUDETE_COORDS[judet]) {
@@ -3056,7 +3056,7 @@ function previewStandFoto(nr, input) {
   var reader = new FileReader();
   reader.onload = function(e) {
     preview.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:7px;"/>';
-    preview.style.border = '1.5px solid #1a6b3a';
+    preview.style.border = '1.5px solid #0c3a4d';
     if(clearBtn) clearBtn.style.display = 'block';
   };
   reader.readAsDataURL(file);
@@ -3083,11 +3083,11 @@ function addStand() {
   div.id = 'stand-' + nr;
   div.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-      <div style="width:28px;height:28px;border-radius:50%;background:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;">${nr}</div>
+      <div style="width:28px;height:28px;border-radius:50%;background:#0c3a4d;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;">${nr}</div>
       <input type="text" id="s${nr}-nume" value="Stand ${nr}"
         style="flex:1;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:7px;padding:6px 10px;color:#f1f5f9;font-size:13px;font-weight:700;outline:none;"
         placeholder="Denumire stand"
-        onfocus="this.style.borderColor='#1a6b3a'" onblur="this.style.borderColor='#1e293b'"/>
+        onfocus="this.style.borderColor='#0c3a4d'" onblur="this.style.borderColor='#1e293b'"/>
       <button class="stand-del" onclick="delStand(${nr})" title="Șterge stand">✕</button>
     </div>
     <div class="fg-row3">
@@ -3243,7 +3243,7 @@ function getStanduriData() {
       </div>
       <div class="auth-remember" style="align-items:flex-start;margin-bottom:14px;">
         <input type="checkbox" id="reg-terms"/>
-        <label for="reg-terms" style="font-size:11px;color:#94a3b8;line-height:1.5;cursor:pointer;">Sunt de acord cu <a href="termeni.html" target="_blank" style="color:#a3e635;">Termenii și Condițiile</a> și <a href="confidentialitate.html" target="_blank" style="color:#a3e635;">Politica de Confidențialitate</a></label>
+        <label for="reg-terms" style="font-size:11px;color:#94a3b8;line-height:1.5;cursor:pointer;">Sunt de acord cu <a href="termeni.html" target="_blank" style="color:#38bdf8;">Termenii și Condițiile</a> și <a href="confidentialitate.html" target="_blank" style="color:#38bdf8;">Politica de Confidențialitate</a></label>
       </div>
       <div style="margin-bottom:14px;display:flex;justify-content:center;">
         <div id="turnstile-register" class="cf-turnstile" data-sitekey="0x4AAAAAADvJsgO0e3tWAKX2" data-theme="dark" data-callback="onTurnstileOk" data-expired-callback="onTurnstileExpired"></div>
@@ -3450,7 +3450,7 @@ async function updateNavForUser(user) {
   const initials  = username.slice(0, 2).toUpperCase();
 
   const avatarHtml = avatarUrl
-    ? `<img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #1a3020;flex-shrink:0;" alt="avatar"/>`
+    ? `<img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #0e7490;flex-shrink:0;" alt="avatar"/>`
     : `<div class="nav-avatar" style="cursor:default;">${initials}</div>`;
 
   const isAdmin = currentRole === 'zoda_admin';
@@ -3485,7 +3485,7 @@ async function updateNavForUser(user) {
       <div class="nav-bell" onclick="toggleNotifPanel()" title="Notificări" id="nav-bell-btn">
         🔔${bellBadge}
       </div>
-      <a href="cont.html" onclick="saveIndexState()" style="display:flex;align-items:center;gap:7px;text-decoration:none;background:#111827;border:1px solid #1e293b;border-radius:8px;padding:5px 10px;transition:border-color .2s;" title="Contul meu" onmouseover="this.style.borderColor='#a3e635'" onmouseout="this.style.borderColor='#1e293b'">
+      <a href="cont.html" onclick="saveIndexState()" style="display:flex;align-items:center;gap:7px;text-decoration:none;background:#111827;border:1px solid #1e293b;border-radius:8px;padding:5px 10px;transition:border-color .2s;" title="Contul meu" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#1e293b'">
         ${avatarHtml}
         <span class="nav-user-name">${username}</span>
       </a>
@@ -3540,7 +3540,7 @@ async function sorteazaSiRandeazaPescari(dd, rezultate) {
     const initials = (u.username || '?').slice(0, 2).toUpperCase();
     const avatarHtml = u.avatar_url
       ? `<img src="${u.avatar_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" alt=""/>`
-      : `<div style="width:32px;height:32px;border-radius:50%;background:#1a6b3a;color:#a3e635;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">${initials}</div>`;
+      : `<div style="width:32px;height:32px;border-radius:50%;background:#0c3a4d;color:#38bdf8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">${initials}</div>`;
     return `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid #1e293b;gap:10px;">
         <a href="pescar.html?id=${escH(u.zoda_id)}" style="display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;">
@@ -3552,7 +3552,7 @@ async function sorteazaSiRandeazaPescari(dd, rezultate) {
         </a>
         ${dejaUrmarit
           ? '<span style="font-size:11px;color:#4b5563;white-space:nowrap;">✓ Urmărit</span>'
-          : `<button onclick="urmarestePescarDinIndex('${escH(u.zoda_id)}','${escH(u.username||u.zoda_id).replace(/'/g,"\\'")}')" style="background:#166534;color:#fff;font-weight:700;font-size:11px;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">+ Urmărește</button>`}
+          : `<button onclick="urmarestePescarDinIndex('${escH(u.zoda_id)}','${escH(u.username||u.zoda_id).replace(/'/g,"\\'")}')" style="background:#0e7490;color:#fff;font-weight:700;font-size:11px;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">+ Urmărește</button>`}
       </div>`;
   }).join('');
 }
@@ -3708,7 +3708,7 @@ async function loadNotifPanel() {
           ${unread ? '<div class="notif-dot"></div>' : '<div style="width:7px;flex-shrink:0;"></div>'}
           <div style="flex:1;">
             <div class="notif-msg">${escHtmlNotif(n.mesaj)}</div>
-            <div class="notif-time">${time}${url ? ' · <span style="color:#a3e635;font-size:10px;">↗ Vezi</span>' : ''}</div>
+            <div class="notif-time">${time}${url ? ' · <span style="color:#38bdf8;font-size:10px;">↗ Vezi</span>' : ''}</div>
           </div>
         </div>
       </div>`;
@@ -3950,7 +3950,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
           .then(url => {
             window._hartaUrl = url;
             window._hartaFile = null;
-            if(statusEl) { statusEl.textContent = '✅ Imaginea a fost uploadată cu succes'; statusEl.style.color = '#a3e635'; }
+            if(statusEl) { statusEl.textContent = '✅ Imaginea a fost uploadată cu succes'; statusEl.style.color = '#38bdf8'; }
             console.log('✅ Hartă pre-uploadată:', url);
           })
           .catch(err => {
@@ -4073,7 +4073,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     // Drag & drop fișier pe dropzone
     const dz = document.getElementById('harta-dropzone');
     if(dz) {
-      dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#1a6b3a'; dz.style.background = '#0d1f12'; });
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#0c3a4d'; dz.style.background = '#071c26'; });
       dz.addEventListener('dragleave', () => { dz.style.borderColor = '#1e293b'; dz.style.background = '#0d1014'; });
       dz.addEventListener('drop', e => {
         e.preventDefault();
@@ -4152,7 +4152,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
           .then(url => {
             window._editHartaUrl  = url;
             window._editHartaFile = null;
-            if(zoomLbl) { zoomLbl.textContent = '✅ Uploadat'; zoomLbl.style.color = '#a3e635'; }
+            if(zoomLbl) { zoomLbl.textContent = '✅ Uploadat'; zoomLbl.style.color = '#38bdf8'; }
             console.log('✅ Hartă edit pre-uploadată:', url);
           })
           .catch(err => {
@@ -4241,7 +4241,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     const dz = document.getElementById('edit-harta-dropzone');
     if(dz && !dz._evtAttached) {
       dz._evtAttached = true;
-      dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#1a6b3a'; dz.style.background = '#0d1f12'; });
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#0c3a4d'; dz.style.background = '#071c26'; });
       dz.addEventListener('dragleave', () => { dz.style.borderColor = '#1e293b'; dz.style.background = '#0d1014'; });
       dz.addEventListener('drop', e => {
         e.preventDefault(); dz.style.borderColor = '#1e293b'; dz.style.background = '#0d1014';
@@ -4304,8 +4304,8 @@ function closeGuestToast() {
 #cookie-notice{display:none;position:fixed;bottom:0;left:0;right:0;z-index:5000;background:#111827;border-top:1px solid #1e293b;padding:14px 16px;box-shadow:0 -8px 32px rgba(0,0,0,.5);align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
 #cookie-notice.show{display:flex;}
 #cookie-notice-text{font-size:12px;color:#94a3b8;line-height:1.6;max-width:640px;}
-#cookie-notice-text a{color:#a3e635;}
-#cookie-notice-btn{background:#1a6b3a;border:none;color:#a3e635;font-weight:700;font-size:12px;padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+#cookie-notice-text a{color:#38bdf8;}
+#cookie-notice-btn{background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;font-size:12px;padding:9px 20px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 </style>
 <div id="cookie-notice">
   <div id="cookie-notice-text">
@@ -4354,7 +4354,7 @@ function closeGuestToast() {
 .promo-sub{font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #promo-dots{display:flex;gap:4px;justify-content:center;margin-top:6px;}
 .promo-dot{width:5px;height:5px;border-radius:50%;background:#334155;cursor:pointer;transition:background .2s,transform .2s;flex-shrink:0;}
-.promo-dot.active{background:#a3e635;transform:scale(1.2);}
+.promo-dot.active{background:#38bdf8;transform:scale(1.2);}
 #promo-bar-close{background:transparent;border:none;color:#4b5563;font-size:18px;line-height:1;cursor:pointer;padding:6px;flex-shrink:0;}
 #promo-bar-close:hover{color:#94a3b8;}
 </style>
