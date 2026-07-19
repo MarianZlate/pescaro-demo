@@ -31,20 +31,22 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 /* HEADER */
 #hdr{background:rgba(10,15,26,.97);border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
-#hdr-in{max-width:1600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;
+#hdr-in{max-width:1600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
   /* mobil */
-  padding:0 12px;height:48px;}
-.logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;display:flex;align-items:center;}
+  padding:8px 12px;}
+.logo{font-size:16px;font-weight:800;color:#a3e635;text-decoration:none;white-space:nowrap;display:flex;align-items:center;order:0;}
 .logo-img{height:28px;width:auto;display:block;}
 .badge{font-size:10px;background:#7c3aed;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:6px;}
-#hdr-balta-info{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;}
-#hdr-balta-name{font-weight:700;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  /* mobil */
-  font-size:13px;}
+#hdr-balta-info{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;
+  /* mobil: rând propriu, sub logo/buton, ca numele lung să nu se suprapună peste nimic */
+  order:2;flex-basis:100%;width:100%;}
+#hdr-balta-name{font-weight:700;color:#f8fafc;
+  /* mobil: până la 2 rânduri, apoi tăiat cu ... */
+  font-size:13px;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-overflow:ellipsis;}
 #hdr-balta-loc{color:#64748b;font-size:12px;white-space:nowrap;
   /* mobil */
   display:none;}
-.back-btn{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;color:#94a3b8;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;
+.back-btn{display:flex;align-items:center;gap:6px;background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;color:#94a3b8;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;order:1;
   /* mobil */
   padding:5px 10px;font-size:11px;}
 .back-btn:hover{border-color:#a3e635;color:#a3e635;}
@@ -262,11 +264,12 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 
 @media(min-width:769px){
   /* HEADER */
-  #hdr-in{padding:0 20px;height:52px;gap:12px;}
-  #hdr-balta-name{font-size:15px;}
+  #hdr-in{padding:0 20px;height:52px;gap:12px;flex-wrap:nowrap;}
+  #hdr-balta-info{order:0;flex-basis:auto;width:auto;}
+  #hdr-balta-name{font-size:15px;white-space:nowrap;display:block;-webkit-line-clamp:unset;}
   .ib-name-tagline-wrap{flex-direction:row;align-items:baseline;gap:8px;}
   #hdr-balta-loc{display:block;}
-  .back-btn{padding:6px 12px;font-size:12px;}
+  .back-btn{padding:6px 12px;font-size:12px;order:2;}
 
   .info-overlay-body{font-size:13px;line-height:1.7;}
 
