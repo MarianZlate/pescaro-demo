@@ -1161,6 +1161,9 @@ function flyToBalta(id) {
   if (!b) return;
   BALTI.forEach(x => x._marker && x._marker.setIcon(makeMarker(x.id === id, x.vizibilitate === 'basic' ? 1 : (x.nivel_vizibilitate || 1))));
   map.flyTo([b.lat, b.lng], 13, { duration: 1.2 });
+  // Închide dropdown-ul de căutare, ca pinul selectat să rămână vizibil pe hartă
+  const dd = document.getElementById('dropdown');
+  if (dd) dd.style.display = 'none';
   // "moveend" (declanșat de flyTo) rulează updateVisibleMarkers() automat,
   // care va adăuga pinul pe hartă dacă nu era deja — apoi îi deschidem popup-ul
   setTimeout(() => { if (b._marker && map.hasLayer(b._marker)) b._marker.openPopup(); }, 1300);
