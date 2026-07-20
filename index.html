@@ -1721,6 +1721,10 @@ async function refreshBaltiInBackground() {
       vizite: b.vizite || 0, _marker: null,
     }));
     CACHE.set('balti_publice', fresh, 30);
+    // Elimină markerii vechi de pe hartă ÎNAINTE de înlocuirea array-ului —
+    // altfel rămân orfani (nu mai sunt referențiați de noul BALTI, deci
+    // updateVisibleMarkers() nu-i mai poate găsi niciodată ca să-i elimine).
+    BALTI.forEach(b => { if (b._marker && map.hasLayer(b._marker)) map.removeLayer(b._marker); });
     // Actualizează BALTI și re-renderizează silențios
     BALTI = fresh;
     renderMapMarkers();
