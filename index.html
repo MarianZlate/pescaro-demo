@@ -1118,7 +1118,7 @@ function initMap() {
 // Praguri de zoom per nivel — nivel 3 (auriu) apare primul, de la cel mai
 // mic zoom permis global; nivel 2 (albastru) puțin mai târziu; nivel 1
 // (verde) doar la zoom apropiat. Bălțile "basic" nu primesc niciodată pin.
-var ZOOM_PRAG_NIVEL = { 3: 9, 2: 11, 1: 13 };
+var ZOOM_PRAG_NIVEL = { 3: 7, 2: 10, 1: 13 };
 
 function makeMarker(active, nivel) {
   nivel = nivel || 1;
@@ -1726,7 +1726,7 @@ async function refreshBaltiInBackground() {
 
 // Adaugă/actualizează markerii pe hartă în funcție de rol.
 // Admini văd toate bălțile (unlisted semi-transparent); userii văd doar public.
-var MAP_MIN_ZOOM_PINS = 9; // sub acest zoom, nu randăm pini deloc (prea multi la nivel de tara)
+var MAP_MIN_ZOOM_PINS = 7; // sub acest zoom, nu randăm pini deloc (prea multi la nivel de tara)
 
 function renderMapMarkers() {
   const isAdmin = currentRole === 'zoda_admin';
