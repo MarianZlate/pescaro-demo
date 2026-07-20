@@ -1782,6 +1782,10 @@ function updateVisibleMarkers() {
   const zoom = map.getZoom();
   const hint = document.getElementById('map-zoom-hint');
   const legend = document.getElementById('map-legend');
+  // Bara de text rămâne vizibilă mai mult decât pragul de afișare a pinilor —
+  // ține până apar bălțile de nivel 2 (ZOOM_PRAG_NIVEL[2]), nu doar până apare
+  // primul pin premium, ca userul să știe că mai are ce descoperi dând zoom.
+  const hintVisibleSubZoom = ZOOM_PRAG_NIVEL[2] || MAP_MIN_ZOOM_PINS;
 
   if (zoom < MAP_MIN_ZOOM_PINS) {
     if (hint) hint.style.display = 'block';
@@ -1789,8 +1793,8 @@ function updateVisibleMarkers() {
     BALTI.forEach(b => { if (b._marker && map.hasLayer(b._marker)) map.removeLayer(b._marker); });
     return;
   }
-  if (hint) hint.style.display = 'none';
-  if (legend) legend.style.display = 'block';
+  if (hint) hint.style.display = zoom < hintVisibleSubZoom ? 'block' : 'none';
+  if (legend) legend.style.display = 'block'; // de la MAP_MIN_ZOOM_PINS încolo, deja pot exista pini de dat click
 
   const bounds = map.getBounds();
   BALTI.forEach(b => {
