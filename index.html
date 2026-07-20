@@ -3891,6 +3891,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     }
     await updateNavForUser(currentUser);
     closeAuthModal();
+    closeGuestToast(); // dacă era deja vizibil când s-a logat, nu mai are sens acum
     if (HOF.length) renderHof(); // re-renderăm cu link-uri deblocate
     if (currentUser) { await mergeLocalIstoricInCont(currentUser.id); renderBalti(); }
   } else if(event === 'SIGNED_OUT') {
