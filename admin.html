@@ -725,7 +725,7 @@ th,td{padding:8px 6px;}
     <div class="section-title">
       <span>📋 Bălți Follow-up — discuții abonamente</span>
     </div>
-    <div style="position:relative;margin-bottom:16px;max-width:460px;">
+    <div style="position:relative;margin-bottom:12px;max-width:460px;">
       <div style="display:flex;align-items:center;gap:8px;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input id="fu-search-input" type="text" placeholder="Caută baltă după nume, ca s-o adaugi în listă..."
@@ -733,6 +733,12 @@ th,td{padding:8px 6px;}
           oninput="fuSearchInput(this.value)" autocomplete="off"/>
       </div>
       <div id="fu-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:260px;overflow-y:auto;"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;max-width:460px;">
+      <input id="fu-manual-input" type="text" placeholder="...sau scrie numele unei bălți care nu e încă pe platformă"
+        style="flex:1;background:#111827;border:1.5px dashed #334155;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;"
+        onkeydown="if(event.key==='Enter'){fuAddManual();event.preventDefault();}"/>
+      <button onclick="fuAddManual()" style="background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;white-space:nowrap;">➕ Reminder</button>
     </div>
     <div id="followup-list" style="display:flex;flex-direction:column;gap:10px;">
       <div class="empty-state">Se încarcă...</div>
@@ -1125,7 +1131,7 @@ async function loadFollowup() {
   const list = document.getElementById('followup-list');
   list.innerHTML = '<div class="empty-state">Se încarcă...</div>';
   const { data, error } = await sb.from('balti_followup')
-    .select('id, note, balta_id, balti(id, nume, judet, vizibilitate, nivel_vizibilitate)')
+    .select('id, note, balta_id, nume_manual, balti(id, nume, judet, vizibilitate, nivel_vizibilitate)')
     .order('created_at', { ascending: false });
   if (error) {
     list.innerHTML = '<div class="empty-state">❌ Eroare la încărcare: ' + escHtml(error.message) + '</div>';
@@ -1143,16 +1149,23 @@ function renderFollowupList() {
   }
   list.innerHTML = _followupCache.map(row => {
     const b = row.balti;
-    if (!b) return ''; // balta a fost ștearsă între timp
+    if (!b && !row.nume_manual) return ''; // balta a fost ștearsă între timp și nu era manual
+    const nume   = b ? b.nume : row.nume_manual;
+    const subinfo = b
+      ? `📍 ${escHtml(b.judet || '—')} · nivel ${b.nivel_vizibilitate || 1}`
+      : `🆕 Nu e încă pe platformă — doar reminder`;
+    const actionBtns = b
+      ? `<a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">↗ Vezi balta</a>`
+      : `<button onclick="openAddBalta('${escHtml(nume).replace(/'/g, "\\'")}')" style="background:transparent;border:1px solid #0c3a4d;color:#38bdf8;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">➕ Creează balta</button>`;
     return `
-    <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+    <div style="background:#111827;border:1px solid ${b ? '#1e293b' : '#334155'};border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;${b ? '' : 'border-style:dashed;'}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
         <div>
-          <div style="font-size:14px;font-weight:700;color:#f1f5f9;">${escHtml(b.nume)}</div>
-          <div style="font-size:11px;color:#4b5563;">📍 ${escHtml(b.judet || '—')} · nivel ${b.nivel_vizibilitate || 1}</div>
+          <div style="font-size:14px;font-weight:700;color:#f1f5f9;">${escHtml(nume)}</div>
+          <div style="font-size:11px;color:#4b5563;">${subinfo}</div>
         </div>
         <div style="display:flex;gap:8px;">
-          <a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">↗ Vezi balta</a>
+          ${actionBtns}
           <button onclick="fuRemove(${row.id})" style="background:transparent;border:1px solid #3f1d1d;color:#ef4444;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">✕ Scoate</button>
         </div>
       </div>
@@ -1199,6 +1212,20 @@ async function fuAddBalta(baltaId) {
     return;
   }
   showToast('✅ Adăugată în Follow-up.');
+  loadFollowup();
+}
+
+async function fuAddManual() {
+  const input = document.getElementById('fu-manual-input');
+  const nume = input.value.trim();
+  if (!nume) return;
+  const { error } = await sb.from('balti_followup').insert({ nume_manual: nume });
+  if (error) {
+    showToast('❌ Eroare la adăugare: ' + error.message, true);
+    return;
+  }
+  input.value = '';
+  showToast('✅ Reminder adăugat.');
   loadFollowup();
 }
 
@@ -3987,7 +4014,7 @@ const JUDETE_COORDS = {
 const JUDETE_LIST = ['Alba','Arad','Argeș','Bacău','Bihor','Bistrița-Năsăud','Botoșani','Brașov','Brăila','Buzău','Caraș-Severin','Călărași','Cluj','Constanța','Covasna','Dâmbovița','Dolj','Galați','Giurgiu','Gorj','Harghita','Hunedoara','Ialomița','Iași','Ilfov','Maramureș','Mehedinți','Mureș','Neamț','Olt','Prahova','Satu Mare','Sălaj','Sibiu','Suceava','Teleorman','Timiș','Tulcea','Vaslui','Vâlcea','Vrancea','București'];
 let judetFocusIdx = -1;
 
-function openAddBalta() {
+function openAddBalta(prefillNume) {
   abStep = 1; abCoords = null; abStandCount = 0;
   window._hartaFile = null; window._hartaUrl = null;
   hartaRemove();
@@ -3995,6 +4022,7 @@ function openAddBalta() {
   ['ab-nume','ab-adresa','ab-tel','ab-fb','ab-wa','ab-drum-yt','ab-tarife','ab-regulament'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
+  if (prefillNume) { const n = document.getElementById('ab-nume'); if (n) n.value = prefillNume; }
   const js = document.getElementById('ab-judet-search'); if(js) js.value = '';
   const jh = document.getElementById('ab-judet'); if(jh) jh.value = '';
   document.getElementById('ab-coord-display').textContent = 'Click pe hartă pentru a marca locația baltii';
