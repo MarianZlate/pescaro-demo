@@ -1124,6 +1124,7 @@ function switchTab(tab) {
 // ── BĂLȚI FOLLOW-UP ──────────────────────────────────────────────────────────
 let _followupCache = [];
 let fuSearchTimeout = null;
+let fuLinkOpenId = null; // id-ul rândului de follow-up pentru care e deschisă căutarea de legare
 
 async function loadFollowup() {
   const list = document.getElementById('followup-list');
@@ -1154,7 +1155,15 @@ function renderFollowupList() {
       : `🆕 Nu e încă pe platformă — doar reminder`;
     const actionBtns = b
       ? `<a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">↗ Vezi balta</a>`
-      : `<button onclick="openAddBalta('${escHtml(nume).replace(/'/g, "\\'")}')" style="background:transparent;border:1px solid #0c3a4d;color:#38bdf8;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">➕ Creează balta</button>`;
+      : `<button onclick="openAddBalta('${escHtml(nume).replace(/'/g, "\\'")}')" style="background:transparent;border:1px solid #0c3a4d;color:#38bdf8;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">➕ Creează balta</button>
+         <button onclick="fuToggleLink(${row.id})" style="background:transparent;border:1px solid #334155;color:#94a3b8;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">🔗 E deja creată</button>`;
+    const linkBox = (!b && fuLinkOpenId === row.id) ? `
+      <div style="position:relative;">
+        <input id="fu-link-input-${row.id}" type="text" placeholder="Caută numele exact cu care a fost creată balta..."
+          oninput="fuLinkSearchInput(${row.id}, this.value)" autocomplete="off"
+          style="width:100%;background:#0a0f1a;border:1.5px solid #334155;border-radius:8px;padding:9px 12px;color:#f1f5f9;font-size:12px;outline:none;"/>
+        <div id="fu-link-results-${row.id}" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:220px;overflow-y:auto;"></div>
+      </div>` : '';
     return `
     <div style="background:#111827;border:1px solid ${b ? '#1e293b' : '#334155'};border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;${b ? '' : 'border-style:dashed;'}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
@@ -1162,11 +1171,12 @@ function renderFollowupList() {
           <div style="font-size:14px;font-weight:700;color:#f1f5f9;">${escHtml(nume)}</div>
           <div style="font-size:11px;color:#4b5563;">${subinfo}</div>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           ${actionBtns}
           <button onclick="fuRemove(${row.id})" style="background:transparent;border:1px solid #3f1d1d;color:#ef4444;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">✕ Scoate</button>
         </div>
       </div>
+      ${linkBox}
       <textarea placeholder="Note / ce informații mai aștepți de la ei..." rows="2"
         onblur="fuSaveNote(${row.id}, this.value)"
         style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:9px 12px;color:#f1f5f9;font-size:12px;outline:none;font-family:inherit;resize:vertical;">${escHtml(row.note || '')}</textarea>
@@ -1224,6 +1234,47 @@ async function fuAddManual() {
   }
   input.value = '';
   showToast('✅ Reminder adăugat.');
+  loadFollowup();
+}
+
+function fuToggleLink(followupId) {
+  fuLinkOpenId = (fuLinkOpenId === followupId) ? null : followupId;
+  renderFollowupList();
+  if (fuLinkOpenId) {
+    setTimeout(() => { const el = document.getElementById('fu-link-input-' + followupId); if (el) el.focus(); }, 50);
+  }
+}
+
+function fuLinkSearchInput(followupId, val) {
+  const res = document.getElementById('fu-link-results-' + followupId);
+  if (!res) return;
+  const qLower = val.trim().toLowerCase();
+  if (!qLower) { res.style.display = 'none'; return; }
+  const dejaLegate = new Set(_followupCache.filter(r => r.balta_id).map(r => r.balta_id));
+  const matches = (_baltiCache || [])
+    .filter(b => b.nume?.toLowerCase().includes(qLower) && !dejaLegate.has(b.id))
+    .slice(0, 8);
+  if (!matches.length) {
+    res.innerHTML = '<div style="padding:10px 12px;color:#4b5563;font-size:12px;">Niciun rezultat.</div>';
+    res.style.display = 'block';
+    return;
+  }
+  res.innerHTML = matches.map(b => `
+    <div onclick="fuLinkExisting(${followupId}, ${b.id})" style="padding:9px 12px;border-bottom:1px solid #1e293b;cursor:pointer;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
+      <div style="font-size:12px;font-weight:600;color:#f1f5f9;">${escHtml(b.nume)}</div>
+      <div style="font-size:10px;color:#4b5563;">${escHtml(b.judet || '')}</div>
+    </div>`).join('');
+  res.style.display = 'block';
+}
+
+async function fuLinkExisting(followupId, baltaId) {
+  const { error } = await sb.from('balti_followup').update({ balta_id: baltaId, nume_manual: null }).eq('id', followupId);
+  if (error) {
+    showToast('❌ Eroare: ' + error.message, true);
+    return;
+  }
+  fuLinkOpenId = null;
+  showToast('✅ Legată de balta de pe platformă.');
   loadFollowup();
 }
 
