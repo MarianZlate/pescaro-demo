@@ -3289,6 +3289,10 @@ function buildEditBody(b, ext) {
         style="flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;${viz==='unlisted'?'border:2px solid #f59e0b;background:#1c1500;color:#f59e0b;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
         🔒 Unlisted<div style="font-size:10px;font-weight:400;margin-top:3px;">Nevizibil publicului</div>
       </button>
+      <button id="ev-basic" onclick="setEditViz('basic')"
+        style="flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;${viz==='basic'?'border:2px solid #94a3b8;background:#1e293b;color:#94a3b8;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
+        🔍 Basic<div style="font-size:10px;font-weight:400;margin-top:3px;">Listare de bază</div>
+      </button>
       <button id="ev-public" onclick="setEditViz('public')"
         style="flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;${viz==='public'?'border:2px solid #38bdf8;background:#071c26;color:#38bdf8;':'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;'}">
         🌍 Public<div style="font-size:10px;font-weight:400;margin-top:3px;">Vizibil pe platformă</div>
@@ -3620,15 +3624,18 @@ function delEditGalerie(standId, gi) {
 
 function setEditViz(status) {
   editVizStatus = status;
-  const btnU = document.getElementById('ev-unlisted');
-  const btnP = document.getElementById('ev-public');
-  if(status === 'unlisted') {
-    btnU.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #f59e0b;background:#1c1500;color:#f59e0b;';
-    btnP.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;';
-  } else {
-    btnP.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #38bdf8;background:#071c26;color:#38bdf8;';
-    btnU.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;';
-  }
+  const stiluri = {
+    unlisted: 'border:2px solid #f59e0b;background:#1c1500;color:#f59e0b;',
+    basic:    'border:2px solid #94a3b8;background:#1e293b;color:#94a3b8;',
+    public:   'border:2px solid #38bdf8;background:#071c26;color:#38bdf8;',
+  };
+  const inactiv = 'border:2px solid #1e293b;background:#0a0f1a;color:#4b5563;';
+  ['unlisted', 'basic', 'public'].forEach(s => {
+    const btn = document.getElementById('ev-' + s);
+    if (!btn) return;
+    btn.style.cssText = 'flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;'
+      + (s === status ? stiluri[s] : inactiv);
+  });
 }
 
 function setEditNivel(n) {
