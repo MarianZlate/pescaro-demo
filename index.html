@@ -679,7 +679,7 @@ nav{display:flex;align-items:center;gap:6px;}
 </footer>
 
 <!-- MODAL DETALII FIRMĂ -->
-<div id="modal-detalii-firma" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;" onclick="if(event.target===this)closeDetaliiFirmaModal()">
+<div id="modal-detalii-firma" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;">
   <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:420px;">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;">
       <div style="font-size:16px;font-weight:800;color:#f1f5f9;">🏢 Detalii firmă</div>
@@ -695,7 +695,7 @@ nav{display:flex;align-items:center;gap:6px;}
 </div>
 
 <!-- HALL OF FAME MODAL -->
-<div id="hof-modal" onclick="if(event.target===this)closeHof()">
+<div id="hof-modal">
   <div class="hof-modal-inner">
     <div class="hof-modal-hdr">
       <div>
@@ -709,7 +709,7 @@ nav{display:flex;align-items:center;gap:6px;}
 </div>
 
 <!-- MODAL ADAUGA BALTA -->
-<div id="ab-modal" onclick="if(event.target===this)closeAddBalta()">
+<div id="ab-modal">
   <div class="ab-inner">
 
     <!-- Header -->
@@ -3176,7 +3176,7 @@ function getStanduriData() {
 <div class="save-toast" id="save-toast">✓ Salvat cu succes!</div>
 
 <!-- MODAL EDIT BALTA -->
-<div id="edit-modal" onclick="if(event.target===this)closeEditBalta()">
+<div id="edit-modal">
   <div class="edit-inner">
     <div class="edit-hdr">
       <div>
@@ -3195,7 +3195,7 @@ function getStanduriData() {
 </div>
 
 <!-- AUTH MODAL -->
-<div id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
+<div id="auth-modal">
   <div class="auth-inner">
     <button class="auth-close" onclick="closeAuthModal()">✕</button>
     <div class="auth-logo">🎣</div>
@@ -4270,7 +4270,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
 </script>
 
 <!-- PESCAR GUEST MODAL -->
-<div id="pescar-guest-modal" onclick="if(event.target===this)closePescarGuestModal()">
+<div id="pescar-guest-modal">
   <div class="pgm-box">
     <div class="pgm-icon">🎣</div>
     <div class="pgm-title">Creează un cont gratuit</div>
