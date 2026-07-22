@@ -377,6 +377,7 @@ th,td{padding:8px 6px;}
 .add-stand-btn{width:100%;background:transparent;border:1.5px dashed #1e293b;border-radius:10px;padding:14px;color:#4b5563;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .add-stand-btn:hover{border-color:#0c3a4d;color:#38bdf8;background:#071c26;}
 #ab-map{width:100%;height:260px;border-radius:10px;overflow:hidden;border:1.5px solid #1e293b;margin-bottom:10px;}
+#eb-map{width:100%;height:260px;border-radius:10px;overflow:hidden;border:1.5px solid #1e293b;margin-bottom:10px;}
 @media(min-width:769px){
   #ab-modal{align-items:center;justify-content:center;}
   .ab-inner{max-width:680px;border-radius:20px;margin-top:0;}
@@ -2932,6 +2933,7 @@ async function uploadToR2(file, folder) {
 let editBaltaId   = null;
 let editBaltaData = null; // rândul din tabela balti
 let editVizStatus = 'public';
+let ebMap = null, ebMarker = null, ebCoords = null;
 
 async function openEditBalta(id) {
   editBaltaId = id;
@@ -3017,6 +3019,8 @@ async function openEditBalta(id) {
   document.getElementById('edit-save-btn').disabled = false;
   _deletedStandIds = [];
   initEditStandsDrag();
+  // Inițializăm harta de localizare cu poziția curentă a băltii (dacă există)
+  setTimeout(() => initEbMap(b.lat || null, b.lng || null), 150);
 }
 
 function closeEditBalta() {
@@ -3057,6 +3061,35 @@ function buildEditBody(b, ext) {
     <div class="fg"><label>📋 REGULAMENT</label><textarea id="e-regulament" rows="4" style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:13px;outline:none;font-family:inherit;resize:vertical;">${escHtml(ext.regulament||'')}</textarea></div>
     <div class="fg"><label>ADMINISTRATOR BALTĂ (ZODA-ID)</label><input type="text" id="e-admin-zoda-id" value="${escHtml(b.admin_zoda_id||'')}" placeholder="ex: ZODA-1042" style="font-family:monospace;" /><div style="font-size:10px;color:#4b5563;margin-top:4px;">Setând acest câmp, utilizatorul cu ZODA-ID-ul respectiv primește rolul de administrator al acestei bălți și poate trimite cereri de capturi.</div></div>
     <div class="fg"><label>🎥 AMBASADOR (ZODA-ID)</label><input type="text" id="e-ambasador-zoda-id" value="${escHtml(b.ambasador_zoda_id||'')}" placeholder="ex: ZODA-1077" style="font-family:monospace;" /><div style="font-size:10px;color:#4b5563;margin-top:4px;">Persoana care documentează fizic balta (foto, video, detalii standuri). Apare creditată public pe pagina băltii. Nu are drepturi de administrare — orice modificare trimisă de el așteaptă aprobarea ta în tab-ul „Ambasadori".</div></div>
+    </div>
+  </div>
+
+  <!-- LOCALIZARE (pin hartă) -->
+  <div class="edit-section">
+    <div class="edit-section-title"><span>📍 LOCALIZARE (pin pe hartă — Waze/Maps)</span></div>
+    <div id="eb-loc-wrap">
+      <div style="background:#071c26;border:1px solid #0c3a4d;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#94a3b8;line-height:1.7;">
+        Dacă pinul e greșit (Waze/Maps nu duc la locul corect), caută adresa corectă sau dă click direct pe hartă ca să-l repoziționezi.
+      </div>
+      <div style="position:relative;margin-bottom:8px;">
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;display:flex;align-items:center;gap:8px;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input id="eb-search-input" type="text" placeholder="Caută sat, comună sau oraș..."
+              style="flex:1;background:transparent;border:none;outline:none;color:#f1f5f9;font-size:13px;"
+              oninput="ebSearchInput(this.value)" onkeydown="if(event.key==='Enter'){ebDoSearch();event.preventDefault();}" autocomplete="off"/>
+            <button onclick="ebClearSearch()" id="eb-search-clear" style="display:none;background:transparent;border:none;color:#4b5563;cursor:pointer;font-size:16px;line-height:1;">✕</button>
+          </div>
+          <button onclick="ebDoSearch()" style="background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;">🔍 Caută</button>
+        </div>
+        <div id="eb-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:220px;overflow-y:auto;"></div>
+      </div>
+      <div id="eb-map"></div>
+      <div style="margin-top:8px;padding:8px 12px;border-radius:8px;background:#0a0f1a;border:1px solid #1e293b;display:flex;align-items:center;gap:8px;font-size:12px;">
+        <span style="font-size:16px;">🎯</span>
+        <span style="color:#4b5563;flex:1;" id="eb-coord-display">Click pe hartă pentru a marca locația baltii</span>
+        <button id="eb-coord-clear" onclick="ebResetToOriginal()" style="display:none;background:#1e293b;border:none;color:#94a3b8;font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer;">↺ Revino la poziția inițială</button>
+      </div>
     </div>
   </div>
 
@@ -3482,6 +3515,8 @@ async function saveEditBalta() {
     vizibilitate:   editVizStatus,
     nivel_vizibilitate: parseInt(document.getElementById('eb-nivel')?.value, 10) || 1,
     tagline:        document.getElementById('eb-tagline')?.value.trim().slice(0, 140) || null,
+    lat:            ebCoords ? ebCoords.lat : b.lat,
+    lng:            ebCoords ? ebCoords.lng : b.lng,
   };
 
   // Acordăm/confirmăm rolul balta_admin ori de câte ori admin_zoda_id e setat
@@ -4020,6 +4055,70 @@ function abSelectLocation(lat,lng,displayName){
 function abClearSearch(){document.getElementById('ab-search-input').value='';document.getElementById('ab-search-clear').style.display='none';document.getElementById('ab-search-results').style.display='none';}
 function abClearPin(){abCoords=null;if(abMarker){abMap.removeLayer(abMarker);abMarker=null;}document.getElementById('ab-coord-display').textContent='Click pe hartă pentru a marca locația baltii';document.getElementById('ab-coord-display').style.color='#4b5563';document.getElementById('ab-coord-clear').style.display='none';}
 document.addEventListener('click',e=>{const w=document.getElementById('pane-2');if(w&&!w.contains(e.target))document.getElementById('ab-search-results').style.display='none';});
+
+// ── HARTĂ LOCALIZARE — modal EDITARE baltă (reutilizează pinIcon() de mai sus) ──
+function initEbMap(lat, lng){
+  if(!ebMap){
+    ebMap = L.map('eb-map', { center: [lat||45.5, lng||24.8], zoom: (lat&&lng) ? 14 : 7 });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:19}).addTo(ebMap);
+    ebMap.on('click', e=>{
+      ebCoords = e.latlng;
+      document.getElementById('eb-coord-display').textContent='✓ Marcat: '+ebCoords.lat.toFixed(5)+'°N, '+ebCoords.lng.toFixed(5)+'°E';
+      document.getElementById('eb-coord-display').style.color='#38bdf8';
+      document.getElementById('eb-coord-clear').style.display='inline';
+      if(ebMarker) ebMap.removeLayer(ebMarker);
+      ebMarker = L.marker([ebCoords.lat, ebCoords.lng], {icon: pinIcon()}).addTo(ebMap);
+      document.getElementById('eb-search-results').style.display='none';
+    });
+  } else {
+    ebMap.invalidateSize();
+  }
+  // resetăm harta la poziția băltii curente de fiecare dată când se deschide modalul
+  ebCoords = (lat && lng) ? { lat, lng } : null;
+  if(ebMarker){ ebMap.removeLayer(ebMarker); ebMarker=null; }
+  if(lat && lng){
+    ebMarker = L.marker([lat, lng], {icon: pinIcon()}).addTo(ebMap);
+    ebMap.setView([lat, lng], 14);
+    document.getElementById('eb-coord-display').textContent='✓ Marcat: '+lat.toFixed(5)+'°N, '+lng.toFixed(5)+'°E';
+    document.getElementById('eb-coord-display').style.color='#38bdf8';
+    document.getElementById('eb-coord-clear').style.display='inline';
+  } else {
+    document.getElementById('eb-coord-display').textContent='Click pe hartă pentru a marca locația baltii';
+    document.getElementById('eb-coord-display').style.color='#4b5563';
+    document.getElementById('eb-coord-clear').style.display='none';
+  }
+}
+function ebResetToOriginal(){
+  const b = editBaltaData;
+  initEbMap(b?.lat || null, b?.lng || null);
+}
+let ebSearchTimeout=null;
+function ebSearchInput(val){document.getElementById('eb-search-clear').style.display=val?'block':'none';clearTimeout(ebSearchTimeout);if(!val.trim()){document.getElementById('eb-search-results').style.display='none';return;}ebSearchTimeout=setTimeout(()=>ebDoSearch(),400);}
+async function ebDoSearch(){
+  const q=document.getElementById('eb-search-input').value.trim();if(!q)return;
+  const res=document.getElementById('eb-search-results');
+  res.innerHTML='<div style="padding:12px 14px;color:#64748b;font-size:12px;">🔍 Se caută...</div>';res.style.display='block';
+  try{
+    const data=await(await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', Romania')}&format=json&limit=6&countrycodes=ro&accept-language=ro`,{headers:{'Accept-Language':'ro','User-Agent':'Zoda/1.0'}})).json();
+    if(!data.length){res.innerHTML='<div style="padding:12px 14px;color:#4b5563;font-size:12px;">Niciun rezultat.</div>';return;}
+    res.innerHTML=data.map(r=>`<div onclick="ebSelectLocation(${r.lat},${r.lon},'${r.display_name.replace(/'/g,"\\'")}')" style="padding:10px 14px;border-bottom:1px solid #1e293b;cursor:pointer;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'"><div style="font-size:12px;font-weight:600;color:#f1f5f9;">${r.display_name.split(',').slice(0,2).join(',')}</div><div style="font-size:10px;color:#4b5563;">${r.display_name.split(',').slice(2).join(',').trim()}</div></div>`).join('');
+  }catch(e){res.innerHTML='<div style="padding:12px 14px;color:#ef4444;font-size:12px;">Eroare la căutare.</div>';}
+}
+function ebSelectLocation(lat,lng,displayName){
+  ebCoords={lat:parseFloat(lat),lng:parseFloat(lng)};
+  const sn=displayName.split(',').slice(0,2).join(',').trim();
+  document.getElementById('eb-coord-display').textContent=sn+' · '+parseFloat(lat).toFixed(5)+'°N, '+parseFloat(lng).toFixed(5)+'°E';
+  document.getElementById('eb-coord-display').style.color='#38bdf8';
+  document.getElementById('eb-coord-clear').style.display='inline';
+  if(ebMarker) ebMap.removeLayer(ebMarker);
+  ebMarker=L.marker([lat,lng],{icon:pinIcon()}).addTo(ebMap);
+  ebMap.flyTo([lat,lng],16,{duration:1.2});
+  document.getElementById('eb-search-results').style.display='none';
+  document.getElementById('eb-search-input').value=sn;
+  document.getElementById('eb-search-clear').style.display='block';
+}
+function ebClearSearch(){document.getElementById('eb-search-input').value='';document.getElementById('eb-search-clear').style.display='none';document.getElementById('eb-search-results').style.display='none';}
+document.addEventListener('click',e=>{const w=document.getElementById('eb-loc-wrap');if(w&&!w.contains(e.target)){const r=document.getElementById('eb-search-results');if(r)r.style.display='none';}});
 
 // ── JUDEȚ DROPDOWN ────────────────────────────────────────────────────────────
 function judetOpen(){judetRenderList('');document.getElementById('judet-dropdown').style.display='block';document.getElementById('judet-arrow').textContent='▴';}
