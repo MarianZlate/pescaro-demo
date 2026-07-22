@@ -465,6 +465,7 @@ th,td{padding:8px 6px;}
     <button class="tab" onclick="switchTab('reclame')">📢 Reclame</button>
     <button class="tab" onclick="switchTab('statistici')">📊 Statistici</button>
     <button class="tab" onclick="switchTab('settings')">⚙️ Setări platformă</button>
+    <button class="tab" onclick="switchTab('followup')">📋 Bălți Follow-up</button>
   </div>
 
   <!-- BALTI PANEL -->
@@ -715,6 +716,25 @@ th,td{padding:8px 6px;}
       <span>✉️ Mesaje din formularul de contact</span>
     </div>
     <div id="mesaje-list" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="empty-state">Se încarcă...</div>
+    </div>
+  </div>
+
+  <!-- FOLLOW-UP PANEL -->
+  <div id="panel-followup" style="display:none;">
+    <div class="section-title">
+      <span>📋 Bălți Follow-up — discuții abonamente</span>
+    </div>
+    <div style="position:relative;margin-bottom:16px;max-width:460px;">
+      <div style="display:flex;align-items:center;gap:8px;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="fu-search-input" type="text" placeholder="Caută baltă după nume, ca s-o adaugi în listă..."
+          style="flex:1;background:transparent;border:none;outline:none;color:#f1f5f9;font-size:13px;"
+          oninput="fuSearchInput(this.value)" autocomplete="off"/>
+      </div>
+      <div id="fu-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:260px;overflow-y:auto;"></div>
+    </div>
+    <div id="followup-list" style="display:flex;flex-direction:column;gap:10px;">
       <div class="empty-state">Se încarcă...</div>
     </div>
   </div>
@@ -1075,7 +1095,7 @@ function closeConfirm() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','mesaje','aprobari','capturi','ambasadori','reclame','statistici','settings'][i]===tab));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['balti','users','mesaje','aprobari','capturi','ambasadori','reclame','statistici','settings','followup'][i]===tab));
   const pB = document.getElementById('panel-balti');      if(pB) pB.style.display      = tab==='balti'      ? 'block' : 'none';
   const pST= document.getElementById('panel-statistici'); if(pST) pST.style.display    = tab==='statistici' ? 'block' : 'none';
   const pA = document.getElementById('panel-aprobari');   if(pA) pA.style.display      = tab==='aprobari'   ? 'block' : 'none';
@@ -1085,6 +1105,7 @@ function switchTab(tab) {
   const pS = document.getElementById('panel-settings');   if(pS) pS.style.display      = tab==='settings'   ? 'block' : 'none';
   const pR = document.getElementById('panel-reclame');    if(pR) pR.style.display      = tab==='reclame'    ? 'block' : 'none';
   const pM = document.getElementById('panel-mesaje');     if(pM) pM.style.display      = tab==='mesaje'     ? 'block' : 'none';
+  const pFU= document.getElementById('panel-followup');   if(pFU) pFU.style.display    = tab==='followup'   ? 'block' : 'none';
   if(tab==='statistici') { setStatsInterval(30); }
   if(tab==='aprobari') loadAprobari();
   if(tab==='users')    loadUsers();
@@ -1093,9 +1114,115 @@ function switchTab(tab) {
   if(tab==='settings') loadSettings();
   if(tab==='reclame')  loadReclame();
   if(tab==='mesaje')   loadMesaje();
+  if(tab==='followup') loadFollowup();
 }
 
-// ── BADGE APROBĂRI ÎN AȘTEPTARE ──────────────────────────────────────────────
+// ── BĂLȚI FOLLOW-UP ──────────────────────────────────────────────────────────
+let _followupCache = [];
+let fuSearchTimeout = null;
+
+async function loadFollowup() {
+  const list = document.getElementById('followup-list');
+  list.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+  const { data, error } = await sb.from('balti_followup')
+    .select('id, note, balta_id, balti(id, nume, judet, vizibilitate, nivel_vizibilitate)')
+    .order('created_at', { ascending: false });
+  if (error) {
+    list.innerHTML = '<div class="empty-state">❌ Eroare la încărcare: ' + escHtml(error.message) + '</div>';
+    return;
+  }
+  _followupCache = data || [];
+  renderFollowupList();
+}
+
+function renderFollowupList() {
+  const list = document.getElementById('followup-list');
+  if (!_followupCache.length) {
+    list.innerHTML = '<div class="empty-state">Nicio baltă în follow-up încă. Caută una mai sus ca s-o adaugi.</div>';
+    return;
+  }
+  list.innerHTML = _followupCache.map(row => {
+    const b = row.balti;
+    if (!b) return ''; // balta a fost ștearsă între timp
+    return `
+    <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#f1f5f9;">${escHtml(b.nume)}</div>
+          <div style="font-size:11px;color:#4b5563;">📍 ${escHtml(b.judet || '—')} · nivel ${b.nivel_vizibilitate || 1}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="balta.html?id=${b.id}&edit=1" target="_blank" style="background:transparent;border:1px solid #1e293b;color:#64748b;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">↗ Vezi balta</a>
+          <button onclick="fuRemove(${row.id})" style="background:transparent;border:1px solid #3f1d1d;color:#ef4444;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">✕ Scoate</button>
+        </div>
+      </div>
+      <textarea placeholder="Note / ce informații mai aștepți de la ei..." rows="2"
+        onblur="fuSaveNote(${row.id}, this.value)"
+        style="width:100%;background:#0a0f1a;border:1.5px solid #1e293b;border-radius:8px;padding:9px 12px;color:#f1f5f9;font-size:12px;outline:none;font-family:inherit;resize:vertical;">${escHtml(row.note || '')}</textarea>
+    </div>`;
+  }).join('');
+}
+
+function fuSearchInput(val) {
+  clearTimeout(fuSearchTimeout);
+  const res = document.getElementById('fu-search-results');
+  if (!val.trim()) { res.style.display = 'none'; return; }
+  fuSearchTimeout = setTimeout(() => fuRenderSearchResults(val.trim()), 200);
+}
+
+function fuRenderSearchResults(q) {
+  const res = document.getElementById('fu-search-results');
+  const already = new Set(_followupCache.map(r => r.balta_id));
+  const qLower = q.toLowerCase();
+  const matches = (_baltiCache || [])
+    .filter(b => b.nume?.toLowerCase().includes(qLower) && !already.has(b.id))
+    .slice(0, 8);
+  if (!matches.length) {
+    res.innerHTML = '<div style="padding:12px 14px;color:#4b5563;font-size:12px;">Niciun rezultat (sau deja e în listă).</div>';
+    res.style.display = 'block';
+    return;
+  }
+  res.innerHTML = matches.map(b => `
+    <div onclick="fuAddBalta(${b.id})" style="padding:10px 14px;border-bottom:1px solid #1e293b;cursor:pointer;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
+      <div style="font-size:12px;font-weight:600;color:#f1f5f9;">${escHtml(b.nume)}</div>
+      <div style="font-size:10px;color:#4b5563;">${escHtml(b.judet || '')}</div>
+    </div>`).join('');
+  res.style.display = 'block';
+}
+
+async function fuAddBalta(baltaId) {
+  document.getElementById('fu-search-input').value = '';
+  document.getElementById('fu-search-results').style.display = 'none';
+  const { error } = await sb.from('balti_followup').insert({ balta_id: baltaId });
+  if (error) {
+    showToast('❌ Eroare la adăugare: ' + error.message, true);
+    return;
+  }
+  showToast('✅ Adăugată în Follow-up.');
+  loadFollowup();
+}
+
+async function fuSaveNote(id, value) {
+  await sb.from('balti_followup').update({ note: value, updated_at: new Date().toISOString() }).eq('id', id);
+}
+
+async function fuRemove(id) {
+  if (!confirm('Scoți balta din lista de Follow-up? (nu se șterge balta, doar dispare din această listă)')) return;
+  const { error } = await sb.from('balti_followup').delete().eq('id', id);
+  if (error) {
+    showToast('❌ Eroare: ' + error.message, true);
+    return;
+  }
+  loadFollowup();
+}
+
+document.addEventListener('click', e => {
+  const w = document.getElementById('panel-followup');
+  if (w && !w.contains(e.target)) {
+    const r = document.getElementById('fu-search-results');
+    if (r) r.style.display = 'none';
+  }
+});
 async function updateAprobariPendingBadge() {
   const badge = document.getElementById('aprobari-pending-badge');
   if (!badge) return;
