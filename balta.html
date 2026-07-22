@@ -554,9 +554,9 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
         <div id="pins-layer"></div>
       </div>
       <div id="stand-overlay-backdrop" onclick="closeOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1999;"></div>
-      <div id="stand-overlay-topbar" style="display:none;position:fixed;z-index:2001;gap:6px;justify-content:flex-end;">
-        <button id="ov-edit-btn" onclick="toggleOverlayEdit()" style="display:none;background:#0c3a4d;border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:11.5px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;">✏️ Editează</button>
-        <button class="xbtn" onclick="closeOverlay()" style="background:#111827;border:1px solid #1e293b;border-radius:50%;width:32px;height:32px;font-size:16px;">✕</button>
+      <div id="stand-overlay-topbar" style="display:none;position:fixed;z-index:2001;height:34px;">
+        <button id="ov-edit-btn" onclick="toggleOverlayEdit()" style="display:none;position:absolute;left:50%;top:0;transform:translateX(-50%);background:#0c3a4d;border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:11.5px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;">✏️ Editează</button>
+        <button class="xbtn" onclick="closeOverlay()" style="position:absolute;right:0;top:0;background:#111827;border:1px solid #1e293b;border-radius:50%;width:32px;height:32px;font-size:16px;">✕</button>
       </div>
 
       <div id="stand-overlay">
@@ -795,7 +795,7 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 </footer>
 
 <!-- MODAL DETALII FIRMĂ -->
-<div id="modal-detalii-firma" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;" onclick="if(event.target===this)closeDetaliiFirmaModal()">
+<div id="modal-detalii-firma" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;">
   <div style="background:#111827;border:1px solid #1e293b;border-radius:20px;width:100%;max-width:420px;">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e293b;">
       <div style="font-size:16px;font-weight:800;color:#f1f5f9;">🏢 Detalii firmă</div>
