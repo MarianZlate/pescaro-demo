@@ -15,7 +15,6 @@ html,body{background:#0a0f1a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans
 .logo{display:flex;align-items:center;text-decoration:none;}
 .logo-img{height:26px;width:auto;display:block;}
 .logo-text{font-size:16px;font-weight:900;color:#38bdf8;}
-.admin-badge{font-size:10px;background:#f59e0b;color:#000;padding:2px 6px;border-radius:4px;font-weight:800;flex-shrink:0;}
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0;}
 .logout-btn{background:transparent;border:1px solid #1e293b;color:#4b5563;font-size:10px;padding:4px 8px;border-radius:6px;cursor:pointer;white-space:nowrap;}
 .logout-btn:hover{border-color:#ef4444;color:#ef4444;}
@@ -395,7 +394,6 @@ th,td{padding:8px 6px;}
     <a class="logo" href="index.html" onclick="try{sessionStorage.removeItem('zoda_index_state');}catch(e){}">
       <img src="zoda-logo.png" alt="Zoda" class="logo-img"/>
     </a>
-    <span class="admin-badge">ADMIN</span>
     <div class="hdr-right">
       <a class="back-btn" href="index.html">← Hartă</a>
       <button class="logout-btn" onclick="doLogout()">Ieși</button>
