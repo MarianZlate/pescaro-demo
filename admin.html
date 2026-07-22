@@ -747,6 +747,12 @@ th,td{padding:8px 6px;}
         <div id="fu-assignee-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:220px;overflow-y:auto;"></div>
       </div>
       <div style="flex:1;min-width:220px;">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:4px;">🔎 Caută în listă (după nume):</div>
+        <input id="fu-list-search" type="text" placeholder="Caută printre bălțile deja adăugate..."
+          oninput="renderFollowupList()" autocomplete="off"
+          style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;"/>
+      </div>
+      <div style="flex:1;min-width:220px;">
         <div style="font-size:11px;color:#4b5563;margin-bottom:4px;">🔍 Filtrează lista după admin:</div>
         <select id="fu-filter-select" onchange="renderFollowupList()"
           style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;">
@@ -1180,11 +1186,18 @@ async function loadFollowup() {
 function renderFollowupList() {
   const list = document.getElementById('followup-list');
   const filterVal = document.getElementById('fu-filter-select')?.value || '';
+  const searchVal = (document.getElementById('fu-list-search')?.value || '').trim().toLowerCase();
   let rows = _followupCache;
   if (filterVal === '__unassigned__') rows = rows.filter(r => !r.assigned_to);
   else if (filterVal) rows = rows.filter(r => r.assigned_to === filterVal);
+  if (searchVal) {
+    rows = rows.filter(r => {
+      const nume = (r.balti ? r.balti.nume : r.nume_manual) || '';
+      return nume.toLowerCase().includes(searchVal);
+    });
+  }
   if (!rows.length) {
-    list.innerHTML = '<div class="empty-state">' + (filterVal ? 'Nicio baltă pentru acest filtru.' : 'Nicio baltă în follow-up încă. Caută una mai sus ca s-o adaugi.') + '</div>';
+    list.innerHTML = '<div class="empty-state">' + (filterVal || searchVal ? 'Nicio baltă pentru acest filtru/căutare.' : 'Nicio baltă în follow-up încă. Caută una mai sus ca s-o adaugi.') + '</div>';
     return;
   }
   list.innerHTML = rows.map(row => {
