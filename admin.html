@@ -738,6 +738,23 @@ th,td{padding:8px 6px;}
         onkeydown="if(event.key==='Enter'){fuAddManual();event.preventDefault();}"/>
       <button onclick="fuAddManual()" style="background:#0c3a4d;border:none;color:#38bdf8;font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;white-space:nowrap;">➕ Reminder</button>
     </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="position:relative;flex:1;min-width:220px;">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:4px;">👤 Atribuie ce adaugi în continuare lui:</div>
+        <input id="fu-assignee-input" type="text" placeholder="Neatribuit — caută un admin ca s-o atribui..."
+          oninput="fuAssigneeSearchInput(this.value)" autocomplete="off"
+          style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;"/>
+        <div id="fu-assignee-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:220px;overflow-y:auto;"></div>
+      </div>
+      <div style="flex:1;min-width:220px;">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:4px;">🔍 Filtrează lista după admin:</div>
+        <select id="fu-filter-select" onchange="renderFollowupList()"
+          style="width:100%;background:#111827;border:1.5px solid #1e293b;border-radius:9px;padding:9px 12px;color:#f1f5f9;font-size:13px;outline:none;">
+          <option value="">Toate</option>
+          <option value="__unassigned__">Neatribuite</option>
+        </select>
+      </div>
+    </div>
     <div id="followup-list" style="display:flex;flex-direction:column;gap:10px;">
       <div class="empty-state">Se încarcă...</div>
     </div>
@@ -1125,12 +1142,32 @@ function switchTab(tab) {
 let _followupCache = [];
 let fuSearchTimeout = null;
 let fuLinkOpenId = null; // id-ul rândului de follow-up pentru care e deschisă căutarea de legare
+let fuAssigneeId = null; // adminul selectat pentru următoarea adăugare
+let _adminsCache = [];   // useri cu rol zoda_admin (populat la nevoie)
+
+async function fuEnsureAdminsLoaded() {
+  if (!_usersCache.length || !Object.keys(_usersRoleMap).length) {
+    await loadUsers(); // populează _usersCache + _usersRoleMap (scrie și în tab-ul Utilizatori, ascuns oricum, fără efecte vizibile)
+  }
+  _adminsCache = _usersCache.filter(u => _usersRoleMap[u.id] === 'zoda_admin');
+}
+
+function fuPopulateFilterSelect() {
+  const sel = document.getElementById('fu-filter-select');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Toate</option><option value="__unassigned__">Neatribuite</option>'
+    + _adminsCache.map(u => `<option value="${u.id}">${escHtml(u.username || u.email || u.id)}</option>`).join('');
+  sel.value = current || '';
+}
 
 async function loadFollowup() {
   const list = document.getElementById('followup-list');
   list.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+  await fuEnsureAdminsLoaded();
+  fuPopulateFilterSelect();
   const { data, error } = await sb.from('balti_followup')
-    .select('id, note, balta_id, nume_manual, balti(id, nume, judet, vizibilitate, nivel_vizibilitate)')
+    .select('id, note, balta_id, nume_manual, assigned_to, balti(id, nume, judet, vizibilitate, nivel_vizibilitate)')
     .order('created_at', { ascending: false });
   if (error) {
     list.innerHTML = '<div class="empty-state">❌ Eroare la încărcare: ' + escHtml(error.message) + '</div>';
@@ -1142,11 +1179,15 @@ async function loadFollowup() {
 
 function renderFollowupList() {
   const list = document.getElementById('followup-list');
-  if (!_followupCache.length) {
-    list.innerHTML = '<div class="empty-state">Nicio baltă în follow-up încă. Caută una mai sus ca s-o adaugi.</div>';
+  const filterVal = document.getElementById('fu-filter-select')?.value || '';
+  let rows = _followupCache;
+  if (filterVal === '__unassigned__') rows = rows.filter(r => !r.assigned_to);
+  else if (filterVal) rows = rows.filter(r => r.assigned_to === filterVal);
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty-state">' + (filterVal ? 'Nicio baltă pentru acest filtru.' : 'Nicio baltă în follow-up încă. Caută una mai sus ca s-o adaugi.') + '</div>';
     return;
   }
-  list.innerHTML = _followupCache.map(row => {
+  list.innerHTML = rows.map(row => {
     const b = row.balti;
     if (!b && !row.nume_manual) return ''; // balta a fost ștearsă între timp și nu era manual
     const nume   = b ? b.nume : row.nume_manual;
@@ -1164,6 +1205,11 @@ function renderFollowupList() {
           style="width:100%;background:#0a0f1a;border:1.5px solid #334155;border-radius:8px;padding:9px 12px;color:#f1f5f9;font-size:12px;outline:none;"/>
         <div id="fu-link-results-${row.id}" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#111827;border:1px solid #1e293b;border-radius:10px;overflow:hidden;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:220px;overflow-y:auto;"></div>
       </div>` : '';
+    const assigneeSelect = `
+      <select onchange="fuReassign(${row.id}, this.value)" style="background:#0a0f1a;border:1px solid #1e293b;border-radius:7px;padding:5px 8px;color:#94a3b8;font-size:11px;outline:none;">
+        <option value="">— Neatribuit —</option>
+        ${_adminsCache.map(u => `<option value="${u.id}" ${row.assigned_to === u.id ? 'selected' : ''}>${escHtml(u.username || u.email || u.id)}</option>`).join('')}
+      </select>`;
     return `
     <div style="background:#111827;border:1px solid ${b ? '#1e293b' : '#334155'};border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;${b ? '' : 'border-style:dashed;'}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
@@ -1171,7 +1217,8 @@ function renderFollowupList() {
           <div style="font-size:14px;font-weight:700;color:#f1f5f9;">${escHtml(nume)}</div>
           <div style="font-size:11px;color:#4b5563;">${subinfo}</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          ${assigneeSelect}
           ${actionBtns}
           <button onclick="fuRemove(${row.id})" style="background:transparent;border:1px solid #3f1d1d;color:#ef4444;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;">✕ Scoate</button>
         </div>
@@ -1214,7 +1261,7 @@ function fuRenderSearchResults(q) {
 async function fuAddBalta(baltaId) {
   document.getElementById('fu-search-input').value = '';
   document.getElementById('fu-search-results').style.display = 'none';
-  const { error } = await sb.from('balti_followup').insert({ balta_id: baltaId });
+  const { error } = await sb.from('balti_followup').insert({ balta_id: baltaId, assigned_to: fuAssigneeId });
   if (error) {
     showToast('❌ Eroare la adăugare: ' + error.message, true);
     return;
@@ -1227,7 +1274,7 @@ async function fuAddManual() {
   const input = document.getElementById('fu-manual-input');
   const nume = input.value.trim();
   if (!nume) return;
-  const { error } = await sb.from('balti_followup').insert({ nume_manual: nume });
+  const { error } = await sb.from('balti_followup').insert({ nume_manual: nume, assigned_to: fuAssigneeId });
   if (error) {
     showToast('❌ Eroare la adăugare: ' + error.message, true);
     return;
@@ -1235,6 +1282,43 @@ async function fuAddManual() {
   input.value = '';
   showToast('✅ Reminder adăugat.');
   loadFollowup();
+}
+
+function fuAssigneeSearchInput(val) {
+  const res = document.getElementById('fu-assignee-results');
+  if (!val.trim()) { res.style.display = 'none'; fuAssigneeId = null; return; }
+  const qLower = val.trim().toLowerCase();
+  const matches = _adminsCache.filter(u =>
+    (u.username || '').toLowerCase().includes(qLower) || (u.email || '').toLowerCase().includes(qLower)
+  ).slice(0, 8);
+  if (!matches.length) {
+    res.innerHTML = '<div style="padding:10px 12px;color:#4b5563;font-size:12px;">Niciun admin găsit.</div>';
+    res.style.display = 'block';
+    return;
+  }
+  res.innerHTML = matches.map(u => `
+    <div onclick="fuSelectAssignee('${u.id}', '${escHtml(u.username || u.email || '').replace(/'/g, "\\'")}')" style="padding:9px 12px;border-bottom:1px solid #1e293b;cursor:pointer;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
+      <div style="font-size:12px;font-weight:600;color:#f1f5f9;">${escHtml(u.username || '(fără username)')}</div>
+      <div style="font-size:10px;color:#4b5563;">${escHtml(u.email || '')}</div>
+    </div>`).join('');
+  res.style.display = 'block';
+}
+
+function fuSelectAssignee(id, label) {
+  fuAssigneeId = id;
+  document.getElementById('fu-assignee-input').value = label;
+  document.getElementById('fu-assignee-results').style.display = 'none';
+}
+
+async function fuReassign(followupId, userId) {
+  const { error } = await sb.from('balti_followup').update({ assigned_to: userId || null }).eq('id', followupId);
+  if (error) {
+    showToast('❌ Eroare: ' + error.message, true);
+    return;
+  }
+  const row = _followupCache.find(r => r.id === followupId);
+  if (row) row.assigned_to = userId || null;
+  showToast('✅ Reatribuit.');
 }
 
 function fuToggleLink(followupId) {
@@ -1297,6 +1381,8 @@ document.addEventListener('click', e => {
   if (w && !w.contains(e.target)) {
     const r = document.getElementById('fu-search-results');
     if (r) r.style.display = 'none';
+    const ra = document.getElementById('fu-assignee-results');
+    if (ra) ra.style.display = 'none';
   }
 });
 async function updateAprobariPendingBadge() {
